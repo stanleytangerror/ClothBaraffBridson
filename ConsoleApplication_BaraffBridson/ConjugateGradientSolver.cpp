@@ -47,7 +47,7 @@ inline Eigen::VectorXf ModifiedPCGSolver::filter(Eigen::VectorXf vec)
 	return S * vec;
 }
 
-#define SHOW_CONVERGENCE
+//#define SHOW_CONVERGENCE
 
 void ModifiedPCGSolver::runCG(const GLfloat epsilon)
 {

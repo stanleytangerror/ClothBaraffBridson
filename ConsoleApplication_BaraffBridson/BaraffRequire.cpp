@@ -270,7 +270,7 @@ void BaraffRequire::addExternForce(PolyArrayMesh::VertexHandle vhandle, Eigen::V
 }
 
 #define STRETCH_FORCE
-#define SHEAR_FORCE
+//#define SHEAR_FORCE
 //#define USE_DAMP
 //#define DEBUG_FORCE
 
@@ -415,8 +415,8 @@ void BaraffRequire::getStretchAndShearForce(PolyArrayMesh::FaceHandle fhandle,
 
 		// stretch conditions in u v directions
 		GLfloat Cu, Cv;
-		Cu = alpha * fabs(wu_len - bu);
-		Cv = alpha * fabs(wv_len - bv);
+		Cu = alpha * (wu_len - bu);
+		Cv = alpha * (wv_len - bv);
 #ifdef DEBUG_FORCE
 		//std::cout << "wu_len " << wu_len << std::endl;
 		//std::cout << "bu " << bu << std::endl;
@@ -427,6 +427,11 @@ void BaraffRequire::getStretchAndShearForce(PolyArrayMesh::FaceHandle fhandle,
 		std::cout << "Cu " << Cu << std::endl;
 		std::cout << "Cv " << Cv << std::endl;
 #endif
+		if (Cu < 0 || Cv < 0)
+		{
+			std::cout << "Cu " << Cu << std::endl;
+			std::cout << "Cv " << Cv << std::endl;
+		}
 		// first ordered derivatives dC_dxi, i = 0, 1, 2
 		Eigen::Vector3f dCu_dxi[3], dCv_dxi[3];
 		for (size_t _i = 0; _i < 3; ++_i)
@@ -613,7 +618,7 @@ void BaraffRequire::getStretchAndShearForce(PolyArrayMesh::FaceHandle fhandle,
 		for (size_t _i = 0; _i < 3; ++_i) for (size_t _j = 0; _j < 3; ++_j)
 		{
 			dfi_dxj[_i][_j] = -k_shear * (dC_dxi[_i] * dC_dxi[_j].transpose() + d2C_dxidxj[_i][_j] * C);
-			dfi_dxj_damp[_i][_j] = Eigen::Matrix3f::Identity() * (-k_shear * kd_shear * d2C_dxidxj[_i][_j] * C_dot);
+			dfi_dxj_damp[_i][_j] = -k_shear * kd_shear * d2C_dxidxj[_i][_j] * C_dot;
 			dfi_dvj[_i][_j] = -k_shear * kd_shear * (dC_dxi[_i] * dC_dxi[_j].transpose());
 
 			//if ((_i == 0 && _j == 1) || (_i == 1 && _j == 0))
@@ -664,13 +669,13 @@ void BaraffRequire::getStretchAndShearForce(PolyArrayMesh::FaceHandle fhandle,
 		for (size_t _i = 0; _i < 3; ++_i)
 		{
 			f[_i] = -k_shear * dC_dxi[_i] * C;
+			f_damp[_i] = -k_shear * kd_shear * dC_dxi[_i] * C_dot;
+            
 #ifdef DEBUG_FORCE
 			std::cout << "f[" << global_indices[_i] << "] " << std::endl << f[_i] << std::endl;
-#endif
-			f_damp[_i] = -k_shear * kd_shear * dC_dxi[_i] * C_dot;
-#ifdef DEBUG_FORCE
 			std::cout << "f_damp[" << global_indices[_i] << "] " << std::endl << f_damp[_i] << std::endl;
 #endif
+
 			f_total.block<3, 1>(global_indices[_i] * 3, 0) += f[_i];
 #ifdef USE_DAMP
 			f_total.block<3, 1>(global_indices[_i] * 3, 0) += f_damp[_i];
@@ -691,8 +696,8 @@ void BaraffRequire::getBendForce(PolyArrayMesh::FaceHandle fhandle0, PolyArrayMe
 
 void BaraffRequire::update(const Eigen::VectorXf & v_delta)
 {
+	positions += time_step * (v_total + v_delta);
 	v_total += v_delta;
-	positions += time_step * v_total;
 	//std::cout << "delta position " << std::endl << v_total << std::endl;
 }
 

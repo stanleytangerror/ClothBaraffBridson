@@ -47,7 +47,7 @@ private:
 	GLfloat time_step;
 	// parameters for stretch forces
 	GLfloat k_stretch = 5e3f, kd_stretch = 0.2f;
-	GLfloat bu = 20.0f, bv = 20.0f;
+	GLfloat bu = 1.0f, bv = 1.0f;
 	// parameters for shear forces
 	GLfloat k_shear = 5e2f, kd_shear = 0.2f;
 	// parameters for bend forces
