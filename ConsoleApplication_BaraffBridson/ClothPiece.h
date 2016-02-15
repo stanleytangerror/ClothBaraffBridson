@@ -7,7 +7,6 @@
 #include <map>
 #include <functional>
 
-#define _USE_MATH_DEFINES
 #include <OpenMesh/Core/Mesh/TriMesh_ArrayKernelT.hh>
 #include <OpenMesh/Core/Mesh/PolyMesh_ArrayKernelT.hh>
 

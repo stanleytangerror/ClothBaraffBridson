@@ -126,7 +126,7 @@ void ModifiedPCGSolver::runMPCG(const GLfloat epsilon)
 	delta_new = residual.transpose() * direction;
 	delta_0 = delta_new;
 	// !!!
-	end_point = epsilon * epsilon * delta_0;
+	//end_point = epsilon * epsilon * delta_0;
 #ifdef SHOW_CONVERGENCE
 	std::cout << "initial value " << delta_new << std::endl;
 	std::cout << "target value " << end_point << std::endl;

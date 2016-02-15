@@ -77,7 +77,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>C:\Libraries\C++\eigen-3.2.6;C:\Libraries\C++\OpenMesh 4.1\include;C:\Program Files\OpenMesh 4.1\include;C:\Libraries\C++\assimp-3.1.1\include;C:\Libraries\C++\glew-1.13.0-win32\glew-1.13.0\include;C:\Libraries\C++\glfw-3.1.2.bin.WIN32\include;C:\Libraries\C++\Simple OpenGL Image Library\src;C:\Libraries\C++\glm-0.9.7.1\glm;$(IncludePath)</IncludePath>
+    <IncludePath>C:\Libraries\C++\eigen-3.3-beta;C:\Libraries\C++\OpenMesh 4.1\include;C:\Program Files\OpenMesh 4.1\include;C:\Libraries\C++\assimp-3.1.1\include;C:\Libraries\C++\glew-1.13.0-win32\glew-1.13.0\include;C:\Libraries\C++\glfw-3.1.2.bin.WIN32\include;C:\Libraries\C++\Simple OpenGL Image Library\src;C:\Libraries\C++\glm-0.9.7.1\glm;$(IncludePath)</IncludePath>
     <LibraryPath>C:\Libraries\C++\OpenMesh 4.1\lib;C:\Libraries\C++\assimp-3.1.1\Release;C:\Libraries\C++\glfw-3.1.2.bin.WIN32\lib-vc2015;C:\Libraries\C++\Simple OpenGL Image Library\lib;C:\Libraries\C++\glew-1.13.0-win32\glew-1.13.0\lib\Release\Win32;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -177,6 +177,7 @@
     <ClInclude Include="Simulate.h" />
     <ClInclude Include="Test.h" />
     <ClInclude Include="texture.h" />
+    <ClInclude Include="Types.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="background_cube.frag" />

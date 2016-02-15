@@ -1,10 +1,12 @@
 #ifndef BASIC_OPERATIONS_H
 #define BASIC_OPERATIONS_H
 
+//#define GLEW_STATIC
 #include <GL/glew.h>
 
 #include <Eigen\Core>
 #include <Eigen\Sparse>
+//#include <unsupported/Eigen/CXX11/Tensor>
 
 #include <OpenMesh/Core/Mesh/TriMesh_ArrayKernelT.hh>
 #include <OpenMesh/Core/Mesh/PolyMesh_ArrayKernelT.hh>
@@ -28,6 +30,8 @@ void convert_diag2sparse_mnf(Eigen::SparseMatrix<GLfloat> & dest, const Eigen::D
 
 void addBlock33(Eigen::SparseMatrix<GLfloat> & augend, GLuint block_i, GLuint block_j, const Eigen::Matrix3f & addend);
 
+//Eigen::Vector3f get_vector(Eigen::Tensor<GLfloat, 3> & tensor, GLuint block_i, GLuint block_j);
+
 void get_diag_mnf(Eigen::SparseMatrix<GLfloat> & dest, size_t size);
 
 inline GLfloat max(GLfloat a, GLfloat b)
@@ -46,6 +50,11 @@ GLboolean checkSymmetrical(const Eigen::Matrix3f mat, const GLfloat tolerance = 
 
 GLboolean checkSymmetrical(const Eigen::SparseMatrix<GLfloat> mat, GLfloat tolerance = 1e-20f);
 
+/* S(v) = [ 0  -vx  vy
+			vz  0  -vx
+			-vy  vx  0]
+*/
+Eigen::Matrix3f get_S_m3f(Eigen::Vector3f & v);
 
 #endif
 

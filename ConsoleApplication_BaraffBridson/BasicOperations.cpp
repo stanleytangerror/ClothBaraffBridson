@@ -37,6 +37,12 @@ void addBlock33(Eigen::SparseMatrix<GLfloat> & augend, GLuint block_i, GLuint bl
 	}
 }
 
+//Eigen::Vector3f get_vector(Eigen::Tensor<GLfloat, 3>& tensor, GLuint block_i, GLuint block_j)
+//{
+//
+//	return Eigen::Vector3f();
+//}
+
 
 GLboolean checkIdentical(const Eigen::Matrix3f mat1, const Eigen::Matrix3f mat2, GLfloat tolerance)
 {
@@ -84,6 +90,15 @@ GLboolean checkSymmetrical(const Eigen::SparseMatrix<GLfloat> mat, GLfloat toler
 			result = false;
 		}
 	return result;
+}
+
+Eigen::Matrix3f get_S_m3f(Eigen::Vector3f & v)
+{
+	Eigen::Matrix3f S;
+	S << 0, -v[2], v[1],
+		v[2], 0, -v[0],
+		-v[1], v[0], 0;
+	return S;
 }
 
 

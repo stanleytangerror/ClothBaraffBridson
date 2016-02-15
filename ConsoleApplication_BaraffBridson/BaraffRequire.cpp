@@ -1,8 +1,9 @@
 #include "BaraffRequire.h"
-
 #include "BasicOperations.h"
+#include "Types.h"
 
 #include <Eigen\Core>
+//#include <unsupported/Eigen/CXX11/Tensor>
 
 #include <iostream>
 
@@ -271,7 +272,8 @@ void BaraffRequire::addExternForce(PolyArrayMesh::VertexHandle vhandle, Eigen::V
 
 #define STRETCH_FORCE
 //#define SHEAR_FORCE
-//#define USE_DAMP
+//#define BEND_FORCE
+#define USE_DAMP
 //#define DEBUG_FORCE
 
 void BaraffRequire::getStretchAndShearForce(PolyArrayMesh::FaceHandle fhandle,
@@ -427,11 +429,11 @@ void BaraffRequire::getStretchAndShearForce(PolyArrayMesh::FaceHandle fhandle,
 		std::cout << "Cu " << Cu << std::endl;
 		std::cout << "Cv " << Cv << std::endl;
 #endif
-		if (Cu < 0 || Cv < 0)
-		{
-			std::cout << "Cu " << Cu << std::endl;
-			std::cout << "Cv " << Cv << std::endl;
-		}
+		//if (Cu < 0 || Cv < 0)
+		//{
+		//	std::cout << "Cu " << Cu << std::endl;
+		//	std::cout << "Cv " << Cv << std::endl;
+		//}
 		// first ordered derivatives dC_dxi, i = 0, 1, 2
 		Eigen::Vector3f dCu_dxi[3], dCv_dxi[3];
 		for (size_t _i = 0; _i < 3; ++_i)
@@ -550,15 +552,12 @@ void BaraffRequire::getStretchAndShearForce(PolyArrayMesh::FaceHandle fhandle,
 			f_total.block<3, 1>(global_indices[_i] * 3, 0) += f_damp[_i];
 
 #endif
-
-
-
+			
 			//std::cout << "f_total[" << global_indices[_i] << "] " << std::endl << f_total.block<3, 1>(global_indices[_i] * 3, 0) << std::endl;
 
 		}
 		//std::cout << std::endl;
 
-		// velocity not related to stretch force
 	}
 #endif
 	// ----------------- compute shear force -------------------
@@ -687,11 +686,356 @@ void BaraffRequire::getStretchAndShearForce(PolyArrayMesh::FaceHandle fhandle,
 #endif
 }
 
+#ifdef BEND_FORCE
+// TODO : to be moved to basicoperations.cpp
+//Eigen::Vector3f get_vector3f_block(Eigen::Tensor<GLfloat, 3> & tensor, GLuint block_i, GLuint block_j)
+//{
+//	Eigen::Vector3f vec;
+//	for (size_t _i = 0; _i < 3; ++_i)
+//	{
+//		vec[_i] = tensor.coeff(index3u(block_i, block_j, _i));
+//	}
+//	return vec;
+//}
+#endif
+
 void BaraffRequire::getBendForce(PolyArrayMesh::FaceHandle fhandle0, PolyArrayMesh::FaceHandle fhandle1,
 	PolyArrayMesh::EdgeHandle ehandle, const OpenMesh::VPropHandleT<OpenMesh::Vec3f> & vprop_planarcoord,
 	GLfloat k_bend, GLfloat kd_bend)
 {
-	// TODO 
+	PolyArrayMesh* mesh = clothPiece->getMesh();
+
+	// vhandles of four vertices
+	/*
+	x0-----x1
+	|##A##/#|
+	|####/##|
+	|###e###|
+	|##/##B#|
+	x2------x3
+	*/
+	PolyArrayMesh::VertexHandle vhandles[4];
+
+	vhandles[1] = mesh->to_vertex_handle(mesh->halfedge_handle(ehandle, 0));
+	vhandles[2] = mesh->to_vertex_handle(mesh->halfedge_handle(ehandle, 1));
+
+	for (auto iter = mesh->cfv_begin(fhandle0); iter != mesh->cfv_end(fhandle0); ++iter)
+	{
+		auto vh = *iter;
+		if (vh == vhandles[1] || vh == vhandles[2]) continue;
+		vhandles[0] = vh;
+		break;
+	}
+
+	for (auto iter = mesh->cfv_begin(fhandle1); iter != mesh->cfv_end(fhandle1); ++iter)
+	{
+		auto vh = *iter;
+		if (vh == vhandles[1] || vh == vhandles[2]) continue;
+		vhandles[3] = vh;
+		break;
+	}
+
+	//PolyArrayMesh::EdgeHandle ehd;
+	//for (Mesh::FaceHalfedgeIter fhe_it(mesh_, fl); fhe_it; ++fhe_it) {
+	//	Mesh::HalfedgeHandle ohe = mesh_.opposite_halfedge_handle(fhe_it);
+	//	Mesh::FaceHandle f = mesh_.face_handle(ohe);
+	//	if (f == fr) {
+	//		eh_ = mesh_.edge_handle(ohe);
+	//	}
+	//}
+
+	// global indices of three vertices
+	GLuint global_indices[4];
+	global_indices[0] = vertices2indices[vhandles[0]];
+	global_indices[1] = vertices2indices[vhandles[1]];
+	global_indices[2] = vertices2indices[vhandles[2]];
+	global_indices[3] = vertices2indices[vhandles[3]];
+#ifdef DEBUG_FORCE
+	std::cout << "global indices ";
+	for (size_t _i = 0; _i < 4; ++_i)
+	{
+		std::cout << " " << global_indices[_i];
+	}
+	std::cout << std::endl;
+#endif
+
+	// vertices velocity
+	Eigen::Vector3f v[4];
+	for (size_t _i = 0; _i < 4; ++_i)
+	{
+		v[_i] = v_total.block<3, 1>(global_indices[_i] * 3, 0);
+#ifdef DEBUG_FORCE
+		std::cout << "v[" << global_indices[_i] << "] " << std::endl << v[_i] << std::endl;
+#endif
+	}
+	
+	// world coordinate
+	Eigen::Vector3f x0, x1, x2, x3;
+	x0 = positions.block<3, 1>(vertices2indices[vhandles[0]] * 3, 0);
+	x1 = positions.block<3, 1>(vertices2indices[vhandles[1]] * 3, 0);
+	x2 = positions.block<3, 1>(vertices2indices[vhandles[2]] * 3, 0);
+	x3 = positions.block<3, 1>(vertices2indices[vhandles[3]] * 3, 0);
+#ifdef DEBUG_FORCE
+	std::cout << "x[" << global_indices[0] << "]" << std::endl << x0 << std::endl;
+	std::cout << "x[" << global_indices[1] << "]" << std::endl << x1 << std::endl;
+	std::cout << "x[" << global_indices[2] << "]" << std::endl << x2 << std::endl;
+	std::cout << "x[" << global_indices[3] << "]" << std::endl << x3 << std::endl;
+#endif
+
+	GLuint faceA_index = faces2indices[fhandle0];
+	GLuint faceB_index = faces2indices[fhandle1];
+	
+	PolyArrayMesh::ConstFaceVertexIter cfviterA = mesh->cfv_iter(fhandle0);
+	PolyArrayMesh::ConstFaceVertexIter cfviterB = mesh->cfv_iter(fhandle0);
+	
+	// normal of two faces
+	Eigen::Vector3f normal_A, normal_B, edge;
+	OpenMesh::FPropHandleT<OpenMesh::Vec3f> fprop_normal = mesh->face_normals_pph();
+	copy_v3f(normal_A, mesh->property(fprop_normal, fhandle0));
+	copy_v3f(normal_B, mesh->property(fprop_normal, fhandle1));
+	// TODO initial edge
+
+	GLfloat normal_A_len, normal_B_len, edge_len;
+	normal_A_len = max(normal_A.norm(), 1e-15f);
+	normal_B_len = max(normal_B.norm(), 1e-15f);
+	edge_len = max(edge.norm(), 1e-15f);
+
+	Eigen::Vector3f normal_A_unit, normal_B_unit, edge_unit;
+	normal_A_unit = normal_A / normal_A_len;
+	normal_B_unit = normal_B / normal_B_len;
+	edge_unit = edge / edge_len;
+
+	GLfloat cos_theta = normal_A_unit.transpose() * normal_B_unit;
+	GLfloat sin_theta = normal_A_unit.cross(normal_B_unit).transpose() * edge_unit;
+
+	Eigen::Vector3f qA[4], qB[4], qE[4];
+	qA[0] = x2 - x1;
+	qA[1] = x0 - x2;
+	qA[2] = x1 - x0;
+	qA[3] = Eigen::Vector3f::Zero();
+
+	qB[0] = Eigen::Vector3f::Zero(); 
+	qB[1] = x2 - x3;
+	qB[2] = x3 - x1;
+	qB[3] = x1 - x2;
+
+	qE[0] = Eigen::Vector3f::Zero();
+	qE[1] = Eigen::Vector3f::Ones();
+	qE[2] = -Eigen::Vector3f::Ones();
+	qE[3] = Eigen::Vector3f::Zero();
+
+	static const GLfloat coeff_qA_xi[4][4] = {
+		{ 0, -1, 1, 0 },
+		{ 1, 0, -1, 0 },
+		{ -1, 1, 0, 0 },
+		{ 0, 0, 0, 0 }
+	};
+	static const GLfloat coeff_qB_xi[4][4] = {
+		{ 0, 0, 0, 0 },
+		{ 0, 0, 1, -1 },
+		{ 0, -1, 0, 1 },
+		{ 0, 1, -1, 0 }
+	};
+
+	Eigen::Matrix3f dqAi_dxj[4][4], dqBi_dxj[4][4], dqEi_dxj[4][4];
+	for (size_t _i = 0; _i < 4; ++_i) for (size_t _j = 0; _j < 4; ++_j)
+	{
+		dqAi_dxj[_i][_j] = coeff_qA_xi[_i][_j] / normal_A_len * Eigen::Matrix3f::Identity();
+		dqAi_dxj[_i][_j] = coeff_qB_xi[_i][_j] / normal_B_len * Eigen::Matrix3f::Identity();
+	}
+
+	// ----------------- compute bend force and its damping force -------------------
+#ifdef BEND_FORCE
+	{
+		// bend condition
+		GLfloat C = atan(sin_theta / cos_theta);
+
+		Eigen::Matrix3f dnormalA_dxi[4], dnormalB_dxi[4], de_dxi[4];
+		for (size_t _i = 0; _i < 4; ++_i)
+		{
+			dnormalA_dxi[_i] = get_S_m3f(qA[_i]) / normal_A_len;
+			dnormalB_dxi[_i] = get_S_m3f(qB[_i]) / normal_B_len;
+			de_dxi[_i] = get_S_m3f(qE[_i]);
+		}
+
+		//typedef Eigen::Matrix3f tensor333f[3];
+		Eigen::Tensor<GLfloat, 3> d2normalA_dxidxj[4][4], d2normalB_dxidxj[4][4], d2e_dxidxj[4][4];
+		for (size_t _i = 0; _i < 4; ++_i) for (size_t _j = 0; _j < 4; ++_j)
+		{
+			d2e_dxidxj[_i][_j] = Eigen::Tensor<GLfloat, 3>(3, 3, 3);
+			d2e_dxidxj[_i][_j].setZero();
+
+			d2normalA_dxidxj[_i][_j] = Eigen::Tensor<GLfloat, 3>(3, 3, 3);
+			d2normalB_dxidxj[_i][_j] = Eigen::Tensor<GLfloat, 3>(3, 3, 3);
+			for (size_t _s = 0; _s < 3; ++_s) for (size_t _t = 0; _t < 3; ++_t)
+			{
+				Eigen::Vector3f temp1 = 
+					get_S_m3f(Eigen::Vector3f(dqAi_dxj[_i][_j].block<1, 3>(_t, 0))).col(_s).transpose() / normal_A_len;
+				for (size_t _k = 0; _k < 3; ++_k)
+				{
+					d2normalA_dxidxj[_i][_j].coeffRef(index3u(_s, _t, _k)) = temp1[_k];
+				}
+				Eigen::Vector3f temp2 = (Eigen::Vector3f(dqBi_dxj[_i][_j].block<1, 3>(_t, 0))).col(_s).transpose() / normal_B_len;
+				for (size_t _k = 0; _k < 3; ++_k)
+				{
+					d2normalB_dxidxj[_i][_j].coeffRef(index3u(_s, _t, _k)) = temp2[_k];
+				}
+			}
+		}
+
+		Eigen::Vector3f dcos_dxi[4];
+		for (size_t _i = 0; _i < 4; ++_i)
+		{
+			dcos_dxi[_i] = dnormalA_dxi[_i] * normal_B_unit + dnormalB_dxi[_i] * normal_A_unit;
+		}
+
+		Eigen::Vector3f dsin_dxi[4];
+		for (size_t _i = 0; _i < 4; ++_i)
+		{
+			for (size_t _s = 0; _s < 3; ++_s)
+			{
+				GLfloat temp1 = (dnormalA_dxi[_i].row(_s).cross(normal_B_unit) + dnormalB_dxi[_i].row(_s).cross(normal_A_unit)) * edge_unit;
+				GLfloat temp2 = (normal_A_unit.cross(normal_B_unit)).transpose() * de_dxi[_i].row(_s).transpose();
+				dsin_dxi[_i].coeffRef(0, _s) = temp1 + temp2;
+			}
+		}
+
+		Eigen::Matrix3f d2cos_dxidxj[4][4];
+		for (size_t _i = 0; _i < 4; ++_i) for (size_t _j = 0; _j < 4; ++_j)
+		{
+			for (size_t _s = 0; _s < 3; ++_s) for (size_t _t = 0; _t < 3; ++_t)
+			{
+				GLfloat temp1 = get_vector3f_block(d2normalA_dxidxj[_i][_j], _s, _t).transpose() * normal_B_unit;
+				GLfloat temp2 = normal_A_unit.transpose() * get_vector3f_block(d2normalB_dxidxj[_i][_j], _s, _t);
+				GLfloat temp3 = dnormalB_dxi[_j].row(_t) * dnormalA_dxi[_i].row(_s).transpose();
+				GLfloat temp4 = dnormalA_dxi[_j].row(_t) * dnormalB_dxi[_i].row(_s).transpose();
+				d2cos_dxidxj[_i][_j].coeffRef(_s, _t) = temp1 + temp2 + temp3 + temp4;
+			}
+		}
+
+		Eigen::Matrix3f d2sin_dxidxj[4][4];
+		for (size_t _i = 0; _i < 4; ++_i) for (size_t _j = 0; _j < 4; ++_j)
+		{
+			for (size_t _s = 0; _s < 3; ++_s) for (size_t _t = 0; _t < 3; ++_t)
+			{
+				GLfloat temp1 = 
+					(get_vector3f_block(d2normalA_dxidxj[_i][_j], _s, _t).transpose().cross(normal_B_unit)
+						+ dnormalA_dxi[_i].row(_s).cross(dnormalB_dxi[_j].row(_t))
+						+ dnormalA_dxi[_j].row(_t).cross(dnormalB_dxi[_i].row(_s))
+						+ get_vector3f_block(d2normalB_dxidxj[_i][_j], _s, _t).transpose().cross(normal_B_unit)) * edge_unit;
+				GLfloat temp2 =
+					(dnormalA_dxi[_i].row(_s).cross(normal_B_unit)
+						+ dnormalB_dxi[_i].row(_s).cross(normal_A_unit)) * de_dxi[_j].row(_t).transpose();
+				GLfloat temp3 =
+					(dnormalA_dxi[_j].row(_t).cross(normal_B_unit)
+						+ dnormalB_dxi[_j].row(_t).cross(normal_A_unit)) * de_dxi[_i].row(_s).transpose();
+				GLfloat temp4 =
+					(normal_A_unit.cross(normal_B_unit)).transpose() * get_vector3f_block(d2e_dxidxj[_i][_j], _s, _t);
+				d2sin_dxidxj[_i][_j].coeffRef(_s, _t) = temp1 + temp2 + temp3 + temp4;
+			}
+		}
+
+		Eigen::Vector3f dC_dxi[4];
+		for (size_t _i = 0; _i < 4; ++_i)
+		{
+			dC_dxi[_i] = cos_theta * dsin_dxi[_i] - sin_theta * dcos_dxi[_i];
+		}
+
+		Eigen::Matrix3f d2C_dxidxj[4][4];
+		for (size_t _i = 0; _i < 4; ++_i) for (size_t _j = 0; _j < 4; ++_j)
+		{
+			for (size_t _s = 0; _s < 3; ++_s) for (size_t _t = 0; _t < 3; ++_t)
+			{
+				GLfloat temp1 = cos_theta * d2sin_dxidxj[_i][_j].coeff(_s, _t)
+					- sin_theta * d2cos_dxidxj[_i][_j].coeff(_s, _t);
+				GLfloat temp2 = (sin_theta * sin_theta - cos_theta * cos_theta) *
+					(dsin_dxi[_i][_s] * dcos_dxi[_j][_t] + dcos_dxi[_i][_s] * dsin_dxi[_j][_t]);
+				GLfloat temp3 = 2 * sin_theta * cos_theta *
+					(dcos_dxi[_i][_s] * dcos_dxi[_j][_t] - dsin_dxi[_i][_s] * dsin_dxi[_j][_t]);
+			}
+		}
+
+		// C_dot is dC_dt 
+		GLfloat C_dot = 0.0f;
+		for (size_t _i = 0; _i < 3; ++_i)
+		{
+			C_dot += dC_dxi[_i].transpose() * v[_i];
+		}
+		#ifdef DEBUG_FORCE
+		std::cout << "bend C_dot " << C_dot << std::endl;
+		#endif
+
+		// compute and update first order derivatives df_dx, df_dv
+		Eigen::Matrix3f dfi_dxj[3][3], dfi_dxj_damp[3][3], dfi_dvj[3][3];
+		for (size_t _i = 0; _i < 3; ++_i) for (size_t _j = 0; _j < 3; ++_j)
+		{
+			dfi_dxj[_i][_j] = -k_bend * (dC_dxi[_i] * dC_dxi[_j].transpose() + d2C_dxidxj[_i][_j] * C);
+			dfi_dxj_damp[_i][_j] = -k_bend * kd_bend * d2C_dxidxj[_i][_j] * C_dot;
+			dfi_dvj[_i][_j] = -k_bend * kd_bend * (dC_dxi[_i] * dC_dxi[_j].transpose());
+
+			//if ((_i == 0 && _j == 1) || (_i == 1 && _j == 0))
+			//{
+			//	std::cout << "dC_dx " << std::endl << dC_dxi[_i] << std::endl;
+			//	std::cout << "dfi_dxj " << std::endl << dfi_dvj[_i][_j] << std::endl;
+			//}
+
+			// update total data
+			addBlock33(df_dx_total, global_indices[_j], global_indices[_i], dfi_dxj[_i][_j]);
+		#ifdef USE_DAMP
+			addBlock33(df_dx_total, global_indices[_j], global_indices[_i], dfi_dxj_damp[_i][_j]);
+		#endif
+			addBlock33(df_dv_total, global_indices[_j], global_indices[_i], dfi_dvj[_i][_j]);
+
+		}
+		//std::cout << "bend df_dv_total " << (checkSymmetrical(df_dv_total) ? true : false) << std::endl;
+
+		#ifdef DEBUG_FORCE
+		for (size_t _i = 0; _i < 3; ++_i) for (size_t _j = 0; _j < 3; ++_j)
+		{
+			std::cout << "bend dfi_dxj[" << global_indices[_i] << "][" << global_indices[_j] << "] "
+				<< std::endl << dfi_dxj[_i][_j] << std::endl;
+		}
+		for (size_t _i = 0; _i < 3; ++_i) for (size_t _j = 0; _j < 3; ++_j)
+		{
+			std::cout << "bend dfi_dvj[" << global_indices[_i] << "][" << global_indices[_j] << "] "
+				<< std::endl << dfi_dvj[_i][_j] << std::endl;
+		}
+		//std::cout << "bend df_dx_total " << (checkSymmetrical(df_dx_total) ? true : false) << std::endl;
+		#endif
+		//for (size_t _i = 0; _i < 3; ++_i) for (size_t _j = 0; _j < 3; ++_j)
+		//{
+		//	std::cout << "bend (dC_dxi * dC_dxi^T)[" << global_indices[_i] << "][" << global_indices[_j] << "] "
+		//		<< (checkIdentical(dC_dxi[_i] * dC_dxi[_j].transpose(), (dC_dxi[_j] * dC_dxi[_i].transpose()).transpose()) ? true : false) << std::endl;
+		//}
+		//for (size_t _i = 0; _i < 3; ++_i) for (size_t _j = 0; _j < 3; ++_j)
+		//{
+		//	std::cout << "bend dfi_dvj[" << global_indices[_i] << "][" << global_indices[_j] << "] "
+		//		<< (checkIdentical(dfi_dvj[_i][_j], dfi_dvj[_j][_i].transpose()) ? true : false) << std::endl;
+		//}
+
+		//std::cout << "bend df_dx_total " << (checkSymmetrical(df_dx_total) ? true : false) << std::endl;
+		//std::cout << "bend df_dv_total " << (checkSymmetrical(df_dv_total) ? true : false) << std::endl;
+
+		// compute and update total f
+		Eigen::Vector3f f[3], f_damp[3];
+		for (size_t _i = 0; _i < 3; ++_i)
+		{
+			f[_i] = -k_bend * dC_dxi[_i] * C;
+			f_damp[_i] = -k_bend * kd_bend * dC_dxi[_i] * C_dot;
+
+		#ifdef DEBUG_FORCE
+			std::cout << "f[" << global_indices[_i] << "] " << std::endl << f[_i] << std::endl;
+			std::cout << "f_damp[" << global_indices[_i] << "] " << std::endl << f_damp[_i] << std::endl;
+		#endif
+
+			f_total.block<3, 1>(global_indices[_i] * 3, 0) += f[_i];
+		#ifdef USE_DAMP
+			f_total.block<3, 1>(global_indices[_i] * 3, 0) += f_damp[_i];
+		#endif
+			//std::cout << "f_total[" << global_indices[_i] << "] " << std::endl << f_total.block<3, 1>(global_indices[_i] * 3, 0) << std::endl;
+		}
+	}
+#endif
 }
 
 void BaraffRequire::update(const Eigen::VectorXf & v_delta)
