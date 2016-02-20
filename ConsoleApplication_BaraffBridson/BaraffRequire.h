@@ -7,6 +7,7 @@
 #include <Eigen\Dense>
 #include <Eigen\Sparse>
 
+
 class BaraffRequire
 {
 public:
@@ -16,22 +17,22 @@ public:
 		initial();
 	}
 
-	Eigen::SparseMatrix<GLfloat> exportA();
-	Eigen::SparseMatrix<GLfloat> exportS();
+	Eigen::SparseMatrix<float> exportA();
+	Eigen::SparseMatrix<float> exportS();
 	Eigen::VectorXf exportb();
 
-	void compute(GLfloat time_step);
+	void compute(float time_step);
 	void update(const Eigen::VectorXf & v_delta);
 	void writeMesh();
 
-	void exportConditionData(GLfloat* & dataBuffer, GLuint & dataSize);
+	void exportConditionData(float* & dataBuffer, GLuint & dataSize);
 
 private:
 	ClothPiece* clothPiece;
 
-	typedef Eigen::Triplet<GLfloat> Tri_GLfloat;
+	typedef Eigen::Triplet<float> Tri_float;
 
-	std::vector<Tri_GLfloat> coeff_list; // used for filling sparse matrix 
+	std::vector<Tri_float> coeff_list; // used for filling sparse matrix 
 										 // according to Filling a sparse matrix section of Eigen
 
 	// --------------- variables of model ------------------
@@ -39,19 +40,19 @@ private:
 	std::map<PolyArrayMesh::VertexHandle, GLuint> vertices2indices;
 	std::map<PolyArrayMesh::FaceHandle, GLuint> faces2indices;
 	GLuint VERTEX_SIZE, FACE_SIZE;
-	std::vector<GLfloat> mass;
+	std::vector<float> mass;
 	Eigen::VectorXf positions;
 
 	// ----------------- variables needed by Baraff ---------------- 
 	// parameters for integration
-	GLfloat time_step;
+	float time_step;
 	// parameters for stretch forces
-	GLfloat k_stretch = 5e3f, kd_stretch = 0.2f;
-	GLfloat bu = 1.0f, bv = 1.0f;
+	float k_stretch = 5e3f, kd_stretch = 0.2f;
+	float bu = 1.0f, bv = 1.0f;
 	// parameters for shear forces
-	GLfloat k_shear = 5e2f, kd_shear = 0.2f;
+	float k_shear = 5e2f, kd_shear = 0.2f;
 	// parameters for bend forces
-	// ...
+	float k_bend = 1e1f, kd_bend = 0.2f;
 
 	// vectors
 	Eigen::VectorXf f_total; 
@@ -59,13 +60,13 @@ private:
 	Eigen::VectorXf C_shear; // condition per face
 
 	// matrices
-	Eigen::SparseMatrix<GLfloat> df_dx_total; // symmetric 
-	Eigen::SparseMatrix<GLfloat> df_dv_total; // symmetric 
-	Eigen::SparseMatrix<GLfloat> constraints;
-	Eigen::SparseMatrix<GLfloat> mass_constrainted;
+	Eigen::SparseMatrix<float> df_dx_total; // symmetric 
+	Eigen::SparseMatrix<float> df_dv_total; // symmetric 
+	Eigen::SparseMatrix<float> constraints;
+	Eigen::SparseMatrix<float> mass_constrainted;
 	// will not change once initialed
-	Eigen::SparseMatrix<GLfloat> mass_inverse;
-	Eigen::SparseMatrix<GLfloat> identity;
+	Eigen::SparseMatrix<float> mass_inverse;
+	Eigen::SparseMatrix<float> identity;
 	//Eigen::DiagonalMatrix<int, Eigen::Dynamic> diagonal_matrix;
 
 
@@ -85,11 +86,10 @@ private:
 
 	void getStretchAndShearForce(PolyArrayMesh::FaceHandle fhandle,
 		const OpenMesh::VPropHandleT<OpenMesh::Vec3f> & vprop_planarcoord,
-		GLfloat k_stretch, GLfloat kd_stretch, GLfloat k_shear, GLfloat kd_shear, GLfloat bu, GLfloat bv);
+		float k_stretch, float kd_stretch, float k_shear, float kd_shear, float bu, float bv);
 
 	void getBendForce(PolyArrayMesh::FaceHandle fhandle0, PolyArrayMesh::FaceHandle fhandle1,
-		PolyArrayMesh::EdgeHandle ehandle, const OpenMesh::VPropHandleT<OpenMesh::Vec3f> & vprop_planarcoord,
-		GLfloat k_bend, GLfloat kd_bend);
+		PolyArrayMesh::EdgeHandle ehandle, float k_bend, float kd_bend);
 
 
 };

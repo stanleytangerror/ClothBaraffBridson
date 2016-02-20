@@ -2,49 +2,56 @@
 
 #include <iostream>
 
-void convert_diag2sparse_mnf(Eigen::SparseMatrix<GLfloat> & dest, const Eigen::Diagonal<const Eigen::SparseMatrix<GLfloat>> const & src)
+void convert_diag2sparse_mnf(Eigen::SparseMatrix<float> & dest, const Eigen::Diagonal<const Eigen::SparseMatrix<float>> const & src)
 {
-	typedef Eigen::Triplet<GLfloat> Tri_GLfloat;
+	typedef Eigen::Triplet<float> Tri_float;
 	static size_t size = src.size();
-	dest = Eigen::SparseMatrix<GLfloat>(size, size);
-	std::vector<Tri_GLfloat> triples;
+	dest = Eigen::SparseMatrix<float>(size, size);
+	std::vector<Tri_float> triples;
 	triples.reserve(size);
 	for (size_t _i = 0; _i < size; ++_i)
 	{
-		triples.push_back(Tri_GLfloat(_i, _i, src.coeff(_i)));
+		triples.push_back(Tri_float(_i, _i, src.coeff(_i)));
 	}
 	dest.setFromTriplets(triples.begin(), triples.end());
 }
 
-void get_diag_mnf(Eigen::SparseMatrix<GLfloat> & dest, size_t size)
+void get_diag_mnf(Eigen::SparseMatrix<float> & dest, size_t size)
 {
-	typedef Eigen::Triplet<GLfloat> Tri_GLfloat;
-	std::vector<Tri_GLfloat> triples;
+	typedef Eigen::Triplet<float> Tri_float;
+	std::vector<Tri_float> triples;
 	triples.reserve(size);
 	for (size_t _i = 0; _i < size; ++_i)
 	{
-		triples.push_back(Tri_GLfloat(_i, _i, 1.0f));
+		triples.push_back(Tri_float(_i, _i, 1.0f));
 	}
-	dest = Eigen::SparseMatrix<GLfloat>(size, size);
+	dest = Eigen::SparseMatrix<float>(size, size);
 	dest.setFromTriplets(triples.begin(), triples.end());
 }
 
-void addBlock33(Eigen::SparseMatrix<GLfloat> & augend, GLuint block_i, GLuint block_j, const Eigen::Matrix3f & addend)
+//#define DEBUG_OPERATIONS
+void addBlock33(Eigen::SparseMatrix<float> & augend, GLuint block_i, GLuint block_j, const Eigen::Matrix3f & addend)
 {
+#ifdef DEBUG_OPERATIONS
+	std::cout << "augend size " << augend.size() << std::endl;
+	std::cout << "block " << block_i << ", " << block_j << std::endl;
+	std::cout << "addend " << std::endl << addend << std::endl;
+#endif
+
 	for (size_t _i = 0; _i < 3; ++_i) for (size_t _j = 0; _j < 3; ++_j)
 	{
 		augend.coeffRef(block_i * 3 + _i, block_j * 3 + _j) += addend.coeff(_i, _j);
 	}
 }
 
-//Eigen::Vector3f get_vector(Eigen::Tensor<GLfloat, 3>& tensor, GLuint block_i, GLuint block_j)
+//Eigen::Vector3f get_vector(Eigen::Tensor<float, 3>& tensor, GLuint block_i, GLuint block_j)
 //{
 //
 //	return Eigen::Vector3f();
 //}
 
 
-GLboolean checkIdentical(const Eigen::Matrix3f mat1, const Eigen::Matrix3f mat2, GLfloat tolerance)
+GLboolean checkIdentical(const Eigen::Matrix3f mat1, const Eigen::Matrix3f mat2, float tolerance)
 {
 	int outer_size = mat1.outerSize();
 	int inner_size = mat2.innerSize();
@@ -60,7 +67,7 @@ GLboolean checkIdentical(const Eigen::Matrix3f mat1, const Eigen::Matrix3f mat2,
 	return result;
 }
 
-GLboolean checkSymmetrical(const Eigen::Matrix3f mat, GLfloat tolerance)
+GLboolean checkSymmetrical(const Eigen::Matrix3f mat, float tolerance)
 {
 	int outer_size = mat.outerSize();
 	int inner_size = mat.innerSize();
@@ -76,7 +83,7 @@ GLboolean checkSymmetrical(const Eigen::Matrix3f mat, GLfloat tolerance)
 	return result;
 }
 
-GLboolean checkSymmetrical(const Eigen::SparseMatrix<GLfloat> mat, GLfloat tolerance)
+GLboolean checkSymmetrical(const Eigen::SparseMatrix<float> mat, float tolerance)
 {
 	int outer_size = mat.outerSize();
 	int inner_size = mat.innerSize();
@@ -95,9 +102,9 @@ GLboolean checkSymmetrical(const Eigen::SparseMatrix<GLfloat> mat, GLfloat toler
 Eigen::Matrix3f get_S_m3f(Eigen::Vector3f & v)
 {
 	Eigen::Matrix3f S;
-	S << 0, -v[2], v[1],
-		v[2], 0, -v[0],
-		-v[1], v[0], 0;
+	S << 0.0f, -v[2], v[1],
+		v[2], 0.0f, -v[0],
+		-v[1], v[0], 0.0f;
 	return S;
 }
 

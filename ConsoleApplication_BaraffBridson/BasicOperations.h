@@ -26,29 +26,29 @@ inline void copy_v3f(OpenMesh::Vec3f & dest, const Eigen::Vector3f & src)
 	dest[2] = src(2);
 }
 
-void convert_diag2sparse_mnf(Eigen::SparseMatrix<GLfloat> & dest, const Eigen::Diagonal<const Eigen::SparseMatrix<GLfloat>> const & src);
+void convert_diag2sparse_mnf(Eigen::SparseMatrix<float> & dest, const Eigen::Diagonal<const Eigen::SparseMatrix<float>> const & src);
 
-void addBlock33(Eigen::SparseMatrix<GLfloat> & augend, GLuint block_i, GLuint block_j, const Eigen::Matrix3f & addend);
+void addBlock33(Eigen::SparseMatrix<float> & augend, GLuint block_i, GLuint block_j, const Eigen::Matrix3f & addend);
 
-//Eigen::Vector3f get_vector(Eigen::Tensor<GLfloat, 3> & tensor, GLuint block_i, GLuint block_j);
+//Eigen::Vector3f get_vector(Eigen::Tensor<float, 3> & tensor, GLuint block_i, GLuint block_j);
 
-void get_diag_mnf(Eigen::SparseMatrix<GLfloat> & dest, size_t size);
+void get_diag_mnf(Eigen::SparseMatrix<float> & dest, size_t size);
 
-inline GLfloat max(GLfloat a, GLfloat b)
+inline float max(float a, float b)
 {
 	return (a > b) ? a : b;
 }
 
-inline GLfloat min(GLfloat a, GLfloat b)
+inline float min(float a, float b)
 {
 	return (a < b) ? a : b;
 }
 
-GLboolean checkIdentical(const Eigen::Matrix3f mat1, const Eigen::Matrix3f mat2, GLfloat tolerance = 1e-20f);
+GLboolean checkIdentical(const Eigen::Matrix3f mat1, const Eigen::Matrix3f mat2, float tolerance = 1e-20f);
 
-GLboolean checkSymmetrical(const Eigen::Matrix3f mat, const GLfloat tolerance = 1e-20f);
+GLboolean checkSymmetrical(const Eigen::Matrix3f mat, const float tolerance = 1e-20f);
 
-GLboolean checkSymmetrical(const Eigen::SparseMatrix<GLfloat> mat, GLfloat tolerance = 1e-20f);
+GLboolean checkSymmetrical(const Eigen::SparseMatrix<float> mat, float tolerance = 1e-20f);
 
 /* S(v) = [ 0  -vx  vy
 			vz  0  -vx
