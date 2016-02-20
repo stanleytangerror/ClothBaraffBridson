@@ -48,11 +48,11 @@ private:
 	float time_step;
 	// parameters for stretch forces
 	float k_stretch = 5e3f, kd_stretch = 0.2f;
-	float bu = 1.0f, bv = 1.0f;
+	float bu = 20.0f, bv = 20.0f;
 	// parameters for shear forces
 	float k_shear = 5e2f, kd_shear = 0.2f;
 	// parameters for bend forces
-	float k_bend = 1e1f, kd_bend = 0.2f;
+	float k_bend = 1e-2f, kd_bend = 0.2f;
 
 	// vectors
 	Eigen::VectorXf f_total; 
