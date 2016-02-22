@@ -136,9 +136,12 @@ int main()
 	glEnable(GL_DEPTH_TEST);
 
 	// Setup and compile our shaders
-	ResourceManager::LoadShader("model_loading", "model_loading.vs", "model_loading.frag");
-	ResourceManager::LoadShader("background_cube", "background_cube.vs", "background_cube.frag");
-	ResourceManager::LoadShader("cloth_piece", "cloth_piece.vs", "cloth_piece.frag");
+	ResourceManager::LoadShader("model_loading", "E:\\Microsoft Visual Studio 2015\\Workspace\\ConsoleApplication_BaraffBridson\\ConsoleApplication_BaraffBridson\\model_loading.vs", "E:\\Microsoft Visual Studio 2015\\Workspace\\ConsoleApplication_BaraffBridson\\ConsoleApplication_BaraffBridson\\model_loading.frag");
+	ResourceManager::LoadShader("background_cube", "E:\\Microsoft Visual Studio 2015\\Workspace\\ConsoleApplication_BaraffBridson\\ConsoleApplication_BaraffBridson\\background_cube.vs", "E:\\Microsoft Visual Studio 2015\\Workspace\\ConsoleApplication_BaraffBridson\\ConsoleApplication_BaraffBridson\\background_cube.frag");
+	ResourceManager::LoadShader("cloth_piece", "E:\\Microsoft Visual Studio 2015\\Workspace\\ConsoleApplication_BaraffBridson\\ConsoleApplication_BaraffBridson\\cloth_piece.vs", "E:\\Microsoft Visual Studio 2015\\Workspace\\ConsoleApplication_BaraffBridson\\ConsoleApplication_BaraffBridson\\cloth_piece.frag");
+	//ResourceManager::LoadShader("model_loading", ".\\model_loading.vs", ".\\model_loading.frag");
+	//ResourceManager::LoadShader("background_cube", ".\\background_cube.vs", ".\\background_cube.frag");
+	//ResourceManager::LoadShader("cloth_piece", ".\\cloth_piece.vs", ".\\cloth_piece.frag");
 
 	std::vector<const GLchar*> faces;
 	faces.push_back("E:\\Computer Graphics\\Materials\\CubeMaps\\background01\\side.jpg");
@@ -276,7 +279,11 @@ int main()
 			simulate->simulate();
 			simulate->writeBack();
 			clothPiece->exportPos3fNorm3fBuffer(meshVB, meshVNormalB, meshVBcnt, meshEB, meshEBcnt);
-			simulate->exportConditionData(conditionBuffer, conditionCnt);
+			simulate->exportShearConditionData(conditionBuffer, conditionCnt);
+
+			GLfloat * tempptr;
+			GLuint tempuint;
+			simulate->exportBendConditionData(tempptr, tempuint);
 
 			glBindVertexArray(meshVAO);
 			{
@@ -320,6 +327,7 @@ int main()
 
 void basic_info()
 {
+	std::cout << "INFO::ENV: OpenGL version " << glGetString(GL_VERSION) << std::endl;
 	std::cout << "INFO::ENV: sizeof GLfloat " << sizeof GLfloat << std::endl;
 	std::cout << "INFO::ENV: sizeof GLuint " << sizeof GLuint << std::endl;
 	GLuint indices[] = {  // Note that we start from 0!

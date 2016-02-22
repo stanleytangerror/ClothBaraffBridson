@@ -25,7 +25,8 @@ public:
 	void update(const Eigen::VectorXf & v_delta);
 	void writeMesh();
 
-	void exportConditionData(float* & dataBuffer, GLuint & dataSize);
+	void exportShearConditionData(float* & dataBuffer, GLuint & dataSize);
+	void exportBendConditionData(float* & dataBuffer, GLuint & dataSize);
 
 private:
 	ClothPiece* clothPiece;
@@ -39,7 +40,8 @@ private:
 	OpenMesh::VPropHandleT<OpenMesh::Vec3f> vph_planarcoord;
 	std::map<PolyArrayMesh::VertexHandle, GLuint> vertices2indices;
 	std::map<PolyArrayMesh::FaceHandle, GLuint> faces2indices;
-	GLuint VERTEX_SIZE, FACE_SIZE;
+	std::map<PolyArrayMesh::EdgeHandle, GLuint> edges2indices;
+	GLuint VERTEX_SIZE, FACE_SIZE, EDGE_SIZE;
 	std::vector<float> mass;
 	Eigen::VectorXf positions;
 
@@ -52,12 +54,13 @@ private:
 	// parameters for shear forces
 	float k_shear = 5e2f, kd_shear = 0.2f;
 	// parameters for bend forces
-	float k_bend = 1e-2f, kd_bend = 0.2f;
+	float k_bend = 1e2f, kd_bend = 0.2f;
 
 	// vectors
 	Eigen::VectorXf f_total; 
 	Eigen::VectorXf v_total; 
 	Eigen::VectorXf C_shear; // condition per face
+	Eigen::VectorXf C_bend; // condition per inner edge
 
 	// matrices
 	Eigen::SparseMatrix<float> df_dx_total; // symmetric 

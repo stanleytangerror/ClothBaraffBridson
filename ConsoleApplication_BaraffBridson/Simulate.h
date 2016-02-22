@@ -29,7 +29,8 @@ public:
 		return model;
 	}
 
-	void exportConditionData(GLfloat* & dataBuffer, GLuint & dataSize);
+	void exportShearConditionData(GLfloat* & dataBuffer, GLuint & dataSize);
+	void exportBendConditionData(GLfloat* & dataBuffer, GLuint & dataSize);
 };
 
 #endif

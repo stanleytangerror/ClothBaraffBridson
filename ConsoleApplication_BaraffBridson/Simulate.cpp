@@ -62,8 +62,14 @@ void Simulate::writeBack()
 	variables->writeMesh();
 }
 
-void Simulate::exportConditionData(GLfloat *& dataBuffer, GLuint & dataSize)
+void Simulate::exportShearConditionData(GLfloat *& dataBuffer, GLuint & dataSize)
 {
-	variables->exportConditionData(dataBuffer, dataSize);
+	variables->exportShearConditionData(dataBuffer, dataSize);
+}
+
+void Simulate::exportBendConditionData(GLfloat *& dataBuffer, GLuint & dataSize)
+{
+	// TODO
+	variables->exportBendConditionData(dataBuffer, dataSize);
 }
 

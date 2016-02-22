@@ -64,6 +64,8 @@ void ResourceManager::Clear()
 		glDeleteTextures(1, &iter.second.ID);
 }
 
+//#define DEBUG_SHADER
+
 Shader ResourceManager::loadShaderFromFile(const GLchar *vShaderFile, const GLchar *fShaderFile, const GLchar *gShaderFile)
 {
 	// 1. Retrieve the vertex/fragment source code from filePath
@@ -99,6 +101,11 @@ Shader ResourceManager::loadShaderFromFile(const GLchar *vShaderFile, const GLch
 	{
 		std::cout << "ERROR::SHADER: Failed to read shader files" << std::endl;
 	}
+#ifdef DEBUG_SHADER
+	std::cout << "Vertex src " << std::endl << vertexCode << std::endl;
+	std::cout << "Fragment src " << std::endl << fragmentCode << std::endl;
+	if (gShaderFile != nullptr) std::cout << "Geometry src " << std::endl << geometryCode << std::endl;
+#endif
 	const GLchar *vShaderCode = vertexCode.c_str();
 	const GLchar *fShaderCode = fragmentCode.c_str();
 	const GLchar *gShaderCode = geometryCode.c_str();

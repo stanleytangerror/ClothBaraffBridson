@@ -1,0 +1,144 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{81DDAA5D-E92A-4C9C-9F7D-7EF0CEB59CC9}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v140</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+    <IncludePath>C:\Libraries\C++\Simple OpenGL Image Library\src;C:\Libraries\C++\OpenMesh 4.1\include;C:\Libraries\C++\glm-0.9.7.1\glm;C:\Libraries\C++\glfw-3.1.2.bin.WIN32\include;C:\Libraries\C++\glew-1.13.0-win32\glew-1.13.0\include;C:\Libraries\C++\eigen-3.3-beta;C:\Libraries\C++\assimp-3.1.1\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Libraries\C++\Simple OpenGL Image Library\lib;C:\Libraries\C++\OpenMesh 4.1\lib;C:\Libraries\C++\glfw-3.1.2.bin.WIN32\lib-vc2015;C:\Libraries\C++\glew-1.13.0-win32\glew-1.13.0\lib\Release\Win32;C:\Libraries\C++\assimp-3.1.1\Release;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <Optimization>Disabled</Optimization>
+    </ClCompile>
+    <Link>
+      <TargetMachine>MachineX86</TargetMachine>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Console</SubSystem>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;_USE_MATH_DEFINES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+    </ClCompile>
+    <Link>
+      <TargetMachine>MachineX86</TargetMachine>
+      <GenerateDebugInformation>Debug</GenerateDebugInformation>
+      <SubSystem>Console</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalDependencies>glew32s.lib;glfw3.lib;opengl32.lib;SOIL.lib;assimp.lib;OpenMeshCore.lib;OpenMeshTools.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="consoleapplication_baraffbridson\BaraffRequire.cpp" />
+    <ClCompile Include="consoleapplication_baraffbridson\BasicOperations.cpp" />
+    <ClCompile Include="consoleapplication_baraffbridson\ClothPiece.cpp" />
+    <ClCompile Include="consoleapplication_baraffbridson\ConjugateGradientSolver.cpp" />
+    <ClCompile Include="consoleapplication_baraffbridson\Control.cpp" />
+    <ClCompile Include="consoleapplication_baraffbridson\Main.cpp" />
+    <ClCompile Include="consoleapplication_baraffbridson\Mesh.cpp" />
+    <ClCompile Include="consoleapplication_baraffbridson\Model.cpp" />
+    <ClCompile Include="consoleapplication_baraffbridson\ResourceManager.cpp" />
+    <ClCompile Include="consoleapplication_baraffbridson\Shader.cpp" />
+    <ClCompile Include="consoleapplication_baraffbridson\Simulate.cpp" />
+    <ClCompile Include="consoleapplication_baraffbridson\texture.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="consoleapplication_baraffbridson\BaraffRequire.h" />
+    <ClInclude Include="consoleapplication_baraffbridson\BasicOperations.h" />
+    <ClInclude Include="consoleapplication_baraffbridson\Camera.h" />
+    <ClInclude Include="consoleapplication_baraffbridson\ClothPiece.h" />
+    <ClInclude Include="consoleapplication_baraffbridson\ConjugateGradientSolver.h" />
+    <ClInclude Include="consoleapplication_baraffbridson\Control.h" />
+    <ClInclude Include="consoleapplication_baraffbridson\EigenMatScalar.h" />
+    <ClInclude Include="consoleapplication_baraffbridson\Mesh.h" />
+    <ClInclude Include="consoleapplication_baraffbridson\Model.h" />
+    <ClInclude Include="consoleapplication_baraffbridson\ResourceManager.h" />
+    <ClInclude Include="consoleapplication_baraffbridson\Shader.h" />
+    <ClInclude Include="consoleapplication_baraffbridson\Simulate.h" />
+    <ClInclude Include="consoleapplication_baraffbridson\Test.h" />
+    <ClInclude Include="consoleapplication_baraffbridson\texture.h" />
+    <ClInclude Include="consoleapplication_baraffbridson\Types.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ConsoleApplication_BaraffBridson\background_cube.frag" />
+    <None Include="ConsoleApplication_BaraffBridson\background_cube.vs" />
+    <None Include="ConsoleApplication_BaraffBridson\cloth_piece.frag" />
+    <None Include="ConsoleApplication_BaraffBridson\cloth_piece.vs" />
+    <None Include="ConsoleApplication_BaraffBridson\model_loading.frag" />
+    <None Include="ConsoleApplication_BaraffBridson\model_loading.vs" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
