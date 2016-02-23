@@ -54,11 +54,12 @@ private:
 	// parameters for shear forces
 	float k_shear = 5e2f, kd_shear = 0.2f;
 	// parameters for bend forces
-	float k_bend = 1e2f, kd_bend = 0.2f;
+	float k_bend = 5e-1f, kd_bend = 0.2f;
 
 	// vectors
 	Eigen::VectorXf f_total; 
 	Eigen::VectorXf v_total; 
+	Eigen::VectorXf Cu_stretch, Cv_stretch; // condition per face
 	Eigen::VectorXf C_shear; // condition per face
 	Eigen::VectorXf C_bend; // condition per inner edge
 

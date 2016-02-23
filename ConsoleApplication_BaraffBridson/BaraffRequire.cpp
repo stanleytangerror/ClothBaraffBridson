@@ -8,6 +8,13 @@
 
 #include <iostream>
 
+//#define STRETCH_FORCE
+//#define SHEAR_FORCE
+#define BEND_FORCE
+//#define USE_DAMP
+//#define DEBUG_FORCE
+
+
 typedef Eigen::Tensor<float, 3> Tensor3f;
 typedef Eigen::array<Eigen::DenseIndex, 3U> index3;
 
@@ -107,7 +114,7 @@ void BaraffRequire::compute(float time_step)
 #endif
 
 	// add stretch and shear forces
-
+#ifdef STRETCH_FORCE
 	// forces, velocities and their derivatives
 	//std::cout << "f_total without stretch " << std::endl << f_total << std::endl;
 	//std::cout << "df_dx_total without stretch " << std::endl << df_dx_total << std::endl;
@@ -117,10 +124,13 @@ void BaraffRequire::compute(float time_step)
 	size_t face_cnt = 0;
 	for (auto iter = mesh->faces_begin(); iter != mesh->faces_end(); ++iter)
 	{
-		//getStretchAndShearForce(*iter, vph_planarcoord, k_stretch, kd_stretch, k_shear, kd_shear, bu, bv);
+		getStretchAndShearForce(*iter, vph_planarcoord, k_stretch, kd_stretch, k_shear, kd_shear, bu, bv);
 		face_cnt += 1;
 		//break;
 	}
+
+	std::cout << "stretch energy " << Cu_stretch.norm() + Cv_stretch.norm() << std::endl;
+	std::cout << "shear energy " << C_shear.norm() << std::endl;
 	//std::cout << "C_shear " << std::endl << C_shear << std::endl;
 	//std::cout << "C_shear nonzero " << C_shear.nonZeros() << std::endl;
 	//std::cout << "C_shear norm " << C_shear.norm() << std::endl;
@@ -132,8 +142,10 @@ void BaraffRequire::compute(float time_step)
 	//std::cout << "f_total with stretch block " << std::endl << f_total.block<30, 1>(0, 0) << std::endl;
 	//std::cout << "face_cnt " << std::endl << face_cnt << std::endl;
 	//std::cout << "df_dx_total with stretch " << std::endl << df_dx_total << std::endl;
+#endif
 
 	// add bend force
+#ifdef BEND_FORCE
 	for (auto iter = mesh->edges_begin(); iter != mesh->edges_end(); ++iter)
 	{
 		PolyArrayMesh::EdgeHandle ehd = *iter;
@@ -143,7 +155,10 @@ void BaraffRequire::compute(float time_step)
 		if (!fhd0.is_valid() || !fhd1.is_valid() || fhd0 == fhd1) continue;
 		getBendForce(fhd0, fhd1, ehd, k_bend, kd_bend);
 	}
+	std::cout << "bend energy " << C_bend.norm() << std::endl;
+
 	//std::cout << "bend force pair #" << bend_cnt << std::endl;
+#endif
 
 	//PolyArrayMesh::EdgeHandle ehd;
 	//for (Mesh::FaceHalfedgeIter fhe_it(mesh_, fl); fhe_it; ++fhe_it) {
@@ -197,6 +212,12 @@ void BaraffRequire::writePositions()
 		copy_v3f(pos_openmesh, pos_eigen);
 		mesh->point(*iter) = pos_openmesh;
 	}
+	/* after changing position
+	* update normals for consistence
+	*/
+	mesh->update_face_normals();
+	mesh->update_vertex_normals();
+
 }
 
 /* called once, used for allocating memory */
@@ -239,6 +260,8 @@ void BaraffRequire::initial()
 	df_dv_total = Eigen::SparseMatrix<float>(VERTEX_SIZE * 3, VERTEX_SIZE * 3);
 	f_total = Eigen::VectorXf(VERTEX_SIZE * 3);
 	v_total = Eigen::VectorXf(VERTEX_SIZE * 3);
+	Cu_stretch = Eigen::VectorXf(FACE_SIZE);
+	Cv_stretch = Eigen::VectorXf(FACE_SIZE);
 	C_shear = Eigen::VectorXf(FACE_SIZE);
 	C_bend = Eigen::VectorXf(EDGE_SIZE);
 	constraints = Eigen::SparseMatrix<float>(VERTEX_SIZE * 3, VERTEX_SIZE * 3);
@@ -269,11 +292,15 @@ void BaraffRequire::reset(GLboolean first)
 {
 	PolyArrayMesh* mesh = clothPiece->getMesh();
 
-	mesh->update_face_normals();
-	mesh->update_vertex_normals();
+	// update face normal for bend condition 
+	// TODO need a better solution
+	// if already writted, then skip and update directly
+	writePositions();
 
 	// reset vectors
 	f_total.setZero();
+	Cu_stretch.setZero();
+	Cv_stretch.setZero();
 	C_shear.setZero();
 	C_bend.setZero();
 	if (first)
@@ -306,12 +333,6 @@ void BaraffRequire::addExternForce(PolyArrayMesh::VertexHandle vhandle, Eigen::V
 	GLuint global_index = vertices2indices[vhandle];
 	f_total.block<3, 1>(global_index * 3, 0) += ext_force;
 }
-
-//#define STRETCH_FORCE
-//#define SHEAR_FORCE
-#define BEND_FORCE
-//#define USE_DAMP
-//#define DEBUG_FORCE
 
 void BaraffRequire::getStretchAndShearForce(PolyArrayMesh::FaceHandle fhandle,
 	const OpenMesh::VPropHandleT<OpenMesh::Vec3f> & vprop_planarcoord, 
@@ -456,6 +477,8 @@ void BaraffRequire::getStretchAndShearForce(PolyArrayMesh::FaceHandle fhandle,
 		float Cu, Cv;
 		Cu = alpha * (wu_len - bu);
 		Cv = alpha * (wv_len - bv);
+		Cu_stretch[face_index] = Cu;
+		Cv_stretch[face_index] = Cv;
 #ifdef DEBUG_FORCE
 		//std::cout << "wu_len " << wu_len << std::endl;
 		//std::cout << "bu " << bu << std::endl;
@@ -821,6 +844,18 @@ void BaraffRequire::getBendForce(PolyArrayMesh::FaceHandle fhandle0, PolyArrayMe
 	copy_v3f(normal_B, mesh->property(fprop_normal, fhandle1));
 	edge = x2 - x1;
 
+	//Eigen::Vector3f down(0.0f, -1.0f, 0.0f);
+	//if (normal_A.transpose() * down > 0)
+	//{
+	//	normal_A *= -1;
+	//	//std::cout << "normal down " << std::endl;
+	//}
+	//if (normal_B.transpose() * down > 0)
+	//{
+	//	normal_B *= -1;
+	//	//std::cout << "normal down " << std::endl;
+	//}
+
 	float normal_A_len, normal_B_len, edge_len;
 	normal_A_len = max(normal_A.norm(), 1e-15f);
 	normal_B_len = max(normal_B.norm(), 1e-15f);
@@ -880,8 +915,8 @@ void BaraffRequire::getBendForce(PolyArrayMesh::FaceHandle fhandle0, PolyArrayMe
 	Eigen::Matrix3f dqAi_dxj[4][4], dqBi_dxj[4][4], dqEi_dxj[4][4];
 	for (size_t _i = 0; _i < 4; ++_i) for (size_t _j = 0; _j < 4; ++_j)
 	{
-		dqAi_dxj[_i][_j] = coeff_qA_xi[_i][_j] / normal_A_len * Eigen::Matrix3f::Identity();
-		dqBi_dxj[_i][_j] = coeff_qB_xi[_i][_j] / normal_B_len * Eigen::Matrix3f::Identity();
+		dqAi_dxj[_i][_j] = coeff_qA_xi[_i][_j]/* / normal_A_len*/ * Eigen::Matrix3f::Identity();
+		dqBi_dxj[_i][_j] = coeff_qB_xi[_i][_j]/* / normal_B_len*/ * Eigen::Matrix3f::Identity();
 		dqEi_dxj[_i][_j] = Eigen::Matrix3f::Zero();
 	}
 #ifdef DEBUG_FORCE
@@ -905,12 +940,12 @@ void BaraffRequire::getBendForce(PolyArrayMesh::FaceHandle fhandle0, PolyArrayMe
 #endif
 		//std::cout << "bend sin " << sin_theta << " cos " << cos_theta << " condition " << C << std::endl;
 
-		Eigen::Matrix3f dnormalA_dxi[4], dnormalB_dxi[4], de_dxi[4];
+		Eigen::Matrix3f dnA_unit_dxi[4], dnB_unit_dxi[4], de_unit_dxi[4];
 		for (size_t _i = 0; _i < 4; ++_i)
 		{
-			dnormalA_dxi[_i] = get_S_m3f(qA[_i]) / normal_A_len;
-			dnormalB_dxi[_i] = get_S_m3f(qB[_i]) / normal_B_len;
-			de_dxi[_i] = get_S_m3f(qE[_i]) / edge_len;
+			dnA_unit_dxi[_i] = get_S_m3f(qA[_i]) / normal_A_len;
+			dnB_unit_dxi[_i] = get_S_m3f(qB[_i]) / normal_B_len;
+			de_unit_dxi[_i] = get_S_m3f(qE[_i]) / edge_len;
 		}
 
 #ifdef DEBUG_FORCE
@@ -923,14 +958,14 @@ void BaraffRequire::getBendForce(PolyArrayMesh::FaceHandle fhandle0, PolyArrayMe
 #endif
 
 		// derivetives of normal vector A/B/e w.r.t x
-		Tensor3f d2normalA_dxidxj[4][4], d2normalB_dxidxj[4][4], d2e_dxidxj[4][4];
+		Tensor3f d2nA_unit_dxidxj[4][4], d2nB_unit_dxidxj[4][4], d2e_unit_dxidxj[4][4];
 		for (size_t _i = 0; _i < 4; ++_i) for (size_t _j = 0; _j < 4; ++_j)
 		{
-			d2e_dxidxj[_i][_j] = Tensor3f(3, 3, 3);
-			d2e_dxidxj[_i][_j].setZero();
+			d2e_unit_dxidxj[_i][_j] = Tensor3f(3, 3, 3);
+			d2e_unit_dxidxj[_i][_j].setZero();
 
-			d2normalA_dxidxj[_i][_j] = Tensor3f(3, 3, 3);
-			d2normalB_dxidxj[_i][_j] = Tensor3f(3, 3, 3);
+			d2nA_unit_dxidxj[_i][_j] = Tensor3f(3, 3, 3);
+			d2nB_unit_dxidxj[_i][_j] = Tensor3f(3, 3, 3);
 			for (size_t _s = 0; _s < 3; ++_s) for (size_t _t = 0; _t < 3; ++_t)
 			{
 				Eigen::Vector3f temp1 = 
@@ -941,7 +976,7 @@ void BaraffRequire::getBendForce(PolyArrayMesh::FaceHandle fhandle0, PolyArrayMe
 #endif
 				for (size_t _k = 0; _k < 3; ++_k)
 				{
-					d2normalA_dxidxj[_i][_j].coeffRef(index3(_s, _t, _k)) = temp1[_k];
+					d2nA_unit_dxidxj[_i][_j].coeffRef(index3(_s, _t, _k)) = temp1[_k];
 				}
 
 				Eigen::Vector3f temp2 = 
@@ -952,7 +987,7 @@ void BaraffRequire::getBendForce(PolyArrayMesh::FaceHandle fhandle0, PolyArrayMe
 #endif
 				for (size_t _k = 0; _k < 3; ++_k)
 				{
-					d2normalB_dxidxj[_i][_j].coeffRef(index3(_s, _t, _k)) = temp2[_k];
+					d2nB_unit_dxidxj[_i][_j].coeffRef(index3(_s, _t, _k)) = temp2[_k];
 				}
 			}
 		}
@@ -971,8 +1006,8 @@ void BaraffRequire::getBendForce(PolyArrayMesh::FaceHandle fhandle0, PolyArrayMe
 		{
 			for (size_t _s = 0; _s < 3; ++_s)
 			{
-				float temp1 = dnormalA_dxi[_i].row(_s) * normal_B_unit;
-				float temp2 = normal_A_unit.transpose() * dnormalB_dxi[_i].row(_s).transpose();
+				float temp1 = dnA_unit_dxi[_i].row(_s) * normal_B_unit;
+				float temp2 = normal_A_unit.transpose() * dnB_unit_dxi[_i].row(_s).transpose();
 				dcos_dxi[_i][_s] = temp1 + temp2;
 			}
 			//dcos_dxi[_i] = dnormalA_dxi[_i] * normal_B_unit + dnormalB_dxi[_i] * normal_A_unit;
@@ -993,11 +1028,11 @@ void BaraffRequire::getBendForce(PolyArrayMesh::FaceHandle fhandle0, PolyArrayMe
 				//Eigen::Vector3f temp3 = (dnormalA_dxi[_i].row(_s).cross(normal_B_unit)).transpose();
 				//Eigen::Vector3f temp4 = dnormalB_dxi[_i].row(_s);
 				//Eigen::Vector3f temp5 = normal_A_unit.cross(dnormalB_dxi[_i].row(_s).transpose());
-				float temp1 = (dnormalA_dxi[_i].row(_s).cross(normal_B_unit)
-						+ normal_A_unit.cross(dnormalB_dxi[_i].row(_s)).transpose())
+				float temp1 = (dnA_unit_dxi[_i].row(_s).cross(normal_B_unit)
+						+ normal_A_unit.cross(dnB_unit_dxi[_i].row(_s)).transpose())
 					* edge_unit;
 				float temp2 = (normal_A_unit.cross(normal_B_unit)).transpose() 
-					* de_dxi[_i].row(_s).transpose();
+					* de_unit_dxi[_i].row(_s).transpose();
 				dsin_dxi[_i][_s] = temp1 + temp2;
 #ifdef DEBUG_FORCE
 				//std::cout << "dsin_dxi[" << global_indices[_i] << "] dim [" << _s << "] " << temp1 << " " << temp2 << std::endl;
@@ -1020,10 +1055,10 @@ void BaraffRequire::getBendForce(PolyArrayMesh::FaceHandle fhandle0, PolyArrayMe
 		{
 			for (size_t _s = 0; _s < 3; ++_s) for (size_t _t = 0; _t < 3; ++_t)
 			{
-				float temp1 = get_vector3f_block(d2normalA_dxidxj[_i][_j], _s, _t).transpose() * normal_B_unit;
-				float temp2 = dnormalB_dxi[_j].row(_t) * dnormalA_dxi[_i].row(_s).transpose();
-				float temp3 = dnormalA_dxi[_j].row(_t) * dnormalB_dxi[_i].row(_s).transpose();
-				float temp4 = normal_A_unit.transpose() * get_vector3f_block(d2normalB_dxidxj[_i][_j], _s, _t);
+				float temp1 = get_vector3f_block(d2nA_unit_dxidxj[_i][_j], _s, _t).transpose() * normal_B_unit;
+				float temp2 = dnB_unit_dxi[_j].row(_t) * dnA_unit_dxi[_i].row(_s).transpose();
+				float temp3 = dnA_unit_dxi[_j].row(_t) * dnB_unit_dxi[_i].row(_s).transpose();
+				float temp4 = normal_A_unit.transpose() * get_vector3f_block(d2nB_unit_dxidxj[_i][_j], _s, _t);
 				d2cos_dxidxj[_i][_j].coeffRef(_s, _t) = temp1 + temp2 + temp3 + temp4;
 #ifdef DEBUG_FORCE
 				//std::cout << "d2cos_dxidxj[" << global_indices[_i] << "][" << global_indices[_j] << "] dim " 
@@ -1045,22 +1080,22 @@ void BaraffRequire::getBendForce(PolyArrayMesh::FaceHandle fhandle0, PolyArrayMe
 			for (size_t _s = 0; _s < 3; ++_s) for (size_t _t = 0; _t < 3; ++_t)
 			{
 				float temp1 = 
-					(get_vector3f_block(d2normalA_dxidxj[_i][_j], _s, _t).transpose().cross(normal_B_unit)
-						+ dnormalA_dxi[_i].row(_s).cross(dnormalB_dxi[_j].row(_t))
-						+ dnormalA_dxi[_j].row(_t).cross(dnormalB_dxi[_i].row(_s))
-						+ normal_A_unit.cross(get_vector3f_block(d2normalB_dxidxj[_i][_j], _s, _t)).transpose())
+					(get_vector3f_block(d2nA_unit_dxidxj[_i][_j], _s, _t).transpose().cross(normal_B_unit)
+						+ dnA_unit_dxi[_i].row(_s).cross(dnB_unit_dxi[_j].row(_t))
+						+ dnA_unit_dxi[_j].row(_t).cross(dnB_unit_dxi[_i].row(_s))
+						+ normal_A_unit.cross(get_vector3f_block(d2nB_unit_dxidxj[_i][_j], _s, _t)).transpose())
 					* edge_unit;
 				float temp2 =
-					(dnormalA_dxi[_i].row(_s).cross(normal_B_unit)
-						+ normal_A_unit.cross(dnormalB_dxi[_i].row(_s)).transpose())
-					* de_dxi[_j].row(_t).transpose();
+					(dnA_unit_dxi[_i].row(_s).cross(normal_B_unit)
+						+ normal_A_unit.cross(dnB_unit_dxi[_i].row(_s)).transpose())
+					* de_unit_dxi[_j].row(_t).transpose();
 				float temp3 =
-					(dnormalA_dxi[_j].row(_t).cross(normal_B_unit)
-						+ normal_A_unit.cross(dnormalB_dxi[_j].row(_t)).transpose())
-					* de_dxi[_i].row(_s).transpose();
+					(dnA_unit_dxi[_j].row(_t).cross(normal_B_unit)
+						+ normal_A_unit.cross(dnB_unit_dxi[_j].row(_t)).transpose())
+					* de_unit_dxi[_i].row(_s).transpose();
 				float temp4 =
 					normal_A_unit.cross(normal_B_unit).transpose()
-					* get_vector3f_block(d2e_dxidxj[_i][_j], _s, _t);
+					* get_vector3f_block(d2e_unit_dxidxj[_i][_j], _s, _t);
 				d2sin_dxidxj[_i][_j].coeffRef(_s, _t) = temp1 + temp2 + temp3 + temp4;
 
 #ifdef DEBUG_FORCE
@@ -1096,11 +1131,15 @@ void BaraffRequire::getBendForce(PolyArrayMesh::FaceHandle fhandle0, PolyArrayMe
 			{
 				float temp1 = cos_theta * d2sin_dxidxj[_i][_j].coeff(_s, _t)
 					- sin_theta * d2cos_dxidxj[_i][_j].coeff(_s, _t);
-				float temp2 = (sin_theta * sin_theta - cos_theta * cos_theta) *
-					(dsin_dxi[_i][_s] * dcos_dxi[_j][_t] + dcos_dxi[_i][_s] * dsin_dxi[_j][_t]);
-				float temp3 = 2 * sin_theta * cos_theta *
-					(dcos_dxi[_i][_s] * dcos_dxi[_j][_t] - dsin_dxi[_i][_s] * dsin_dxi[_j][_t]);
-				d2C_dxidxj[_i][_j].coeffRef(_s, _t) = temp1 + temp2 + temp3;
+				float temp2 = dcos_dxi[_j][_t] * dsin_dxi[_i][_s] 
+					- dsin_dxi[_j][_t] * dcos_dxi[_i][_s];
+				//float temp1 = cos_theta * d2sin_dxidxj[_i][_j].coeff(_s, _t)
+				//	- sin_theta * d2cos_dxidxj[_i][_j].coeff(_s, _t);
+				//float temp2 = (sin_theta * sin_theta - cos_theta * cos_theta) *
+				//	(dsin_dxi[_i][_s] * dcos_dxi[_j][_t] + dcos_dxi[_i][_s] * dsin_dxi[_j][_t]);
+				//float temp3 = 2 * sin_theta * cos_theta *
+				//	(dcos_dxi[_i][_s] * dcos_dxi[_j][_t] - dsin_dxi[_i][_s] * dsin_dxi[_j][_t]);
+				d2C_dxidxj[_i][_j].coeffRef(_s, _t) = temp1 + temp2;
 #ifdef DEBUG_FORCE
 				//std::cout << "d2C_dxidxj items " << temp1 << " " << temp2 << " " << temp3 << std::endl;
 #endif
@@ -1238,7 +1277,7 @@ void BaraffRequire::exportBendConditionData(float *& dataBuffer, GLuint & dataSi
 	{
 		sum += fabs(temp[_i]);
 	}
-	std::cout << "bend condition norm " << C_bend.norm() << std::endl;
-	std::cout << "bend condition sum " << sum << std::endl;
+	//std::cout << "bend condition norm " << C_bend.norm() << std::endl;
+	//std::cout << "bend condition sum " << sum << std::endl;
 }
 

@@ -130,5 +130,14 @@
     <None Include="ConsoleApplication_BaraffBridson\background_cube.frag">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="ConsoleApplication_BaraffBridson\cloth_piece_debug.frag">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="ConsoleApplication_BaraffBridson\cloth_piece_debug.gs">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="ConsoleApplication_BaraffBridson\cloth_piece_debug.vs">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

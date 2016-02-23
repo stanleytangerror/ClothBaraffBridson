@@ -93,6 +93,35 @@ void ClothPiece::exportPos3fNorm3fBuffer(
 	return ;
 }
 
+void ClothPiece::exportFaceNorm3fBuffer(GLfloat *& fBarycenterBuffer, GLfloat *& fNormalBuffer, GLuint & faceSize)
+{
+	// TODO
+	PolyArrayMesh* mesh = this->PolyMesh;
+	fBarycenterBuffer = new GLfloat[mesh->n_faces() * 3];
+	fNormalBuffer = new GLfloat[mesh->n_faces() * 3];
+
+	OpenMesh::FPropHandleT<OpenMesh::Vec3f> fprop_normal = mesh->face_normals_pph();
+	GLuint pivot = 0;
+	for (auto iter = mesh->faces_begin(); iter != mesh->faces_end(); ++iter, ++pivot)
+	{
+		PolyArrayMesh::FaceHandle fhd = *iter;
+		// face normal
+		OpenMesh::Vec3f normal = mesh->property(fprop_normal, fhd);
+		memcpy_s(fNormalBuffer + pivot * 3, 3 * sizeof(GLfloat), normal.data(), 3 * sizeof(GLfloat));
+		// face barycenter
+		OpenMesh::Vec3f barycenter(0.0f, 0.0f, 0.0f);
+		GLuint edge_cnt = 0;
+		for (auto viter = mesh->cfv_begin(fhd); viter != mesh->cfv_end(fhd); ++viter, ++edge_cnt)
+		{
+			barycenter += mesh->point(*viter);
+		}
+		barycenter /= (edge_cnt > 1 ? edge_cnt : 1);
+		memcpy_s(fBarycenterBuffer + pivot * 3, 3 * sizeof(GLfloat), barycenter.data(), 3 * sizeof(GLfloat));
+	}
+	faceSize = pivot;
+	return;
+}
+
 //template <typename PropType> 
 //OpenMesh::VPropHandleT<PropType> ClothPiece::addVProp(std::string propName, PropType value)
 //{

@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-void convert_diag2sparse_mnf(Eigen::SparseMatrix<float> & dest, const Eigen::Diagonal<const Eigen::SparseMatrix<float>> const & src)
+void convert_diag2sparse_mnf(Eigen::SparseMatrix<float> & dest, const Eigen::Diagonal<const Eigen::SparseMatrix<float>> & src)
 {
 	typedef Eigen::Triplet<float> Tri_float;
 	static size_t size = src.size();

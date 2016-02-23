@@ -30,9 +30,12 @@ public:
 		GLfloat* & vertexBuffer, GLfloat* & vertexNormalBuffer, GLuint & vertexSize, 
 		GLuint* & elementBuffer, GLuint & elementSize);
 
+	void exportFaceNorm3fBuffer(
+		GLfloat* & fBarycenterBuffer, GLfloat* & fNormalBuffer, GLuint & faceSize);
+
 	bool useVTexCoord2DAsVPlanarCoord3f();
 
-	bool ClothPiece::getVPlanarCoord3f(OpenMesh::VPropHandleT<OpenMesh::Vec3f> & vph);
+	bool getVPlanarCoord3f(OpenMesh::VPropHandleT<OpenMesh::Vec3f> & vph);
 
 private:
 	const GLuint EDGES;
@@ -42,7 +45,7 @@ private:
 	//OpenMesh::VPropHandleT<PropType> ClothPiece::addVProp(std::string propName, PropType value);
 
 	template <typename PropType>
-	OpenMesh::VPropHandleT<PropType> ClothPiece::addVProp(
+	OpenMesh::VPropHandleT<PropType> addVProp(
 		std::string propName,
 		std::function<PropType(PolyArrayMesh::VertexHandle)> vhandle2value
 		);

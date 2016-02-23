@@ -139,6 +139,7 @@ int main()
 	ResourceManager::LoadShader("model_loading", "E:\\Microsoft Visual Studio 2015\\Workspace\\ConsoleApplication_BaraffBridson\\ConsoleApplication_BaraffBridson\\model_loading.vs", "E:\\Microsoft Visual Studio 2015\\Workspace\\ConsoleApplication_BaraffBridson\\ConsoleApplication_BaraffBridson\\model_loading.frag");
 	ResourceManager::LoadShader("background_cube", "E:\\Microsoft Visual Studio 2015\\Workspace\\ConsoleApplication_BaraffBridson\\ConsoleApplication_BaraffBridson\\background_cube.vs", "E:\\Microsoft Visual Studio 2015\\Workspace\\ConsoleApplication_BaraffBridson\\ConsoleApplication_BaraffBridson\\background_cube.frag");
 	ResourceManager::LoadShader("cloth_piece", "E:\\Microsoft Visual Studio 2015\\Workspace\\ConsoleApplication_BaraffBridson\\ConsoleApplication_BaraffBridson\\cloth_piece.vs", "E:\\Microsoft Visual Studio 2015\\Workspace\\ConsoleApplication_BaraffBridson\\ConsoleApplication_BaraffBridson\\cloth_piece.frag");
+	ResourceManager::LoadShader("cloth_piece_debug", "E:\\Microsoft Visual Studio 2015\\Workspace\\ConsoleApplication_BaraffBridson\\ConsoleApplication_BaraffBridson\\cloth_piece_debug.vs", "E:\\Microsoft Visual Studio 2015\\Workspace\\ConsoleApplication_BaraffBridson\\ConsoleApplication_BaraffBridson\\cloth_piece_debug.frag", "E:\\Microsoft Visual Studio 2015\\Workspace\\ConsoleApplication_BaraffBridson\\ConsoleApplication_BaraffBridson\\cloth_piece_debug.gs");
 	//ResourceManager::LoadShader("model_loading", ".\\model_loading.vs", ".\\model_loading.frag");
 	//ResourceManager::LoadShader("background_cube", ".\\background_cube.vs", ".\\background_cube.frag");
 	//ResourceManager::LoadShader("cloth_piece", ".\\cloth_piece.vs", ".\\cloth_piece.frag");
@@ -197,7 +198,18 @@ int main()
 	glGenBuffers(1, &conditionVBO);
 	std::cout << "condition vbo " << conditionVBO << std::endl;
 
+	GLuint debugVAO;
+	glGenVertexArrays(1, &debugVAO);
+	std::cout << "debug vao " << debugVAO << std::endl;
+
+	GLuint debugVBO, debugNormalVBO;
+	glGenBuffers(1, &debugVBO);
+	std::cout << "debug vbo " << debugVBO << std::endl;
+	glGenBuffers(1, &debugNormalVBO);
+	std::cout << "debug normal vbo " << debugNormalVBO << std::endl;
+
 	// Game loop
+	GLuint loop_cnt = 0;
 	while (!glfwWindowShouldClose(window))
 	{
 		// Set frame time
@@ -276,14 +288,14 @@ int main()
 			glUniform1f(glGetUniformLocation(clothPieceShader.Program, "material.shininess"), 0.4f);
 
 			// Draw the loaded model
-			simulate->simulate();
+			//if (loop_cnt < 0)
+			{
+				simulate->simulate();
+			}
 			simulate->writeBack();
 			clothPiece->exportPos3fNorm3fBuffer(meshVB, meshVNormalB, meshVBcnt, meshEB, meshEBcnt);
 			simulate->exportShearConditionData(conditionBuffer, conditionCnt);
 
-			GLfloat * tempptr;
-			GLuint tempuint;
-			simulate->exportBendConditionData(tempptr, tempuint);
 
 			glBindVertexArray(meshVAO);
 			{
@@ -316,9 +328,58 @@ int main()
 			glBindVertexArray(0);
 		}
 #endif
+		{
+			GLfloat * tempptr;
+			GLuint tempuint;
+			simulate->exportBendConditionData(tempptr, tempuint);
+			
+			// debug buffer
+			GLfloat * fBarycentreBuffer = nullptr, *fNormalBuffer = nullptr;
+			GLuint fSize;
+			clothPiece->exportFaceNorm3fBuffer(fBarycentreBuffer, fNormalBuffer, fSize);
 
+			Shader debugShader = ResourceManager::GetShader("cloth_piece_debug");
+			debugShader.Use();
+			glm::mat4 model = glm::scale(glm::mat4(), glm::vec3(0.20f, 0.20f, 0.20f));
+			model = glm::translate(model, glm::vec3(0.0f, 0.40f, 0.0f)); // Translate it down a bit so it's at the center of the scene
+			glUniformMatrix4fv(glGetUniformLocation(debugShader.Program, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+			glUniformMatrix4fv(glGetUniformLocation(debugShader.Program, "view"), 1, GL_FALSE, glm::value_ptr(view));
+			glUniformMatrix4fv(glGetUniformLocation(debugShader.Program, "model"), 1, GL_FALSE, glm::value_ptr(model));
+
+			//glUniform3f(glGetUniformLocation(debugShader.Program, "viewPos"), camera.Position.x, camera.Position.y, camera.Position.z);
+			//glUniform3f(glGetUniformLocation(debugShader.Program, "light.direction"), 0.0f, 1.0f, 0.0f);
+			//glUniform3f(glGetUniformLocation(debugShader.Program, "light.color"), 0.3f, 0.49f, 0.85f);
+			///* from http://devernay.free.fr/cours/opengl/materials.html */
+			//glUniform3f(glGetUniformLocation(debugShader.Program, "material.ambient"), 0.19225f, 0.19225f, 0.19225f);
+			//glUniform3f(glGetUniformLocation(debugShader.Program, "material.diffuse"), 0.50754f, 0.50754f, 0.50754f);
+			//glUniform3f(glGetUniformLocation(debugShader.Program, "material.specular"), 0.508273f, 0.508273f, 0.508273f);
+			//glUniform1f(glGetUniformLocation(debugShader.Program, "material.shininess"), 0.4f);
+
+			glBindVertexArray(debugVAO);
+			{
+				glBindBuffer(GL_ARRAY_BUFFER, debugVBO);
+				glBufferData(GL_ARRAY_BUFFER, fSize * 3 * sizeof(GLfloat), fBarycentreBuffer, GL_STATIC_DRAW);
+				glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0 * sizeof(GLfloat), (GLvoid *)0);
+				glEnableVertexAttribArray(0);
+				glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+				glBindBuffer(GL_ARRAY_BUFFER, debugNormalVBO);
+				glBufferData(GL_ARRAY_BUFFER, fSize * 3 * sizeof(GLfloat), fNormalBuffer, GL_STATIC_DRAW);
+				glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0 * sizeof(GLfloat), (GLvoid *)0);
+				glEnableVertexAttribArray(1);
+				glBindBuffer(GL_ARRAY_BUFFER, 0);
+			}
+			glBindVertexArray(0);
+
+			glBindVertexArray(debugVAO);
+			glDrawArrays(GL_POINTS, 0, fSize);
+			glBindVertexArray(0);
+		
+		}
+		
 		// Swap the buffers
 		glfwSwapBuffers(window);
+		loop_cnt += 1;
 	}
 
 	glfwTerminate();

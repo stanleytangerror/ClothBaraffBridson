@@ -26,7 +26,7 @@ inline void copy_v3f(OpenMesh::Vec3f & dest, const Eigen::Vector3f & src)
 	dest[2] = src(2);
 }
 
-void convert_diag2sparse_mnf(Eigen::SparseMatrix<float> & dest, const Eigen::Diagonal<const Eigen::SparseMatrix<float>> const & src);
+void convert_diag2sparse_mnf(Eigen::SparseMatrix<float> & dest, const Eigen::Diagonal<const Eigen::SparseMatrix<float>> & src);
 
 void addBlock33(Eigen::SparseMatrix<float> & augend, GLuint block_i, GLuint block_j, const Eigen::Matrix3f & addend);
 

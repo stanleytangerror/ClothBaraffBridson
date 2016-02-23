@@ -135,6 +135,9 @@
     <None Include="ConsoleApplication_BaraffBridson\background_cube.vs" />
     <None Include="ConsoleApplication_BaraffBridson\cloth_piece.frag" />
     <None Include="ConsoleApplication_BaraffBridson\cloth_piece.vs" />
+    <None Include="ConsoleApplication_BaraffBridson\cloth_piece_debug.frag" />
+    <None Include="ConsoleApplication_BaraffBridson\cloth_piece_debug.gs" />
+    <None Include="ConsoleApplication_BaraffBridson\cloth_piece_debug.vs" />
     <None Include="ConsoleApplication_BaraffBridson\model_loading.frag" />
     <None Include="ConsoleApplication_BaraffBridson\model_loading.vs" />
   </ItemGroup>
