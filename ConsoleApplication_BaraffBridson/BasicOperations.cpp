@@ -108,4 +108,14 @@ Eigen::Matrix3f get_S_m3f(Eigen::Vector3f & v)
 	return S;
 }
 
+// xyz -> zxy
+void shiftVertices(PolyArrayMesh::VertexHandle & vhd0, PolyArrayMesh::VertexHandle & vhd1, PolyArrayMesh::VertexHandle & vhd2)
+{
+	// x y z
+	std::swap(vhd0, vhd1);
+	// y x z
+	std::swap(vhd0, vhd2);
+	// z x y
+}
+
 

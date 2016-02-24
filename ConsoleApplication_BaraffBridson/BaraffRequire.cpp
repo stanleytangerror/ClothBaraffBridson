@@ -8,7 +8,7 @@
 
 #include <iostream>
 
-//#define STRETCH_FORCE
+#define STRETCH_FORCE
 //#define SHEAR_FORCE
 #define BEND_FORCE
 //#define USE_DAMP
@@ -114,7 +114,7 @@ void BaraffRequire::compute(float time_step)
 #endif
 
 	// add stretch and shear forces
-#ifdef STRETCH_FORCE
+#if defined(STRETCH_FORCE) || defined(SHEAR_FORCE)
 	// forces, velocities and their derivatives
 	//std::cout << "f_total without stretch " << std::endl << f_total << std::endl;
 	//std::cout << "df_dx_total without stretch " << std::endl << df_dx_total << std::endl;
@@ -343,12 +343,42 @@ void BaraffRequire::getStretchAndShearForce(PolyArrayMesh::FaceHandle fhandle,
 	PolyArrayMesh* mesh = clothPiece->getMesh();
 	PolyArrayMesh::ConstFaceVertexIter cfviter = mesh->cfv_iter(fhandle);
 
+	/*
+	x0-----x1
+	|#####/
+	|####/
+	|###/
+	|##/
+	x2
+	*/
+
 	// vhandles of three vertices
 	PolyArrayMesh::VertexHandle vhandles[3];
-	vhandles[0] = *cfviter++;
-	vhandles[1] = *cfviter++;
-	vhandles[2] = *cfviter;
+	{
+		vhandles[0] = *cfviter++;
+		vhandles[1] = *cfviter++;
+		vhandles[2] = *cfviter;
 
+		// planar coordinate
+		Eigen::Vector3f t0, t1, t2;
+		copy_v3f(t0, mesh->property(vprop_planarcoord, vhandles[0]));
+		copy_v3f(t1, mesh->property(vprop_planarcoord, vhandles[1]));
+		copy_v3f(t2, mesh->property(vprop_planarcoord, vhandles[2]));
+		float e1, e2, e3;
+		e1 = (t0 - t1).norm();
+		e2 = (t1 - t2).norm();
+		e3 = (t2 - t0).norm();
+		if (e1 > e2 && e1 > e3)
+		{
+			shiftVertices(vhandles[0], vhandles[1], vhandles[2]);
+		}
+		else if (e3 > e1 && e3 > e2)
+		{
+			shiftVertices(vhandles[0], vhandles[1], vhandles[2]);
+			shiftVertices(vhandles[0], vhandles[1], vhandles[2]);
+		}
+	
+	}
 	// global indices of three vertices
 	GLuint global_indices[3];
 	global_indices[0] = vertices2indices[vhandles[0]];
@@ -626,6 +656,7 @@ void BaraffRequire::getStretchAndShearForce(PolyArrayMesh::FaceHandle fhandle,
 		//std::cout << " ----------- shear ---------- " << std::endl;
 
 		// shear condition
+		//float C = alpha * (float(wu.transpose() * wv) - float(du1.transpose() * du2));
 		float C = alpha * wu.transpose() * wv;
 		C_shear[face_index] = C;
 #ifdef DEBUG_FORCE
@@ -649,7 +680,12 @@ void BaraffRequire::getStretchAndShearForce(PolyArrayMesh::FaceHandle fhandle,
 		Eigen::Matrix3f d2C_dxidxj[3][3];
 		for (size_t _i = 0; _i < 3; ++_i) for (size_t _j = 0; _j < 3; ++_j)
 		{
-			d2C_dxidxj[_i][_j] = alpha * (dwu_dxi[_i] * dwv_dxi[_j] + dwu_dxi[_j] * dwv_dxi[_i]);
+			for (size_t _s = 0; _s < 3; ++_s) for (size_t _t = 0; _t < 3; ++_t)
+			{
+				float temp1 = dwu_dxi[_i].row(_s) * dwv_dxi[_j].row(_t).transpose();
+				float temp2 = dwu_dxi[_j].row(_t) * dwv_dxi[_i].row(_s).transpose();
+				d2C_dxidxj[_i][_j].coeffRef(_s, _t) = alpha * (temp1 + temp2);
+			}
 		}
 
 #ifdef DEBUG_FORCE
@@ -840,9 +876,23 @@ void BaraffRequire::getBendForce(PolyArrayMesh::FaceHandle fhandle0, PolyArrayMe
 	// normal of two faces
 	Eigen::Vector3f normal_A, normal_B, edge;
 	OpenMesh::FPropHandleT<OpenMesh::Vec3f> fprop_normal = mesh->face_normals_pph();
+	// <<<<<<
 	copy_v3f(normal_A, mesh->property(fprop_normal, fhandle0));
 	copy_v3f(normal_B, mesh->property(fprop_normal, fhandle1));
+	// ---- TODO use this normal works ?? check reasons
+	//normal_A = - (x2 - x1).cross(x0 - x2);
+	//normal_B = (x2 - x3).cross(x3 - x1);
+	// >>>>>>
 	edge = x2 - x1;
+
+	// check whether a triangle shrinks to a line
+	float tolerance = 1e-5f;
+	if ((x0 - x1).norm() < tolerance || (x0 - x2).norm() < tolerance
+		|| (x2 - x1).norm() < tolerance || (x3 - x1).norm() < tolerance
+		|| (x3 - x2).norm() < tolerance)
+	{
+		return;
+	}
 
 	//Eigen::Vector3f down(0.0f, -1.0f, 0.0f);
 	//if (normal_A.transpose() * down > 0)
@@ -951,9 +1001,9 @@ void BaraffRequire::getBendForce(PolyArrayMesh::FaceHandle fhandle0, PolyArrayMe
 #ifdef DEBUG_FORCE
 		for (size_t _i = 0; _i < 4; ++_i)
 		{
-			std::cout << "dnormalA_dxi[" << global_indices[_i] << "] " << std::endl << dnormalA_dxi[_i] << std::endl;
-			std::cout << "dnormalB_dxi[" << global_indices[_i] << "] " << std::endl << dnormalB_dxi[_i] << std::endl;
-			std::cout << "de_dxi[" << global_indices[_i] << "] " << std::endl << de_dxi[_i] << std::endl;
+			std::cout << "dnA_unit_dxi[" << global_indices[_i] << "] " << std::endl << dnA_unit_dxi[_i] << std::endl;
+			std::cout << "dnB_unit_dxi[" << global_indices[_i] << "] " << std::endl << dnB_unit_dxi[_i] << std::endl;
+			std::cout << "de_unit_dxi[" << global_indices[_i] << "] " << std::endl << de_unit_dxi[_i] << std::endl;
 		}
 #endif
 
@@ -995,9 +1045,9 @@ void BaraffRequire::getBendForce(PolyArrayMesh::FaceHandle fhandle0, PolyArrayMe
 #ifdef DEBUG_FORCE
 		for (size_t _i = 0; _i < 4; ++_i) for (size_t _j = 0; _j < 4; ++_j)
 		{
-			std::cout << "d2normalA_dxidxj[" << global_indices[_i] << "][" << global_indices[_j] << "] " << std::endl << d2normalA_dxidxj[_i][_j] << std::endl;
-			std::cout << "d2normalB_dxidxj[" << global_indices[_i] << "][" << global_indices[_j] << "] " << std::endl << d2normalB_dxidxj[_i][_j] << std::endl;
-			std::cout << "d2e_dxidxj[" << global_indices[_i] << "][" << global_indices[_j] << "] " << std::endl << d2e_dxidxj[_i][_j] << std::endl;
+			std::cout << "d2nA_unit_dxidxj[" << global_indices[_i] << "][" << global_indices[_j] << "] " << std::endl << d2nA_unit_dxidxj[_i][_j] << std::endl;
+			std::cout << "d2nB_unit_dxidxj[" << global_indices[_i] << "][" << global_indices[_j] << "] " << std::endl << d2nB_unit_dxidxj[_i][_j] << std::endl;
+			std::cout << "d2e_unit_dxidxj[" << global_indices[_i] << "][" << global_indices[_j] << "] " << std::endl << d2e_unit_dxidxj[_i][_j] << std::endl;
 		}
 #endif
 		

@@ -31,6 +31,7 @@
 // Properties
 const GLuint screenWidth = 800, screenHeight = 600;
 
+GLuint const init_loop = 10000000;
 // Function prototypes
 //void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode);
 //void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
@@ -288,9 +289,14 @@ int main()
 			glUniform1f(glGetUniformLocation(clothPieceShader.Program, "material.shininess"), 0.4f);
 
 			// Draw the loaded model
-			//if (loop_cnt < 0)
+			if (loop_cnt < init_loop)
 			{
 				simulate->simulate();
+				loop_cnt += 1;
+			}
+			if (keys[81])
+			{
+				loop_cnt -= 1;
 			}
 			simulate->writeBack();
 			clothPiece->exportPos3fNorm3fBuffer(meshVB, meshVNormalB, meshVBcnt, meshEB, meshEBcnt);
@@ -379,7 +385,6 @@ int main()
 		
 		// Swap the buffers
 		glfwSwapBuffers(window);
-		loop_cnt += 1;
 	}
 
 	glfwTerminate();

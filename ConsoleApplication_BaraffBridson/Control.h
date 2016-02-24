@@ -20,7 +20,6 @@ extern bool firstMouse;
 extern GLfloat deltaTime;
 extern GLfloat lastFrame;
 
-
 // Function prototypes
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode);
 

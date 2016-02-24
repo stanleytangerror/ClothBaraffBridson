@@ -11,6 +11,7 @@
 #include <OpenMesh/Core/Mesh/TriMesh_ArrayKernelT.hh>
 #include <OpenMesh/Core/Mesh/PolyMesh_ArrayKernelT.hh>
 
+#include "ClothPiece.h"
 
 inline void copy_v3f(Eigen::Vector3f & dest, const OpenMesh::Vec3f & src)
 {
@@ -55,6 +56,8 @@ GLboolean checkSymmetrical(const Eigen::SparseMatrix<float> mat, float tolerance
 			-vy  vx  0]
 */
 Eigen::Matrix3f get_S_m3f(Eigen::Vector3f & v);
+
+void shiftVertices(PolyArrayMesh::VertexHandle& vhd0, PolyArrayMesh::VertexHandle& vhd1, PolyArrayMesh::VertexHandle& vhd2);
 
 #endif
 
