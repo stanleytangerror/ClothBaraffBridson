@@ -9,7 +9,7 @@
 #include <iostream>
 
 #define STRETCH_FORCE
-//#define SHEAR_FORCE
+#define SHEAR_FORCE
 #define BEND_FORCE
 //#define USE_DAMP
 //#define DEBUG_FORCE
@@ -657,7 +657,9 @@ void BaraffRequire::getStretchAndShearForce(PolyArrayMesh::FaceHandle fhandle,
 
 		// shear condition
 		//float C = alpha * (float(wu.transpose() * wv) - float(du1.transpose() * du2));
-		float C = alpha * wu.transpose() * wv;
+		// TODO modified 20160225
+		//float C = alpha * wu.transpose() * wv;
+		float C = alpha * wu_unit.transpose() * wv_unit;
 		C_shear[face_index] = C;
 #ifdef DEBUG_FORCE
 		std::cout << "C " << C << std::endl;
@@ -666,7 +668,7 @@ void BaraffRequire::getStretchAndShearForce(PolyArrayMesh::FaceHandle fhandle,
 		Eigen::Vector3f dC_dxi[3];
 		for (size_t _i = 0; _i < 3; ++_i)
 		{
-			dC_dxi[_i] = alpha * (dwu_dxi[_i] * wv + dwv_dxi[_i] * wu);
+			dC_dxi[_i] = alpha * (dwu_dxi[_i] * wv_unit + dwv_dxi[_i] * wu_unit);
 		}
 
 #ifdef DEBUG_FORCE

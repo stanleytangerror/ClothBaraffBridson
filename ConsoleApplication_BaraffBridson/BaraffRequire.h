@@ -54,7 +54,7 @@ private:
 	// parameters for shear forces
 	float k_shear = 5e2f, kd_shear = 0.2f;
 	// parameters for bend forces
-	float k_bend = 5e-1f, kd_bend = 0.2f;
+	float k_bend = 1e-5f, kd_bend = 0.2f;
 
 	// vectors
 	Eigen::VectorXf f_total; 

@@ -31,7 +31,7 @@
 // Properties
 const GLuint screenWidth = 800, screenHeight = 600;
 
-GLuint const init_loop = 10000000;
+GLint const init_loop = 0;
 // Function prototypes
 //void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode);
 //void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
@@ -92,7 +92,7 @@ const GLfloat backgroundCubeVertices[] = {
 	1.0f, -1.0f,  1.0f
 };
 
-const std::string modelPath = "E:\\Computer Graphics\\Materials\\Models\\SquareCloth01\\Clothes.obj";
+const std::string modelPath = "E:\\Computer Graphics\\Materials\\Models\\SquareCloth04\\Clothes.obj";
 //const std::string modelPath = "E:/Computer Graphics/Materials/nanosuit/nanosuit.obj";
 //const std::string modelPath = "E:\\Computer Graphics\\Materials\\nanosuit\\nanosuit.obj";
 //const std::string modelPath = "E:\\Computer Graphics\\Materials\\Huang\\model02\\test01.obj";
@@ -210,7 +210,7 @@ int main()
 	std::cout << "debug normal vbo " << debugNormalVBO << std::endl;
 
 	// Game loop
-	GLuint loop_cnt = 0;
+	GLint loop_cnt = 0;
 	while (!glfwWindowShouldClose(window))
 	{
 		// Set frame time
