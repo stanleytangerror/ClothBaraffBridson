@@ -149,9 +149,11 @@ void ModifiedPCGSolver::runMPCG(const GLfloat epsilon)
 			alpha = delta_new / (direction.transpose() * q);
 			//std::cout << "alpha " << alpha << std::endl;
 			x = x + alpha * direction;
-			// !!!
-			residual = b - A * x;
-			//residual = residual - alpha * q;
+			// remove accumulated error
+			if (round % 50 == 0)
+				residual = b - A * x;
+			else 
+				residual = residual - alpha * q;
 			//std::cout << "residual " << std::endl << residual << std::endl;
 			span_direction = P_inverse * residual;
 			delta_old = delta_new;

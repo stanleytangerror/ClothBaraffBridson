@@ -13,6 +13,8 @@
 #define BEND_FORCE
 //#define USE_DAMP
 //#define DEBUG_FORCE
+#define USE_GRAVITY
+#define USE_CONSTRAINTS
 
 
 typedef Eigen::Tensor<float, 3> Tensor3f;
@@ -93,9 +95,6 @@ Eigen::VectorXf BaraffRequire::exportb()
 	return b;
 }
 
-//#define USE_GRAVITY
-//#define USE_CONSTRAINTS
-
 void BaraffRequire::compute(float time_step)
 {
 	reset(false);
@@ -106,11 +105,24 @@ void BaraffRequire::compute(float time_step)
 
 #ifdef USE_CONSTRAINTS
 	// add constraints
-	OpenMesh::VertexHandle vh = *(mesh->vertices_begin());
+	auto iter = mesh->vertices_begin();
+	OpenMesh::VertexHandle vh = *iter;
 	addConstraint(vh, Eigen::Vector3f(0.0f, 0.0f, 1.0f));
 	addConstraint(vh, Eigen::Vector3f(0.0f, 1.0f, 1.0f));
 	addConstraint(vh, Eigen::Vector3f(1.0f, 0.0f, 1.0f));
 	//std::cout << "constraints " << (checkSymmetrical(constraints) ? true : false) << std::endl;
+	for (size_t _i = 0; _i < 6; ++_i, ++iter);
+	vh = *iter;
+	addConstraint(vh, Eigen::Vector3f(0.0f, 0.0f, 1.0f));
+	addConstraint(vh, Eigen::Vector3f(0.0f, 1.0f, 1.0f));
+	addConstraint(vh, Eigen::Vector3f(1.0f, 0.0f, 1.0f));
+	for (size_t _i = 0; _i < 6; ++_i, ++iter);
+	vh = *iter;
+	addConstraint(vh, Eigen::Vector3f(0.0f, 0.0f, 1.0f));
+	addConstraint(vh, Eigen::Vector3f(0.0f, 1.0f, 1.0f));
+	addConstraint(vh, Eigen::Vector3f(1.0f, 0.0f, 1.0f));
+
+
 #endif
 
 	// add stretch and shear forces
