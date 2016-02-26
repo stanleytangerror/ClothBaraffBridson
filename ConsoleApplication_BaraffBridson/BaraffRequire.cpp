@@ -15,6 +15,7 @@
 //#define DEBUG_FORCE
 #define USE_GRAVITY
 #define USE_CONSTRAINTS
+//#define USE_NEW_A_b
 
 
 typedef Eigen::Tensor<float, 3> Tensor3f;
@@ -48,8 +49,12 @@ Eigen::SparseMatrix<float> BaraffRequire::exportA()
 	//std::cout << "val3 " << (checkSymmetrical(val3) ? true : false) << std::endl;
 	//Eigen::SparseMatrix<float> val4 = (-time_step) * val3 + identity;
 	
+#ifdef USE_NEW_A_b
+	Eigen::SparseMatrix<float> A = mass - time_step * df_dv_total - time_step * time_step * df_dx_total;
+#else
 	Eigen::SparseMatrix<float> A = identity - time_step * (mass_constrainted * df_dv_total)
 		- time_step * time_step * (mass_constrainted * df_dx_total);
+#endif
 	//std::cout << "A " << (checkSymmetrical(A, 1e-6) ? true : false) << std::endl;
 	//std::cout << "A diagonal " << std::endl << A.diagonal() << std::endl;
 	//std::cout << "A nonzero " << std::endl << A.nonZeros() << std::endl;
@@ -86,8 +91,11 @@ Eigen::VectorXf BaraffRequire::exportb()
 	//std::cout << "(f_total + df_dx_total * v_total * time_step) " << std::endl << temp3 << std::endl;
 	//std::cout << "(f_total + df_dx_total * v_total * time_step) " << std::endl << temp3.size() << std::endl;
 
-	
+#ifdef USE_NEW_A_b
+	Eigen::VectorXf b = time_step * (f_total + time_step * df_dx_total * v_total);
+#else
 	Eigen::VectorXf b = mass_constrainted * (f_total + df_dx_total * v_total * time_step) * time_step;
+#endif
 
 	//std::cout << "b " << std::endl << b << std::endl;
 	//std::cout << "b " << std::endl << b.size() << std::endl;
@@ -108,19 +116,19 @@ void BaraffRequire::compute(float time_step)
 	auto iter = mesh->vertices_begin();
 	OpenMesh::VertexHandle vh = *iter;
 	addConstraint(vh, Eigen::Vector3f(0.0f, 0.0f, 1.0f));
-	addConstraint(vh, Eigen::Vector3f(0.0f, 1.0f, 1.0f));
-	addConstraint(vh, Eigen::Vector3f(1.0f, 0.0f, 1.0f));
+	addConstraint(vh, Eigen::Vector3f(0.0f, 1.0f, 0.0f));
+	addConstraint(vh, Eigen::Vector3f(1.0f, 0.0f, 0.0f));
 	//std::cout << "constraints " << (checkSymmetrical(constraints) ? true : false) << std::endl;
 	for (size_t _i = 0; _i < 6; ++_i, ++iter);
 	vh = *iter;
 	addConstraint(vh, Eigen::Vector3f(0.0f, 0.0f, 1.0f));
-	addConstraint(vh, Eigen::Vector3f(0.0f, 1.0f, 1.0f));
-	addConstraint(vh, Eigen::Vector3f(1.0f, 0.0f, 1.0f));
+	addConstraint(vh, Eigen::Vector3f(0.0f, 1.0f, 0.0f));
+	addConstraint(vh, Eigen::Vector3f(1.0f, 0.0f, 0.0f));
 	for (size_t _i = 0; _i < 6; ++_i, ++iter);
 	vh = *iter;
 	addConstraint(vh, Eigen::Vector3f(0.0f, 0.0f, 1.0f));
-	addConstraint(vh, Eigen::Vector3f(0.0f, 1.0f, 1.0f));
-	addConstraint(vh, Eigen::Vector3f(1.0f, 0.0f, 1.0f));
+	addConstraint(vh, Eigen::Vector3f(0.0f, 1.0f, 0.0f));
+	addConstraint(vh, Eigen::Vector3f(1.0f, 0.0f, 0.0f));
 
 
 #endif
@@ -187,7 +195,7 @@ void BaraffRequire::compute(float time_step)
 	for (auto iter = mesh->vertices_begin(); iter != mesh->vertices_end(); ++iter)
 	{
 		GLuint global_index = vertices2indices[*iter];
-		Eigen::Vector3f gravity(0.0f, - mass[global_index] * 9.8f, 0.0f);
+		Eigen::Vector3f gravity(0.0f, - mass_list[global_index] * 9.8f, 0.0f);
 		addExternForce(*iter, gravity);
 		//break;
 	}
@@ -196,6 +204,7 @@ void BaraffRequire::compute(float time_step)
 	// after constraints and mass set 
 	mass_constrainted = mass_inverse * constraints;
 	//std::cout << "mass_constrainted " << (checkSymmetrical(mass_constrainted) ? true : false) << std::endl;
+	//std::cout << "constraints " << std::endl << constraints << std::endl;
 
 	//std::cout << "f_total " << std::endl << f_total << std::endl;
 
@@ -260,7 +269,7 @@ void BaraffRequire::initial()
 	// initial mass
 	for (size_t _i = 0; _i < VERTEX_SIZE; ++_i)
 	{
-		mass.push_back(1.0f);
+		mass_list.push_back(1.0f);
 	}
 
 	readPositions();
@@ -278,13 +287,20 @@ void BaraffRequire::initial()
 	C_bend = Eigen::VectorXf(EDGE_SIZE);
 	constraints = Eigen::SparseMatrix<float>(VERTEX_SIZE * 3, VERTEX_SIZE * 3);
 	mass_inverse = Eigen::SparseMatrix<float>(VERTEX_SIZE * 3, VERTEX_SIZE * 3);
+	mass = Eigen::SparseMatrix<float>(VERTEX_SIZE * 3, VERTEX_SIZE * 3);
 	identity = Eigen::SparseMatrix<float>(VERTEX_SIZE * 3, VERTEX_SIZE * 3);
 	
 	// ------------ initial constant variables ------------ 
+	// initial mass matrix, should not be modified
+	coeff_list.clear();
+	for (size_t _i = 0; _i < VERTEX_SIZE; ++_i) for (size_t _j = 0; _j < 3; ++_j)
+		coeff_list.push_back(Tri_float(_i * 3 + _j, _i * 3 + _j, mass_list[_i]));
+	mass.setFromTriplets(coeff_list.begin(), coeff_list.end());
+
 	// initial mass_inverse matrix, should not be modified
 	coeff_list.clear();
 	for (size_t _i = 0; _i < VERTEX_SIZE; ++_i) for (size_t _j = 0; _j < 3; ++_j)
-		coeff_list.push_back(Tri_float(_i * 3 + _j, _i * 3 + _j, mass[_i]));
+		coeff_list.push_back(Tri_float(_i * 3 + _j, _i * 3 + _j, 1.0f / mass_list[_i]));
 	mass_inverse.setFromTriplets(coeff_list.begin(), coeff_list.end());
 
 	// initial identity matrix, should not be modified

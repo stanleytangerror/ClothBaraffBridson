@@ -14,21 +14,13 @@
 class ModifiedPCGSolver
 {
 public:
-	ModifiedPCGSolver(Eigen::SparseMatrix<GLfloat> P, Eigen::SparseMatrix<GLfloat> A, 
-		Eigen::VectorXf b, Eigen::SparseMatrix<GLfloat> S) :
-		P(P), A(A.transpose() * A), b(A.transpose() * b), S(S)
-	{
-		dim = b.innerSize();
-		initial();
-	}
-
-	// DEPRECATED
 	ModifiedPCGSolver(Eigen::SparseMatrix<GLfloat> A, Eigen::VectorXf b, Eigen::SparseMatrix<GLfloat> S) :
 		//A(A), b(b), S(S)
 		A(A.transpose() * A), b(A.transpose() * b), S(S)
 	{
 		dim = this->b.innerSize();
 		//std::cout << "dim " << dim << std::endl;
+		this->P = Eigen::SparseMatrix<float>(dim, dim);
 		convert_diag2sparse_mnf(this->P, this->A.diagonal());
 		for (size_t _i = 0; _i < this->dim; ++_i)
 		{
@@ -40,8 +32,6 @@ public:
 	}
 
 	const Eigen::VectorXf & solve(const GLfloat epsilon);
-
-	// TODO: P P_inverse
 
 private:
 	// dimension of solution vector

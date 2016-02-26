@@ -31,7 +31,7 @@
 // Properties
 const GLuint screenWidth = 800, screenHeight = 600;
 
-GLint const init_loop = 0;
+GLint const init_loop = 100000;
 // Function prototypes
 //void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode);
 //void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);

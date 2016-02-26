@@ -6,7 +6,7 @@ void convert_diag2sparse_mnf(Eigen::SparseMatrix<float> & dest, const Eigen::Dia
 {
 	typedef Eigen::Triplet<float> Tri_float;
 	static size_t size = src.size();
-	dest = Eigen::SparseMatrix<float>(size, size);
+	//dest = Eigen::SparseMatrix<float>(size, size);
 	std::vector<Tri_float> triples;
 	triples.reserve(size);
 	for (size_t _i = 0; _i < size; ++_i)
@@ -25,7 +25,7 @@ void get_diag_mnf(Eigen::SparseMatrix<float> & dest, size_t size)
 	{
 		triples.push_back(Tri_float(_i, _i, 1.0f));
 	}
-	dest = Eigen::SparseMatrix<float>(size, size);
+	//dest = Eigen::SparseMatrix<float>(size, size);
 	dest.setFromTriplets(triples.begin(), triples.end());
 }
 

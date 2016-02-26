@@ -42,7 +42,7 @@ private:
 	std::map<PolyArrayMesh::FaceHandle, GLuint> faces2indices;
 	std::map<PolyArrayMesh::EdgeHandle, GLuint> edges2indices;
 	GLuint VERTEX_SIZE, FACE_SIZE, EDGE_SIZE;
-	std::vector<float> mass;
+	std::vector<float> mass_list;
 	Eigen::VectorXf positions;
 
 	// ----------------- variables needed by Baraff ---------------- 
@@ -70,6 +70,7 @@ private:
 	Eigen::SparseMatrix<float> mass_constrainted;
 	// will not change once initialed
 	Eigen::SparseMatrix<float> mass_inverse;
+	Eigen::SparseMatrix<float> mass;
 	Eigen::SparseMatrix<float> identity;
 	//Eigen::DiagonalMatrix<int, Eigen::Dynamic> diagonal_matrix;
 

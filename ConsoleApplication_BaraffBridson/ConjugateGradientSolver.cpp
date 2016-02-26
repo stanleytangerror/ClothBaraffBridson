@@ -4,12 +4,15 @@
 
 #include <iostream>
 
+#define SHOW_CONVERGENCE
+//#define DEBUG_PCG
 
 const Eigen::VectorXf & ModifiedPCGSolver::solve(const GLfloat epsilon)
 {
 	//std::cout << "A symmetrical " << (checkSymmetrical(A) ? true : false) << std::endl;
 	//std::cout << "x before " << std::endl << x << std::endl;
 	runMPCG(epsilon);
+	//runProjectedCG(epsilon);
 	//std::cout << "x after " << std::endl << x << std::endl;
 	return x;
 }
@@ -44,10 +47,16 @@ void ModifiedPCGSolver::initial()
 
 inline Eigen::VectorXf ModifiedPCGSolver::filter(Eigen::VectorXf vec)
 {
-	return S * vec;
+#ifdef DEBUG_PCG
+	//std::cout << "S " << S.diagonal().norm() << std::endl;
+	//for (size_t _i = 0; _i < dim / 3; ++_i)
+	//{
+	//	std::cout << "S[" << _i << "] " << std::endl << Eigen::Matrix3f(S.block(_i * 3, _i * 3, 3, 3)) << std::endl;
+	//}
+#endif
+	//return S * vec;
+	return vec;
 }
-
-//#define SHOW_CONVERGENCE
 
 void ModifiedPCGSolver::runCG(const GLfloat epsilon)
 {
@@ -109,24 +118,34 @@ void ModifiedPCGSolver::runMPCG(const GLfloat epsilon)
 	GLfloat alpha, delta_0, delta_old, delta_new, end_point = 1e-2f;
 	// !!!
 	x = z;
-	//Eigen::VectorXf b_filter = filter(b);
-	//delta_0 = b_filter.transpose() * P * b_filter;
+	Eigen::VectorXf b_filter = filter(b);
+	delta_0 = b_filter.transpose() * P * b_filter;
 	//std::cout << "size " << std::endl
 	//	<< "A " << A.size() << std::endl
 	//	<< "b " << b.size() << std::endl
 	//	<< "x " << x.size() << std::endl;
-	//std::cout << "x " << std::endl << x << std::endl;
+#ifdef DEBUG_PCG
+	std::cout << "x " << x.norm() << std::endl;
 	//std::cout << "A " << std::endl << A << std::endl;
-	//std::cout << "b " << std::endl << b << std::endl;
-	residual = (b - A * x);
-	//std::cout << "residual " << std::endl << residual << std::endl;
+	//std::cout << "P_inverse " << std::endl << P_inverse << std::endl;
+	std::cout << "P " << P.diagonal().norm() << std::endl;
+	std::cout << "P_inverse " << P_inverse.diagonal().norm() << std::endl;
+	std::cout << "b " << b.norm() << std::endl;
+	std::cout << "dim " << dim << std::endl;
+#endif
 	//residual = filter(b - A * x);
-	direction = (P_inverse * residual);
-	//direction = filter(P_inverse * residual);
+	//std::cout << "residual " << std::endl << residual << std::endl;
+	residual = filter(b - A * x);
+	direction = filter(P_inverse * residual);
 	delta_new = residual.transpose() * direction;
 	delta_0 = delta_new;
+#ifdef DEBUG_PCG
+	std::cout << "residual " << residual.norm() << std::endl;
+	std::cout << "direction " << direction.norm() << std::endl;
+#endif
 	// !!!
 	end_point = epsilon * epsilon * delta_0;
+	//end_point = epsilon;
 #ifdef SHOW_CONVERGENCE
 	std::cout << "initial value " << delta_new << std::endl;
 	std::cout << "target value " << end_point << std::endl;
@@ -138,29 +157,36 @@ void ModifiedPCGSolver::runMPCG(const GLfloat epsilon)
 	while (delta_new > end_point)
 	{
 		size_t round = 0;
-		residual = (b - A * x);
-		direction = (P_inverse * residual);
+		residual = filter(b - A * x);
+		direction = filter(P_inverse * residual);
 		//std::cout << "restart" << std::endl;
 		while (round < dim && delta_new > end_point) {
 			//std::cout << "delta_new " << delta_new << std::endl;
 			//std::cout << "delta_0 " << delta_0 << std::endl;
-			q = (A * direction);
+			q = filter(A * direction);
 			//q = filter(A * direction);
 			alpha = delta_new / (direction.transpose() * q);
-			//std::cout << "alpha " << alpha << std::endl;
 			x = x + alpha * direction;
 			// remove accumulated error
-			if (round % 50 == 0)
-				residual = b - A * x;
-			else 
-				residual = residual - alpha * q;
-			//std::cout << "residual " << std::endl << residual << std::endl;
+			//if (round % 50 == 0)
+				residual = filter(b - A * x);
+			//else 
+			//	residual = residual - alpha * q;
 			span_direction = P_inverse * residual;
 			delta_old = delta_new;
 			delta_new = residual.transpose() * span_direction;
-			direction = (span_direction + delta_new / delta_old * direction);
+			direction = filter(span_direction + delta_new / delta_old * direction);
 			//direction = filter(span_direction + delta_new / delta_old * direction);
 			round += 1;
+#ifdef DEBUG_PCG
+			std::cout << "q " << q.norm() << std::endl;
+			std::cout << "alpha " << alpha << std::endl;
+			std::cout << "residual " << residual.norm() << std::endl;
+			std::cout << "span_direction " << span_direction.norm() << std::endl;
+			std::cout << "delta_old " << delta_old << std::endl;
+			std::cout << "delta_new " << delta_new << std::endl;
+			std::cout << "direction " << direction.norm() << std::endl;
+#endif
 #ifdef SHOW_CONVERGENCE
 			std::cout << "round " << round << std::endl
 				<< "delta_new " << delta_new << ", "
@@ -188,6 +214,7 @@ void ModifiedPCGSolver::runProjectedCG(const GLfloat epsilon)
 	Eigen::VectorXf b_hat(dim), residual(dim), p(dim), s(dim), h(dim);
 	Eigen::SparseMatrix<GLfloat> iden, iden_minus_S;
 	GLfloat b_delta, delta, delta_hat, alpha;
+	iden = Eigen::SparseMatrix<GLfloat>(dim, dim);
 	get_diag_mnf(iden, dim);
 	iden_minus_S = iden - S;
 	x = z;
