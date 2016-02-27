@@ -38,6 +38,7 @@ private:
 
 	// --------------- variables of model ------------------
 	OpenMesh::VPropHandleT<OpenMesh::Vec3f> vph_planarcoord;
+	// WARNING access to map should via map.at()
 	std::map<PolyArrayMesh::VertexHandle, GLuint> vertices2indices;
 	std::map<PolyArrayMesh::FaceHandle, GLuint> faces2indices;
 	std::map<PolyArrayMesh::EdgeHandle, GLuint> edges2indices;

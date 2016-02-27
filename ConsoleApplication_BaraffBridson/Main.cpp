@@ -31,7 +31,7 @@
 // Properties
 const GLuint screenWidth = 800, screenHeight = 600;
 
-GLint const init_loop = 100000;
+GLint const init_loop = 1000;
 // Function prototypes
 //void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode);
 //void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
@@ -293,6 +293,7 @@ int main()
 			{
 				simulate->simulate();
 				loop_cnt += 1;
+				std::cout << "simulation loop " << loop_cnt << std::endl;
 			}
 			if (keys[81])
 			{
@@ -378,7 +379,7 @@ int main()
 			glBindVertexArray(0);
 
 			glBindVertexArray(debugVAO);
-			glDrawArrays(GL_POINTS, 0, fSize);
+			//glDrawArrays(GL_POINTS, 0, fSize);
 			glBindVertexArray(0);
 		
 		}

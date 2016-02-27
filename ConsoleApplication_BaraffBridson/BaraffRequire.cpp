@@ -11,11 +11,15 @@
 #define STRETCH_FORCE
 #define SHEAR_FORCE
 #define BEND_FORCE
+
 //#define USE_DAMP
-//#define DEBUG_FORCE
 #define USE_GRAVITY
 #define USE_CONSTRAINTS
 //#define USE_NEW_A_b
+
+//#define DEBUG_ENERGY
+//#define DEBUG_FORCE
+
 
 
 typedef Eigen::Tensor<float, 3> Tensor3f;
@@ -119,12 +123,17 @@ void BaraffRequire::compute(float time_step)
 	addConstraint(vh, Eigen::Vector3f(0.0f, 1.0f, 0.0f));
 	addConstraint(vh, Eigen::Vector3f(1.0f, 0.0f, 0.0f));
 	//std::cout << "constraints " << (checkSymmetrical(constraints) ? true : false) << std::endl;
-	for (size_t _i = 0; _i < 6; ++_i, ++iter);
+	for (size_t _i = 0; _i < 10; ++_i, ++iter);
 	vh = *iter;
 	addConstraint(vh, Eigen::Vector3f(0.0f, 0.0f, 1.0f));
 	addConstraint(vh, Eigen::Vector3f(0.0f, 1.0f, 0.0f));
 	addConstraint(vh, Eigen::Vector3f(1.0f, 0.0f, 0.0f));
-	for (size_t _i = 0; _i < 6; ++_i, ++iter);
+	for (size_t _i = 0; _i < 100; ++_i, ++iter);
+	vh = *iter;
+	addConstraint(vh, Eigen::Vector3f(0.0f, 0.0f, 1.0f));
+	addConstraint(vh, Eigen::Vector3f(0.0f, 1.0f, 0.0f));
+	addConstraint(vh, Eigen::Vector3f(1.0f, 0.0f, 0.0f));
+	for (size_t _i = 0; _i < 10; ++_i, ++iter);
 	vh = *iter;
 	addConstraint(vh, Eigen::Vector3f(0.0f, 0.0f, 1.0f));
 	addConstraint(vh, Eigen::Vector3f(0.0f, 1.0f, 0.0f));
@@ -149,8 +158,10 @@ void BaraffRequire::compute(float time_step)
 		//break;
 	}
 
+#ifdef DEBUG_ENERGY
 	std::cout << "stretch energy " << Cu_stretch.norm() + Cv_stretch.norm() << std::endl;
 	std::cout << "shear energy " << C_shear.norm() << std::endl;
+#endif
 	//std::cout << "C_shear " << std::endl << C_shear << std::endl;
 	//std::cout << "C_shear nonzero " << C_shear.nonZeros() << std::endl;
 	//std::cout << "C_shear norm " << C_shear.norm() << std::endl;
@@ -175,7 +186,9 @@ void BaraffRequire::compute(float time_step)
 		if (!fhd0.is_valid() || !fhd1.is_valid() || fhd0 == fhd1) continue;
 		getBendForce(fhd0, fhd1, ehd, k_bend, kd_bend);
 	}
+#ifdef DEBUG_ENERGY
 	std::cout << "bend energy " << C_bend.norm() << std::endl;
+#endif
 
 	//std::cout << "bend force pair #" << bend_cnt << std::endl;
 #endif
@@ -194,7 +207,7 @@ void BaraffRequire::compute(float time_step)
 	// add external force
 	for (auto iter = mesh->vertices_begin(); iter != mesh->vertices_end(); ++iter)
 	{
-		GLuint global_index = vertices2indices[*iter];
+		GLuint global_index = vertices2indices.at(*iter);
 		Eigen::Vector3f gravity(0.0f, - mass_list[global_index] * 9.8f, 0.0f);
 		addExternForce(*iter, gravity);
 		//break;
@@ -219,7 +232,7 @@ void BaraffRequire::readPositions()
 		Eigen::Vector3f pos_eigen;
 		OpenMesh::VertexHandle vh = *iter;
 		copy_v3f(pos_eigen, mesh->point(vh));
-		positions.block<3, 1>(vertices2indices[vh] * 3, 0) = pos_eigen;
+		positions.block<3, 1>(vertices2indices.at(vh) * 3, 0) = pos_eigen;
 	}
 }
 
@@ -229,7 +242,7 @@ void BaraffRequire::writePositions()
 	for (auto iter = mesh->vertices_begin(); iter != mesh->vertices_end(); ++iter)
 	{
 		OpenMesh::Vec3f pos_openmesh;
-		Eigen::Vector3f pos_eigen = positions.block<3, 1>(vertices2indices[*iter] * 3, 0);
+		Eigen::Vector3f pos_eigen = positions.block<3, 1>(vertices2indices.at(*iter) * 3, 0);
 		copy_v3f(pos_openmesh, pos_eigen);
 		mesh->point(*iter) = pos_openmesh;
 	}
@@ -352,13 +365,13 @@ void BaraffRequire::reset(GLboolean first)
 
 void BaraffRequire::addConstraint(PolyArrayMesh::VertexHandle vhandle, Eigen::Vector3f direction)
 {
-	GLuint global_index = vertices2indices[vhandle];
+	GLuint global_index = vertices2indices.at(vhandle);
 	addBlock33(constraints, global_index, global_index, - direction * direction.transpose());
 }
 
 void BaraffRequire::addExternForce(PolyArrayMesh::VertexHandle vhandle, Eigen::Vector3f ext_force)
 {
-	GLuint global_index = vertices2indices[vhandle];
+	GLuint global_index = vertices2indices.at(vhandle);
 	f_total.block<3, 1>(global_index * 3, 0) += ext_force;
 }
 
@@ -405,13 +418,13 @@ void BaraffRequire::getStretchAndShearForce(PolyArrayMesh::FaceHandle fhandle,
 			shiftVertices(vhandles[0], vhandles[1], vhandles[2]);
 			shiftVertices(vhandles[0], vhandles[1], vhandles[2]);
 		}
-	
+			
 	}
 	// global indices of three vertices
 	GLuint global_indices[3];
-	global_indices[0] = vertices2indices[vhandles[0]];
-	global_indices[1] = vertices2indices[vhandles[1]];
-	global_indices[2] = vertices2indices[vhandles[2]];
+	global_indices[0] = vertices2indices.at(vhandles[0]);
+	global_indices[1] = vertices2indices.at(vhandles[1]);
+	global_indices[2] = vertices2indices.at(vhandles[2]);
 #ifdef DEBUG_FORCE
 	std::cout << "global indices ";
 	for (size_t _i = 0; _i < 3; ++_i)
@@ -427,7 +440,7 @@ void BaraffRequire::getStretchAndShearForce(PolyArrayMesh::FaceHandle fhandle,
 	//	
 	//}
 
-	GLuint face_index = faces2indices[fhandle];
+	GLuint face_index = faces2indices.at(fhandle);
 	
 	// vertices velocity
 #ifdef DEBUG_FORCE
@@ -472,9 +485,9 @@ void BaraffRequire::getStretchAndShearForce(PolyArrayMesh::FaceHandle fhandle,
 
 	// world coordinate
 	Eigen::Vector3f x0, x1, x2;
-	x0 = positions.block<3, 1>(vertices2indices[vhandles[0]] * 3, 0);
-	x1 = positions.block<3, 1>(vertices2indices[vhandles[1]] * 3, 0);
-	x2 = positions.block<3, 1>(vertices2indices[vhandles[2]] * 3, 0);
+	x0 = positions.block<3, 1>(vertices2indices.at(vhandles[0]) * 3, 0);
+	x1 = positions.block<3, 1>(vertices2indices.at(vhandles[1]) * 3, 0);
+	x2 = positions.block<3, 1>(vertices2indices.at(vhandles[2]) * 3, 0);
 #ifdef DEBUG_FORCE
 	std::cout << "x[" << global_indices[0] << "]" << std::endl << x0 << std::endl;
 	std::cout << "x[" << global_indices[1] << "]" << std::endl << x1 << std::endl;
@@ -864,10 +877,10 @@ void BaraffRequire::getBendForce(PolyArrayMesh::FaceHandle fhandle0, PolyArrayMe
 
 	// global indices of three vertices
 	GLuint global_indices[4];
-	global_indices[0] = vertices2indices[vhandles[0]];
-	global_indices[1] = vertices2indices[vhandles[1]];
-	global_indices[2] = vertices2indices[vhandles[2]];
-	global_indices[3] = vertices2indices[vhandles[3]];
+	global_indices[0] = vertices2indices.at(vhandles[0]);
+	global_indices[1] = vertices2indices.at(vhandles[1]);
+	global_indices[2] = vertices2indices.at(vhandles[2]);
+	global_indices[3] = vertices2indices.at(vhandles[3]);
 #ifdef DEBUG_FORCE
 	std::cout << "global indices ";
 	for (size_t _i = 0; _i < 4; ++_i)
@@ -889,10 +902,10 @@ void BaraffRequire::getBendForce(PolyArrayMesh::FaceHandle fhandle0, PolyArrayMe
 	
 	// world coordinate
 	Eigen::Vector3f x0, x1, x2, x3;
-	x0 = positions.block<3, 1>(vertices2indices[vhandles[0]] * 3, 0);
-	x1 = positions.block<3, 1>(vertices2indices[vhandles[1]] * 3, 0);
-	x2 = positions.block<3, 1>(vertices2indices[vhandles[2]] * 3, 0);
-	x3 = positions.block<3, 1>(vertices2indices[vhandles[3]] * 3, 0);
+	x0 = positions.block<3, 1>(vertices2indices.at(vhandles[0]) * 3, 0);
+	x1 = positions.block<3, 1>(vertices2indices.at(vhandles[1]) * 3, 0);
+	x2 = positions.block<3, 1>(vertices2indices.at(vhandles[2]) * 3, 0);
+	x3 = positions.block<3, 1>(vertices2indices.at(vhandles[3]) * 3, 0);
 #ifdef DEBUG_FORCE
 	std::cout << "x[" << global_indices[0] << "]" << std::endl << x0 << std::endl;
 	std::cout << "x[" << global_indices[1] << "]" << std::endl << x1 << std::endl;
@@ -900,8 +913,8 @@ void BaraffRequire::getBendForce(PolyArrayMesh::FaceHandle fhandle0, PolyArrayMe
 	std::cout << "x[" << global_indices[3] << "]" << std::endl << x3 << std::endl;
 #endif
 
-	GLuint faceA_index = faces2indices[fhandle0];
-	GLuint faceB_index = faces2indices[fhandle1];
+	GLuint faceA_index = faces2indices.at(fhandle0);
+	GLuint faceB_index = faces2indices.at(fhandle1);
 	
 	// normal of two faces
 	Eigen::Vector3f normal_A, normal_B, edge;
@@ -1014,7 +1027,7 @@ void BaraffRequire::getBendForce(PolyArrayMesh::FaceHandle fhandle0, PolyArrayMe
 	{
 		// bend condition
 		float C = atan2(sin_theta, cos_theta);
-		C_bend[edges2indices[ehandle]] = C;
+		C_bend[edges2indices.at(ehandle)] = C;
 #ifdef DEBUG_FORCE
 		std::cout << "bend condition " << C << std::endl;
 #endif
@@ -1341,9 +1354,9 @@ void BaraffRequire::exportShearConditionData(float* & dataBuffer, GLuint & dataS
 		GLuint cnt = 0;
 		for (auto cvfiter = mesh->cvf_begin(vhd); cvfiter != mesh->cvf_end(vhd); ++cvfiter, ++cnt)
 		{
-			condition += C_shear_normalized[faces2indices[*cvfiter]];
+			condition += C_shear_normalized[faces2indices.at(*cvfiter)];
 		}
-		dataBuffer[vertices2indices[vhd]] = condition / (float) cnt;
+		dataBuffer[vertices2indices.at(vhd)] = condition / (float) cnt;
 	}
 }
 

@@ -4,7 +4,7 @@
 
 #include <iostream>
 
-#define SHOW_CONVERGENCE
+//#define SHOW_CONVERGENCE
 //#define DEBUG_PCG
 
 const Eigen::VectorXf & ModifiedPCGSolver::solve(const GLfloat epsilon)
@@ -54,8 +54,8 @@ inline Eigen::VectorXf ModifiedPCGSolver::filter(Eigen::VectorXf vec)
 	//	std::cout << "S[" << _i << "] " << std::endl << Eigen::Matrix3f(S.block(_i * 3, _i * 3, 3, 3)) << std::endl;
 	//}
 #endif
-	//return S * vec;
-	return vec;
+	return S * vec;
+	//return vec;
 }
 
 void ModifiedPCGSolver::runCG(const GLfloat epsilon)
@@ -118,8 +118,8 @@ void ModifiedPCGSolver::runMPCG(const GLfloat epsilon)
 	GLfloat alpha, delta_0, delta_old, delta_new, end_point = 1e-2f;
 	// !!!
 	x = z;
-	Eigen::VectorXf b_filter = filter(b);
-	delta_0 = b_filter.transpose() * P * b_filter;
+	//Eigen::VectorXf b_filter = filter(b);
+	//delta_0 = b_filter.transpose() * P * b_filter;
 	//std::cout << "size " << std::endl
 	//	<< "A " << A.size() << std::endl
 	//	<< "b " << b.size() << std::endl
