@@ -12,7 +12,7 @@ void Simulate::initial()
 
 void Simulate::simulate()
 {
-	variables->compute(2.0f);
+	variables->compute(0.2f);
 	Eigen::SparseMatrix<GLfloat> A = variables->exportA();
 	Eigen::VectorXf b = variables->exportb();
 	Eigen::SparseMatrix<GLfloat> S = variables->exportS();

@@ -12,12 +12,16 @@
 #define SHEAR_FORCE
 #define BEND_FORCE
 
-//#define USE_DAMP
+#define USE_DAMP
+#define USE_STRETCH_DAMP
+#define USE_SHEAR_DAMP
+#define USE_BEND_DAMP
+
 #define USE_GRAVITY
 #define USE_CONSTRAINTS
 //#define USE_NEW_A_b
 
-//#define DEBUG_ENERGY
+#define DEBUG_ENERGY
 //#define DEBUG_FORCE
 
 
@@ -122,12 +126,14 @@ void BaraffRequire::compute(float time_step)
 	addConstraint(vh, Eigen::Vector3f(0.0f, 0.0f, 1.0f));
 	addConstraint(vh, Eigen::Vector3f(0.0f, 1.0f, 0.0f));
 	addConstraint(vh, Eigen::Vector3f(1.0f, 0.0f, 0.0f));
-	//std::cout << "constraints " << (checkSymmetrical(constraints) ? true : false) << std::endl;
-	for (size_t _i = 0; _i < 10; ++_i, ++iter);
-	vh = *iter;
-	addConstraint(vh, Eigen::Vector3f(0.0f, 0.0f, 1.0f));
-	addConstraint(vh, Eigen::Vector3f(0.0f, 1.0f, 0.0f));
-	addConstraint(vh, Eigen::Vector3f(1.0f, 0.0f, 0.0f));
+	std::cout << "constraints " << (checkSymmetrical(constraints) ? true : false) << std::endl;
+	//for (size_t _i = 0; _i < 10; ++_i, ++iter)
+	//{
+	//	vh = *iter;
+	//	addConstraint(vh, Eigen::Vector3f(0.0f, 0.0f, 1.0f));
+	//	addConstraint(vh, Eigen::Vector3f(0.0f, 1.0f, 0.0f));
+	//	addConstraint(vh, Eigen::Vector3f(1.0f, 0.0f, 0.0f));
+	//}
 	for (size_t _i = 0; _i < 100; ++_i, ++iter);
 	vh = *iter;
 	addConstraint(vh, Eigen::Vector3f(0.0f, 0.0f, 1.0f));
@@ -188,6 +194,8 @@ void BaraffRequire::compute(float time_step)
 	}
 #ifdef DEBUG_ENERGY
 	std::cout << "bend energy " << C_bend.norm() << std::endl;
+	std::cout << "total energy \t\t" << k_stretch * (Cu_stretch.norm() + Cv_stretch.norm()) 
+		+ k_shear * C_shear.norm() + k_bend * C_bend.norm() << std::endl;
 #endif
 
 	//std::cout << "bend force pair #" << bend_cnt << std::endl;
@@ -629,7 +637,7 @@ void BaraffRequire::getStretchAndShearForce(PolyArrayMesh::FaceHandle fhandle,
 			//std::cout << "dfi_dvj[" << _i << "]" << "[" << _j << "] " << std::endl << dfi_dvj[_i][_j] << std::endl;
 			// update to total f and total v
 			addBlock33(df_dx_total, global_indices[_j], global_indices[_i], dfi_dxj[_i][_j]);
-#ifdef USE_DAMP
+#if defined(USE_DAMP) && defined(USE_STRETCH_DAMP)
 			addBlock33(df_dx_total, global_indices[_j], global_indices[_i], dfi_dxj_damp[_i][_j]);
 #endif
 			addBlock33(df_dv_total, global_indices[_j], global_indices[_i], dfi_dvj[_i][_j]);
@@ -679,7 +687,7 @@ void BaraffRequire::getStretchAndShearForce(PolyArrayMesh::FaceHandle fhandle,
 #endif
 
 			f_total.block<3, 1>(global_indices[_i] * 3, 0) += f[_i];
-#ifdef USE_DAMP
+#if defined(USE_DAMP) && defined(USE_STRETCH_DAMP)
 			f_total.block<3, 1>(global_indices[_i] * 3, 0) += f_damp[_i];
 
 #endif
@@ -767,7 +775,7 @@ void BaraffRequire::getStretchAndShearForce(PolyArrayMesh::FaceHandle fhandle,
 
 			// update total data
 			addBlock33(df_dx_total, global_indices[_j], global_indices[_i], dfi_dxj[_i][_j]);
-#ifdef USE_DAMP
+#if defined(USE_DAMP) && defined(USE_SHEAR_DAMP)
 			addBlock33(df_dx_total, global_indices[_j], global_indices[_i], dfi_dxj_damp[_i][_j]);
 #endif
 			addBlock33(df_dv_total, global_indices[_j], global_indices[_i], dfi_dvj[_i][_j]);
@@ -815,7 +823,7 @@ void BaraffRequire::getStretchAndShearForce(PolyArrayMesh::FaceHandle fhandle,
 #endif
 
 			f_total.block<3, 1>(global_indices[_i] * 3, 0) += f[_i];
-#ifdef USE_DAMP
+#if defined(USE_DAMP) && defined(USE_SHEAR_DAMP)
 			f_total.block<3, 1>(global_indices[_i] * 3, 0) += f_damp[_i];
 #endif
 			//std::cout << "f_total[" << global_indices[_i] << "] " << std::endl << f_total.block<3, 1>(global_indices[_i] * 3, 0) << std::endl;
@@ -1273,7 +1281,7 @@ void BaraffRequire::getBendForce(PolyArrayMesh::FaceHandle fhandle0, PolyArrayMe
 
 			// update total data
 			addBlock33(df_dx_total, global_indices[_j], global_indices[_i], dfi_dxj[_i][_j]);
-		#ifdef USE_DAMP
+#if defined(USE_DAMP) && defined(USE_BEND_DAMP)
 			addBlock33(df_dx_total, global_indices[_j], global_indices[_i], dfi_dxj_damp[_i][_j]);
 		#endif
 			addBlock33(df_dv_total, global_indices[_j], global_indices[_i], dfi_dvj[_i][_j]);
@@ -1311,7 +1319,7 @@ void BaraffRequire::getBendForce(PolyArrayMesh::FaceHandle fhandle0, PolyArrayMe
 #endif
 
 			f_total.block<3, 1>(global_indices[_i] * 3, 0) += f[_i];
-		#ifdef USE_DAMP
+#if defined(USE_DAMP) && defined(USE_BEND_DAMP)
 			f_total.block<3, 1>(global_indices[_i] * 3, 0) += f_damp[_i];
 		#endif
 			//std::cout << "f_total[" << global_indices[_i] << "] " << std::endl << f_total.block<3, 1>(global_indices[_i] * 3, 0) << std::endl;
