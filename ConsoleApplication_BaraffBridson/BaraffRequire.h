@@ -28,6 +28,16 @@ public:
 	void exportShearConditionData(float* & dataBuffer, GLuint & dataSize);
 	void exportBendConditionData(float* & dataBuffer, GLuint & dataSize);
 
+	Eigen::VectorXf const exportVelocity()
+	{
+		return v_total;
+	}
+
+	size_t exportVertexSize()
+	{
+		return VERTEX_SIZE;
+	}
+
 private:
 	ClothPiece* clothPiece;
 
@@ -49,6 +59,8 @@ private:
 	// ----------------- variables needed by Baraff ---------------- 
 	// parameters for integration
 	float time_step;
+	// parameters for cloth density
+	float density = 0.1f;
 	// parameters for stretch forces
 	float k_stretch = 5e3f, kd_stretch = 0.2f;
 	float bu = 20.0f, bv = 20.0f;
@@ -96,7 +108,6 @@ private:
 
 	void getBendForce(PolyArrayMesh::FaceHandle fhandle0, PolyArrayMesh::FaceHandle fhandle1,
 		PolyArrayMesh::EdgeHandle ehandle, float k_bend, float kd_bend);
-
 
 };
 

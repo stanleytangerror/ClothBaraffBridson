@@ -4,14 +4,14 @@
 
 #include <iostream>
 
-//#define SHOW_CONVERGENCE
+#define SHOW_CONVERGENCE
 //#define DEBUG_PCG
 
-const Eigen::VectorXf & ModifiedPCGSolver::solve(const GLfloat epsilon)
+const Eigen::VectorXf & ModifiedPCGSolver::solve(const GLfloat epsilon, const Eigen::VectorXf init_val)
 {
 	//std::cout << "A symmetrical " << (checkSymmetrical(A) ? true : false) << std::endl;
 	//std::cout << "x before " << std::endl << x << std::endl;
-	runMPCG(epsilon);
+	runMPCG(epsilon, init_val);
 	//runProjectedCG(epsilon);
 	//std::cout << "x after " << std::endl << x << std::endl;
 	return x;
@@ -22,8 +22,8 @@ void ModifiedPCGSolver::initial()
 	x = Eigen::VectorXf(dim);
 	x.setZero();
 	// DEPRECATED
-	z = Eigen::VectorXf(dim);
-	z.setZero();
+	//z = Eigen::VectorXf(dim);
+	//z.setZero();
 	// DEPRECATED
 	//P_inverse = Eigen::SparseMatrix<GLfloat>(dim, dim);
 	//for (size_t _i = 0; _i < dim; ++_i)
@@ -66,7 +66,7 @@ void ModifiedPCGSolver::runCG(const GLfloat epsilon)
 	Eigen::VectorXf residual(dim), direction(dim), span_direction(dim), q(dim);
 	GLfloat alpha, delta_0, delta_old, delta_new;
 	// initial solution
-	x = z;
+	x = Eigen::VectorXf(dim);
 	residual = b - A * x;
 	direction = residual;
 	delta_0 = residual.transpose() * residual;
@@ -109,15 +109,16 @@ void ModifiedPCGSolver::runCG(const GLfloat epsilon)
 	}
 }
 
-void ModifiedPCGSolver::runMPCG(const GLfloat epsilon)
+void ModifiedPCGSolver::runMPCG(const GLfloat epsilon, const Eigen::VectorXf z)
 {
 #ifdef SHOW_CONVERGENCE
 	std::cout << " ========== MPCG ============== " << std::endl;
+	//std::cout << "z " << std::endl << z << std::endl;
 #endif
 	Eigen::VectorXf residual(dim), direction(dim), span_direction(dim), q(dim);
 	GLfloat alpha, delta_0, delta_old, delta_new, end_point = 1e-2f;
 	// !!!
-	x = z;
+	x = filter(z);
 	//Eigen::VectorXf b_filter = filter(b);
 	//delta_0 = b_filter.transpose() * P * b_filter;
 	//std::cout << "size " << std::endl
@@ -190,7 +191,7 @@ void ModifiedPCGSolver::runMPCG(const GLfloat epsilon)
 #ifdef SHOW_CONVERGENCE
 			std::cout << "round " << round << std::endl
 				<< "delta_new " << delta_new << ", "
-				<< "epsilon^2 * delta_0 " << epsilon * epsilon * delta_0 << std::endl
+				<< "epsilon^2 * delta_0 " << end_point << std::endl
 				//<< "x " << std::endl << x << std::endl
 				//<< "residual " << std::endl << residual << std::endl
 				;
@@ -217,7 +218,7 @@ void ModifiedPCGSolver::runProjectedCG(const GLfloat epsilon)
 	iden = Eigen::SparseMatrix<GLfloat>(dim, dim);
 	get_diag_mnf(iden, dim);
 	iden_minus_S = iden - S;
-	x = z;
+	x = Eigen::VectorXf(dim);
 	//x = iden_minus_S * z;
 	b_hat = S * (b);
 	//b_hat = S * (b - A * iden_minus_S * z);

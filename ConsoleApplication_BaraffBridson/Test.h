@@ -53,6 +53,6 @@ void testPCG()
 	//std::cout << "estimated error: " << cg.error() << std::endl;
 
 	ModifiedPCGSolver solver(sA, b, S);
-	auto solution2 = solver.solve(0.01f);
+	auto solution2 = solver.solve(0.01f, Eigen::VectorXf(b.size()));
 	std::cout << solution2 << std::endl;
 }

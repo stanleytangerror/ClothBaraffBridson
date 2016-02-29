@@ -290,7 +290,7 @@ void BaraffRequire::initial()
 	// initial mass
 	for (size_t _i = 0; _i < VERTEX_SIZE; ++_i)
 	{
-		mass_list.push_back(1.0f);
+		mass_list.push_back(density);
 	}
 
 	readPositions();
@@ -504,7 +504,11 @@ void BaraffRequire::getStretchAndShearForce(PolyArrayMesh::FaceHandle fhandle,
 
 	// transform between world coordinate and planar coordinate
 	Eigen::Vector3f wu, wv;
-	float dom = du1(0) * du2(1) - du2(0) * du1(1);
+	//float dom = max(du1(0) * du2(1) - du2(0) * du1(1), 1e-15f);
+	float dom_raw = du1(0) * du2(1) - du2(0) * du1(1);
+	float dom = (dom_raw >= 0.0f) ? 
+		max(du1(0) * du2(1) - du2(0) * du1(1), 1e-15f) :
+		min(du1(0) * du2(1) - du2(0) * du1(1), -1e-15f);
 #ifdef DEBUG_FORCE
 	std::cout << "dom " << dom << std::endl;
 #endif

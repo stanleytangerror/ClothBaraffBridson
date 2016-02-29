@@ -31,7 +31,7 @@ public:
 		initial();
 	}
 
-	const Eigen::VectorXf & solve(const GLfloat epsilon);
+	const Eigen::VectorXf & solve(const GLfloat epsilon, const Eigen::VectorXf init_val);
 
 private:
 	// dimension of solution vector
@@ -48,7 +48,7 @@ private:
 	Eigen::VectorXf x;
 
 	// change in velocity in constraint directions
-	Eigen::VectorXf z;
+	//Eigen::VectorXf z;
 	// constraints of particles 
 	Eigen::SparseMatrix<GLfloat> S;
 
@@ -66,7 +66,7 @@ private:
 
 	void runCG(const GLfloat epsilon);
 	// baraff & witkin 98
-	void runMPCG(const GLfloat epsilon);
+	void runMPCG(const GLfloat epsilon, const Eigen::VectorXf z);
 	// Ascher & Boxerman 03
 	void runProjectedCG(const GLfloat epsilon);
 };

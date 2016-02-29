@@ -11,6 +11,7 @@ class Simulate
 private:
 	ClothPiece* model;
 	BaraffRequire* variables;
+	Eigen::VectorXf last_root;
 	//ModifiedPCGSolver solver;
 
 	void initial();

@@ -8,6 +8,7 @@
 void Simulate::initial()
 {
 	//variables = BaraffRequire(model);
+	last_root = Eigen::VectorXf::Zero(3 * variables->exportVertexSize());
 }
 
 void Simulate::simulate()
@@ -39,7 +40,8 @@ void Simulate::simulate()
 
 #ifdef MPCG_BARAFF
 	ModifiedPCGSolver solver2 = ModifiedPCGSolver(A, b, S);
-	Eigen::VectorXf v_delta2 = solver2.solve(0.05f);
+	//Eigen::VectorXf v_delta2 = solver2.solve(0.05f, last_root);
+	Eigen::VectorXf v_delta2 = solver2.solve(0.05f, Eigen::VectorXf::Zero(variables->exportVertexSize() * 3));
 #endif
 
 #ifdef MPCG_BARAFF 
@@ -54,6 +56,7 @@ void Simulate::simulate()
 #ifdef DEBUG_SOLVE_EQUATION
 	std::cout << "solution " << std::endl << v_delta2 << std::endl;
 #endif
+	last_root = v_delta2;
 	variables->update(v_delta2);
 }
 
