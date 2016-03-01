@@ -62,12 +62,12 @@ private:
 	// parameters for cloth density
 	float density = 0.1f;
 	// parameters for stretch forces
-	float k_stretch = 5e3f, kd_stretch = 0.2f;
+	float k_stretch = 5e3f, kd_stretch = 0.6f;
 	float bu = 20.0f, bv = 20.0f;
 	// parameters for shear forces
-	float k_shear = 5e2f, kd_shear = 0.2f;
+	float k_shear = 5e2f, kd_shear = 0.6f;
 	// parameters for bend forces
-	float k_bend = 1e-5f, kd_bend = 0.2f;
+	float k_bend = 1e-5f, kd_bend = 0.6f;
 
 	// vectors
 	Eigen::VectorXf f_total; 

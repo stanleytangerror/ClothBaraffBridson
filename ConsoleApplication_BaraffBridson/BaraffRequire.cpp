@@ -371,10 +371,12 @@ void BaraffRequire::reset(GLboolean first)
 
 }
 
+// I - p*pT == 0, p should be unit vector
 void BaraffRequire::addConstraint(PolyArrayMesh::VertexHandle vhandle, Eigen::Vector3f direction)
 {
 	GLuint global_index = vertices2indices.at(vhandle);
-	addBlock33(constraints, global_index, global_index, - direction * direction.transpose());
+	Eigen::Vector3f dir_unit = direction.normalized();
+	addBlock33(constraints, global_index, global_index, -dir_unit * dir_unit.transpose());
 }
 
 void BaraffRequire::addExternForce(PolyArrayMesh::VertexHandle vhandle, Eigen::Vector3f ext_force)
@@ -623,7 +625,7 @@ void BaraffRequire::getStretchAndShearForce(PolyArrayMesh::FaceHandle fhandle,
 		std::cout << "Cv_dot " << Cv_dot << std::endl;
 #endif
 		// compute and update first order derivatives df_dx, df_dv
-		Eigen::Matrix3f dfi_dxj[3][3], dfi_dxj_damp[3][3], dfi_dvj[3][3];
+		Eigen::Matrix3f dfi_dxj[3][3], dfi_dxj_damp[3][3], dfi_dvj_damp[3][3];
 		for (size_t _i = 0; _i < 3; ++_i) for (size_t _j = 0; _j < 3; ++_j)
 		{
 			// stretch force
@@ -636,15 +638,15 @@ void BaraffRequire::getStretchAndShearForce(PolyArrayMesh::FaceHandle fhandle,
 				d2Cu_dxidxj[_i][_j] * Cu_dot + d2Cv_dxidxj[_i][_j] * Cv_dot);
 			//std::cout << "dfi_dxj_damp[" << _i << "]" << "[" << _j << "] " << std::endl << dfi_dxj_damp[_i][_j] << std::endl;
 			// stretch damp velocity
-			dfi_dvj[_i][_j] = -k_stretch * kd_stretch * (
+			dfi_dvj_damp[_i][_j] = -k_stretch * kd_stretch * (
 				dCu_dxi[_i] * dCu_dxi[_j].transpose() + dCv_dxi[_i] * dCv_dxi[_j].transpose());
 			//std::cout << "dfi_dvj[" << _i << "]" << "[" << _j << "] " << std::endl << dfi_dvj[_i][_j] << std::endl;
 			// update to total f and total v
 			addBlock33(df_dx_total, global_indices[_j], global_indices[_i], dfi_dxj[_i][_j]);
 #if defined(USE_DAMP) && defined(USE_STRETCH_DAMP)
 			addBlock33(df_dx_total, global_indices[_j], global_indices[_i], dfi_dxj_damp[_i][_j]);
+			addBlock33(df_dv_total, global_indices[_j], global_indices[_i], dfi_dvj_damp[_i][_j]);
 #endif
-			addBlock33(df_dv_total, global_indices[_j], global_indices[_i], dfi_dvj[_i][_j]);
 			//std::cout << "df_dx_total[" << global_indices[_j] << "]" << "[" << global_indices[_i] << "] " << std::endl 
 			//	<< df_dx_total.block(3 * global_indices[_j], 3 * global_indices[_i], 3, 3) << std::endl;
 			//std::cout << "df_dv_total[" << global_indices[_j] << "]" << "[" << global_indices[_i] << "] " << std::endl
@@ -764,12 +766,12 @@ void BaraffRequire::getStretchAndShearForce(PolyArrayMesh::FaceHandle fhandle,
 #endif
 
 		// compute and update first order derivatives df_dx, df_dv
-		Eigen::Matrix3f dfi_dxj[3][3], dfi_dxj_damp[3][3], dfi_dvj[3][3];
+		Eigen::Matrix3f dfi_dxj[3][3], dfi_dxj_damp[3][3], dfi_dvj_damp[3][3];
 		for (size_t _i = 0; _i < 3; ++_i) for (size_t _j = 0; _j < 3; ++_j)
 		{
 			dfi_dxj[_i][_j] = -k_shear * (dC_dxi[_i] * dC_dxi[_j].transpose() + d2C_dxidxj[_i][_j] * C);
 			dfi_dxj_damp[_i][_j] = -k_shear * kd_shear * d2C_dxidxj[_i][_j] * C_dot;
-			dfi_dvj[_i][_j] = -k_shear * kd_shear * (dC_dxi[_i] * dC_dxi[_j].transpose());
+			dfi_dvj_damp[_i][_j] = -k_shear * kd_shear * (dC_dxi[_i] * dC_dxi[_j].transpose());
 
 			//if ((_i == 0 && _j == 1) || (_i == 1 && _j == 0))
 			//{
@@ -781,8 +783,8 @@ void BaraffRequire::getStretchAndShearForce(PolyArrayMesh::FaceHandle fhandle,
 			addBlock33(df_dx_total, global_indices[_j], global_indices[_i], dfi_dxj[_i][_j]);
 #if defined(USE_DAMP) && defined(USE_SHEAR_DAMP)
 			addBlock33(df_dx_total, global_indices[_j], global_indices[_i], dfi_dxj_damp[_i][_j]);
+			addBlock33(df_dv_total, global_indices[_j], global_indices[_i], dfi_dvj_damp[_i][_j]);
 #endif
-			addBlock33(df_dv_total, global_indices[_j], global_indices[_i], dfi_dvj[_i][_j]);
 
 		}
 		//std::cout << "shear df_dv_total " << (checkSymmetrical(df_dv_total) ? true : false) << std::endl;
@@ -1270,12 +1272,12 @@ void BaraffRequire::getBendForce(PolyArrayMesh::FaceHandle fhandle0, PolyArrayMe
 #endif
 
 		// compute and update first order derivatives df_dx, df_dv
-		Eigen::Matrix3f dfi_dxj[4][4], dfi_dxj_damp[4][4], dfi_dvj[4][4];
+		Eigen::Matrix3f dfi_dxj[4][4], dfi_dxj_damp[4][4], dfi_dvj_damp[4][4];
 		for (size_t _i = 0; _i < 4; ++_i) for (size_t _j = 0; _j < 4; ++_j)
 		{
 			dfi_dxj[_i][_j] = -k_bend * (dC_dxi[_i] * dC_dxi[_j].transpose() + d2C_dxidxj[_i][_j] * C);
 			dfi_dxj_damp[_i][_j] = -k_bend * kd_bend * d2C_dxidxj[_i][_j] * C_dot;
-			dfi_dvj[_i][_j] = -k_bend * kd_bend * (dC_dxi[_i] * dC_dxi[_j].transpose());
+			dfi_dvj_damp[_i][_j] = -k_bend * kd_bend * (dC_dxi[_i] * dC_dxi[_j].transpose());
 
 			//if ((_i == 0 && _j == 1) || (_i == 1 && _j == 0))
 			//{
@@ -1287,8 +1289,8 @@ void BaraffRequire::getBendForce(PolyArrayMesh::FaceHandle fhandle0, PolyArrayMe
 			addBlock33(df_dx_total, global_indices[_j], global_indices[_i], dfi_dxj[_i][_j]);
 #if defined(USE_DAMP) && defined(USE_BEND_DAMP)
 			addBlock33(df_dx_total, global_indices[_j], global_indices[_i], dfi_dxj_damp[_i][_j]);
-		#endif
-			addBlock33(df_dv_total, global_indices[_j], global_indices[_i], dfi_dvj[_i][_j]);
+			addBlock33(df_dv_total, global_indices[_j], global_indices[_i], dfi_dvj_damp[_i][_j]);
+#endif
 
 		}
 		//std::cout << "bend df_dv_total " << (checkSymmetrical(df_dv_total) ? true : false) << std::endl;

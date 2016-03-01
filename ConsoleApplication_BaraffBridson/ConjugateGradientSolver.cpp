@@ -4,7 +4,7 @@
 
 #include <iostream>
 
-#define SHOW_CONVERGENCE
+//#define SHOW_CONVERGENCE
 //#define DEBUG_PCG
 
 const Eigen::VectorXf & ModifiedPCGSolver::solve(const GLfloat epsilon, const Eigen::VectorXf init_val)
