@@ -35,15 +35,15 @@ void addBlock33(Eigen::SparseMatrix<float> & augend, GLuint block_i, GLuint bloc
 
 void get_diag_mnf(Eigen::SparseMatrix<float> & dest, size_t size);
 
-inline float max(float a, float b)
-{
-	return (a > b) ? a : b;
-}
-
-inline float min(float a, float b)
-{
-	return (a < b) ? a : b;
-}
+//inline float max(float a, float b)
+//{
+//	return (a > b) ? a : b;
+//}
+//
+//inline float min(float a, float b)
+//{
+//	return (a < b) ? a : b;
+//}
 
 GLboolean checkIdentical(const Eigen::Matrix3f mat1, const Eigen::Matrix3f mat2, float tolerance = 1e-20f);
 
