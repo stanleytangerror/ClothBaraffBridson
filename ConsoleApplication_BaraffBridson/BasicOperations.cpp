@@ -108,6 +108,7 @@ Eigen::Matrix3f get_S_m3f(Eigen::Vector3f & v)
 	return S;
 }
 
+#ifdef OPENMESH_BASED
 // xyz -> zxy
 void shiftVertices(PolyArrayMesh::VertexHandle & vhd0, PolyArrayMesh::VertexHandle & vhd1, PolyArrayMesh::VertexHandle & vhd2)
 {
@@ -117,5 +118,17 @@ void shiftVertices(PolyArrayMesh::VertexHandle & vhd0, PolyArrayMesh::VertexHand
 	std::swap(vhd0, vhd2);
 	// z x y
 }
+#endif
 
+#ifdef CGAL_BASED
+// xyz -> zxy
+void shiftVertices(Veridx & vhd0, Veridx & vhd1, Veridx & vhd2)
+{
+	// x y z
+	std::swap(vhd0, vhd1);
+	// y x z
+	std::swap(vhd0, vhd2);
+	// z x y
+}
+#endif
 

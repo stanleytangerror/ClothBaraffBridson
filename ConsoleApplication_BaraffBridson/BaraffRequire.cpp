@@ -122,7 +122,7 @@ void BaraffRequire::compute(float time_step)
 #ifdef USE_CONSTRAINTS
 	// add constraints
 	auto iter = mesh->vertices_begin();
-	OpenMesh::VertexHandle vh = *iter;
+	Veridx vh = *iter;
 	addConstraint(vh, Eigen::Vector3f(0.0f, 0.0f, 1.0f));
 	addConstraint(vh, Eigen::Vector3f(0.0f, 1.0f, 0.0f));
 	addConstraint(vh, Eigen::Vector3f(1.0f, 0.0f, 0.0f));
@@ -185,10 +185,10 @@ void BaraffRequire::compute(float time_step)
 #ifdef BEND_FORCE
 	for (auto iter = mesh->edges_begin(); iter != mesh->edges_end(); ++iter)
 	{
-		PolyArrayMesh::EdgeHandle ehd = *iter;
-		PolyArrayMesh::FaceHandle fhd0, fhd1;
-		fhd0 = mesh->face_handle(mesh->halfedge_handle(ehd, 0));
-		fhd1 = mesh->face_handle(mesh->halfedge_handle(ehd, 1));
+		Edgeidx ehd = *iter;
+		Faceidx fhd0, fhd1;
+		fhd0 = mesh->face(mesh->halfedge(ehd, 0));
+		fhd1 = mesh->face(mesh->halfedge(ehd, 1));
 		if (!fhd0.is_valid() || !fhd1.is_valid() || fhd0 == fhd1) continue;
 		getBendForce(fhd0, fhd1, ehd, k_bend, kd_bend);
 	}
@@ -201,7 +201,7 @@ void BaraffRequire::compute(float time_step)
 	//std::cout << "bend force pair #" << bend_cnt << std::endl;
 #endif
 
-	//PolyArrayMesh::EdgeHandle ehd;
+	//Edgeidx ehd;
 	//for (Mesh::FaceHalfedgeIter fhe_it(mesh_, fl); fhe_it; ++fhe_it) {
 	//	Mesh::HalfedgeHandle ohe = mesh_.opposite_halfedge_handle(fhe_it);
 	//	Mesh::FaceHandle f = mesh_.face_handle(ohe);
@@ -238,7 +238,7 @@ void BaraffRequire::readPositions()
 	for (auto iter = mesh->vertices_begin(); iter != mesh->vertices_end(); ++iter)
 	{
 		Eigen::Vector3f pos_eigen;
-		OpenMesh::VertexHandle vh = *iter;
+		Veridx vh = *iter;
 		copy_v3f(pos_eigen, mesh->point(vh));
 		positions.block<3, 1>(vertices2indices.at(vh) * 3, 0) = pos_eigen;
 	}
@@ -247,18 +247,27 @@ void BaraffRequire::readPositions()
 void BaraffRequire::writePositions()
 {
 	PolyArrayMesh* mesh = clothPiece->getMesh();
-	for (auto iter = mesh->vertices_begin(); iter != mesh->vertices_end(); ++iter)
+	BOOST_FOREACH(Veridx viter, mesh->vertices())
 	{
-		OpenMesh::Vec3f pos_openmesh;
-		Eigen::Vector3f pos_eigen = positions.block<3, 1>(vertices2indices.at(*iter) * 3, 0);
-		copy_v3f(pos_openmesh, pos_eigen);
-		mesh->point(*iter) = pos_openmesh;
+		Point3f pos_cgal;
+		Eigen::Vector3f pos_eigen = positions.block<3, 1>(vertices2indices.at(viter) * 3, 0);
+		copy_v3f(pos_cgal, pos_eigen);
+		mesh->point(viter) = pos_cgal;
 	}
 	/* after changing position
 	* update normals for consistence
 	*/
-	mesh->update_face_normals();
-	mesh->update_vertex_normals();
+	PolyArrayMesh::Property_map<Faceidx, Vec3f> faceNormals =
+		mesh->property_map<Faceidx, Vec3f>(clothPiece->pname_faceNormals).first;
+	//CGAL::Polygon_mesh_processing::compute_face_normals(mesh, faceNormals);
+	PolyArrayMesh::Property_map<Veridx, Vec3f> vertexNormals =
+		mesh->property_map<Veridx, Vec3f>(clothPiece->pname_vertexNormals).first;
+	//CGAL::Polygon_mesh_processing::compute_vertex_normals(mesh, vertexNormals);
+	// TODO change to compute_normals
+	//CGAL::Polygon_mesh_processing::compute_normals(mesh, vertexNormals, faceNormals, mesh->vertices());
+	//CGAL::Polygon_mesh_processing::compute_normals(PolyMesh, vertexNormals, faceNormals,
+	//boost::get(PolyMesh->points(), *PolyMesh));
+	//CGAL::Polygon_mesh_processing::parameters::vertex_point_map(PolyMesh->points()).geom_traits(CGAL::Exact_predicates_inexact_constructions_kernel()));
 
 }
 
@@ -266,9 +275,9 @@ void BaraffRequire::writePositions()
 void BaraffRequire::initial()
 {
 	PolyArrayMesh* mesh = clothPiece->getMesh();
-	VERTEX_SIZE = mesh->n_vertices();
-	FACE_SIZE = mesh->n_faces();
-	EDGE_SIZE = mesh->n_edges();
+	VERTEX_SIZE = mesh->number_of_vertices();
+	FACE_SIZE = mesh->number_of_faces();
+	EDGE_SIZE = mesh->number_of_edges();
 
 	// initial global indices
 	int index = 0;
@@ -372,27 +381,27 @@ void BaraffRequire::reset(GLboolean first)
 }
 
 // I - p*pT == 0, p should be unit vector
-void BaraffRequire::addConstraint(PolyArrayMesh::VertexHandle vhandle, Eigen::Vector3f direction)
+void BaraffRequire::addConstraint(Veridx vhandle, Eigen::Vector3f direction)
 {
 	GLuint global_index = vertices2indices.at(vhandle);
 	Eigen::Vector3f dir_unit = direction.normalized();
 	addBlock33(constraints, global_index, global_index, -dir_unit * dir_unit.transpose());
 }
 
-void BaraffRequire::addExternForce(PolyArrayMesh::VertexHandle vhandle, Eigen::Vector3f ext_force)
+void BaraffRequire::addExternForce(Veridx vhandle, Eigen::Vector3f ext_force)
 {
 	GLuint global_index = vertices2indices.at(vhandle);
 	f_total.block<3, 1>(global_index * 3, 0) += ext_force;
 }
 
-void BaraffRequire::getStretchAndShearForce(PolyArrayMesh::FaceHandle fhandle,
-	const OpenMesh::VPropHandleT<OpenMesh::Vec3f> & vprop_planarcoord, 
+void BaraffRequire::getStretchAndShearForce(Faceidx fhandle,
+	const PolyArrayMesh::Property_map<Veridx, Vec3f> & vprop_planarcoord,
 	float k_stretch, float kd_stretch, float k_shear, float kd_shear, float bu, float bv)
 {
 	//std::cout << "in1 v_total nonzero " << std::endl << v_total.nonZeros() << std::endl;
 	//std::cout << "in1 v_total[0] " << std::endl << v_total.block<3, 1>(0, 0) << std::endl;
 	PolyArrayMesh* mesh = clothPiece->getMesh();
-	PolyArrayMesh::ConstFaceVertexIter cfviter = mesh->cfv_iter(fhandle);
+	CGAL::Vertex_around_face_circulator<PolyArrayMesh> cfviter(mesh->halfedge(fhandle), *mesh);
 
 	/*
 	x0-----x1
@@ -400,11 +409,12 @@ void BaraffRequire::getStretchAndShearForce(PolyArrayMesh::FaceHandle fhandle,
 	|####/
 	|###/
 	|##/
+	|#/
 	x2
 	*/
 
 	// vhandles of three vertices
-	PolyArrayMesh::VertexHandle vhandles[3];
+	Veridx vhandles[3];
 	{
 		vhandles[0] = *cfviter++;
 		vhandles[1] = *cfviter++;
@@ -412,9 +422,9 @@ void BaraffRequire::getStretchAndShearForce(PolyArrayMesh::FaceHandle fhandle,
 
 		// planar coordinate
 		Eigen::Vector3f t0, t1, t2;
-		copy_v3f(t0, mesh->property(vprop_planarcoord, vhandles[0]));
-		copy_v3f(t1, mesh->property(vprop_planarcoord, vhandles[1]));
-		copy_v3f(t2, mesh->property(vprop_planarcoord, vhandles[2]));
+		copy_v3f(t0, vprop_planarcoord[vhandles[0]]);
+		copy_v3f(t1, vprop_planarcoord[vhandles[1]]);
+		copy_v3f(t2, vprop_planarcoord[vhandles[2]]);
 		float e1, e2, e3;
 		e1 = (t0 - t1).norm();
 		e2 = (t1 - t2).norm();
@@ -471,9 +481,9 @@ void BaraffRequire::getStretchAndShearForce(PolyArrayMesh::FaceHandle fhandle,
 
 	// planar coordinate
 	Eigen::Vector3f u0, u1, u2;
-	copy_v3f(u0, mesh->property(vprop_planarcoord, vhandles[0]));
-	copy_v3f(u1, mesh->property(vprop_planarcoord, vhandles[1]));
-	copy_v3f(u2, mesh->property(vprop_planarcoord, vhandles[2]));
+	copy_v3f(u0, vprop_planarcoord[vhandles[0]]);
+	copy_v3f(u1, vprop_planarcoord[vhandles[1]]);
+	copy_v3f(u2, vprop_planarcoord[vhandles[2]]);
 
 	Eigen::Vector3f du1 = u1 - u0;
 	Eigen::Vector3f du2 = u2 - u0;
@@ -854,8 +864,8 @@ Eigen::Vector3f get_vector3f_block(Tensor3f & tensor, unsigned int block_i, unsi
 }
 #endif
 
-void BaraffRequire::getBendForce(PolyArrayMesh::FaceHandle fhandle0, PolyArrayMesh::FaceHandle fhandle1,
-	PolyArrayMesh::EdgeHandle ehandle, float k_bend, float kd_bend)
+void BaraffRequire::getBendForce(Faceidx fhandle0, Faceidx fhandle1,
+	Edgeidx ehandle, float k_bend, float kd_bend)
 {
 	PolyArrayMesh* mesh = clothPiece->getMesh();
 
@@ -866,24 +876,22 @@ void BaraffRequire::getBendForce(PolyArrayMesh::FaceHandle fhandle0, PolyArrayMe
 	|####/##|
 	|###e###|
 	|##/##B#|
+	|#/#####|
 	x2------x3
 	*/
-	PolyArrayMesh::VertexHandle vhandles[4];
+	Veridx vhandles[4];
 
-	vhandles[1] = mesh->to_vertex_handle(mesh->halfedge_handle(ehandle, 0));
-	vhandles[2] = mesh->to_vertex_handle(mesh->halfedge_handle(ehandle, 1));
+	vhandles[1] = mesh->target(mesh->halfedge(ehandle, 0));
+	vhandles[2] = mesh->target(mesh->halfedge(ehandle, 1));
 
-	for (auto iter = mesh->cfv_begin(fhandle0); iter != mesh->cfv_end(fhandle0); ++iter)
+	BOOST_FOREACH(Veridx vh, vertices_around_face(mesh->halfedge(fhandle0), *mesh))
 	{
-		auto vh = *iter;
 		if (vh == vhandles[1] || vh == vhandles[2]) continue;
 		vhandles[0] = vh;
 		break;
 	}
-
-	for (auto iter = mesh->cfv_begin(fhandle1); iter != mesh->cfv_end(fhandle1); ++iter)
+	BOOST_FOREACH(Veridx vh, vertices_around_face(mesh->halfedge(fhandle1), *mesh))
 	{
-		auto vh = *iter;
 		if (vh == vhandles[1] || vh == vhandles[2]) continue;
 		vhandles[3] = vh;
 		break;
@@ -932,10 +940,11 @@ void BaraffRequire::getBendForce(PolyArrayMesh::FaceHandle fhandle0, PolyArrayMe
 	
 	// normal of two faces
 	Eigen::Vector3f normal_A, normal_B, edge;
-	OpenMesh::FPropHandleT<OpenMesh::Vec3f> fprop_normal = mesh->face_normals_pph();
+	PolyArrayMesh::Property_map<Faceidx, Vec3f> fprop_normal =
+		mesh->property_map<Faceidx, Vec3f>(clothPiece->pname_faceNormals).first;
 	// <<<<<<
-	copy_v3f(normal_A, mesh->property(fprop_normal, fhandle0));
-	copy_v3f(normal_B, mesh->property(fprop_normal, fhandle1));
+	copy_v3f(normal_A, fprop_normal[fhandle0]);
+	copy_v3f(normal_B, fprop_normal[fhandle1]);
 	// ---- TODO use this normal works ?? check reasons
 	//normal_A = - (x2 - x1).cross(x0 - x2);
 	//normal_B = (x2 - x3).cross(x3 - x1);
@@ -1354,24 +1363,25 @@ void BaraffRequire::exportShearConditionData(float* & dataBuffer, GLuint & dataS
 	PolyArrayMesh* mesh = clothPiece->getMesh();
 	float max = C_shear.maxCoeff(), min = C_shear.minCoeff();
 	//std::cout << "shear condition range " << min << ", " << max << std::endl;
-	Eigen::VectorXf C_shear_normalized(mesh->n_faces());
+	Eigen::VectorXf C_shear_normalized(mesh->number_of_faces());
 	C_shear_normalized.setOnes();
 	C_shear_normalized = (C_shear - C_shear_normalized * min) / (max - min);
-	dataSize = mesh->n_vertices();
+	dataSize = mesh->number_of_vertices();
 	dataBuffer = new float[dataSize];
 	memset(dataBuffer, sizeof(float) * dataSize, 0);
+	// TODO
 	//std::cout << "shear condition size " << dataSize << std::endl;
-	for (auto viter = mesh->vertices_begin(); viter != mesh->vertices_end(); ++viter)
-	{
-		PolyArrayMesh::VertexHandle vhd = *viter;
-		float condition = 0.0f;
-		GLuint cnt = 0;
-		for (auto cvfiter = mesh->cvf_begin(vhd); cvfiter != mesh->cvf_end(vhd); ++cvfiter, ++cnt)
-		{
-			condition += C_shear_normalized[faces2indices.at(*cvfiter)];
-		}
-		dataBuffer[vertices2indices.at(vhd)] = condition / (float) cnt;
-	}
+	//for (auto viter = mesh->vertices_begin(); viter != mesh->vertices_end(); ++viter)
+	//{
+	//	Veridx vhd = *viter;
+	//	float condition = 0.0f;
+	//	GLuint cnt = 0;
+	//	for (auto cvfiter = mesh->cvf_begin(vhd); cvfiter != mesh->cvf_end(vhd); ++cvfiter, ++cnt)
+	//	{
+	//		condition += C_shear_normalized[faces2indices.at(*cvfiter)];
+	//	}
+	//	dataBuffer[vertices2indices.at(vhd)] = condition / (float) cnt;
+	//}
 }
 
 void BaraffRequire::exportBendConditionData(float *& dataBuffer, GLuint & dataSize)

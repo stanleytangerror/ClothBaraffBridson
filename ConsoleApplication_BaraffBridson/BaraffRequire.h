@@ -47,11 +47,11 @@ private:
 										 // according to Filling a sparse matrix section of Eigen
 
 	// --------------- variables of model ------------------
-	OpenMesh::VPropHandleT<OpenMesh::Vec3f> vph_planarcoord;
+	PolyArrayMesh::Property_map<Veridx, Vec3f> vph_planarcoord;
 	// WARNING access to map should via map.at()
-	std::map<PolyArrayMesh::VertexHandle, GLuint> vertices2indices;
-	std::map<PolyArrayMesh::FaceHandle, GLuint> faces2indices;
-	std::map<PolyArrayMesh::EdgeHandle, GLuint> edges2indices;
+	std::map<Veridx, GLuint> vertices2indices;
+	std::map<Faceidx, GLuint> faces2indices;
+	std::map<Edgeidx, GLuint> edges2indices;
 	GLuint VERTEX_SIZE, FACE_SIZE, EDGE_SIZE;
 	std::vector<float> mass_list;
 	Eigen::VectorXf positions;
@@ -99,15 +99,15 @@ private:
 	// called before each iteration
 	void reset(GLboolean first);
 
-	void addConstraint(PolyArrayMesh::VertexHandle vhandle, Eigen::Vector3f direction);
-	void addExternForce(PolyArrayMesh::VertexHandle vhandle, Eigen::Vector3f ext_force);
+	void addConstraint(Veridx vhandle, Eigen::Vector3f direction);
+	void addExternForce(Veridx vhandle, Eigen::Vector3f ext_force);
 
-	void getStretchAndShearForce(PolyArrayMesh::FaceHandle fhandle,
-		const OpenMesh::VPropHandleT<OpenMesh::Vec3f> & vprop_planarcoord,
+	void getStretchAndShearForce(Faceidx fhandle,
+		const PolyArrayMesh::Property_map<Veridx, Vec3f> & vprop_planarcoord,
 		float k_stretch, float kd_stretch, float k_shear, float kd_shear, float bu, float bv);
 
-	void getBendForce(PolyArrayMesh::FaceHandle fhandle0, PolyArrayMesh::FaceHandle fhandle1,
-		PolyArrayMesh::EdgeHandle ehandle, float k_bend, float kd_bend);
+	void getBendForce(Faceidx fhandle0, Faceidx fhandle1,
+		Edgeidx ehandle, float k_bend, float kd_bend);
 
 };
 

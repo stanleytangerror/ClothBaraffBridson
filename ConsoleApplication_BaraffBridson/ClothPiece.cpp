@@ -1,17 +1,19 @@
 #include "ClothPiece.h"
 #include <iostream>
 
+#ifdef OPENMESH_BASED
+
 void ClothPiece::import(const Mesh mesh)
 {
 	/* load vertexes */
-	std::map<GLuint, PolyArrayMesh::VertexHandle> vindices2vhandles;
+	std::map<GLuint, Veridx> vindices2vhandles;
 	for (size_t i = 0; i < mesh.vertices.size(); ++i)
 	{
 		vindices2vhandles[i] = this->PolyMesh->add_vertex(
 			PolyArrayMesh::Point(mesh.vertices[i].Position[0], mesh.vertices[i].Position[1], mesh.vertices[i].Position[2]));
 	}
 	/* set faces */
-	std::vector<PolyArrayMesh::VertexHandle> face_vhandles;
+	std::vector<Veridx> face_vhandles;
 	for (GLuint vindex : mesh.indices)
 	{
 		face_vhandles.push_back(vindices2vhandles[vindex]);
@@ -55,13 +57,13 @@ void ClothPiece::exportPos3fNorm3fBuffer(
 	/* data for EBO */
 	elementBuffer = new GLuint[mesh->n_faces() * 3 * (EDGES - 2)];
 
-	std::map<PolyArrayMesh::VertexHandle, GLuint> vhandles2vindices;
+	std::map<Veridx, GLuint> vhandles2vindices;
 	
 	/* export data for VBO */
 	GLuint pivot = 0;
 	for (PolyArrayMesh::VertexIter iter = mesh->vertices_begin(); iter != mesh->vertices_end(); ++iter, ++pivot)
 	{
-		PolyArrayMesh::VertexHandle vhandle = *iter;
+		Veridx vhandle = *iter;
 		vhandles2vindices[vhandle] = pivot;
 		memcpy_s(vertexBuffer + pivot * 3, 3 * sizeof(GLfloat), mesh->point(vhandle).data(), 3 * sizeof(GLfloat));
 		memcpy_s(vertexNormalBuffer + pivot * 3, 3 * sizeof(GLfloat), mesh->normal(vhandle).data(), 3 * sizeof(GLfloat));
@@ -78,7 +80,7 @@ void ClothPiece::exportPos3fNorm3fBuffer(
 		   rearrange is 
 		   0, 1, (2, 0, 2), (3, 0, 3), ..., (n-2, 0, n-2), n-1
 		*/
-		PolyArrayMesh::VertexHandle v0 = *cfviter;
+		Veridx v0 = *cfviter;
 		elementBuffer[pivot++] = vhandles2vindices[*(cfviter++)];
 		elementBuffer[pivot++] = vhandles2vindices[*(cfviter++)];
 		for (size_t i = 2; i <= EDGES - 2; ++i, ++cfviter)
@@ -100,16 +102,16 @@ void ClothPiece::exportFaceNorm3fBuffer(GLfloat *& fBarycenterBuffer, GLfloat *&
 	fBarycenterBuffer = new GLfloat[mesh->n_faces() * 3];
 	fNormalBuffer = new GLfloat[mesh->n_faces() * 3];
 
-	OpenMesh::FPropHandleT<OpenMesh::Vec3f> fprop_normal = mesh->face_normals_pph();
+	OpenMesh::FPropHandleT<Point3f> fprop_normal = mesh->face_normals_pph();
 	GLuint pivot = 0;
 	for (auto iter = mesh->faces_begin(); iter != mesh->faces_end(); ++iter, ++pivot)
 	{
 		PolyArrayMesh::FaceHandle fhd = *iter;
 		// face normal
-		OpenMesh::Vec3f normal = mesh->property(fprop_normal, fhd);
+		Point3f normal = mesh->property(fprop_normal, fhd);
 		memcpy_s(fNormalBuffer + pivot * 3, 3 * sizeof(GLfloat), normal.data(), 3 * sizeof(GLfloat));
 		// face barycenter
-		OpenMesh::Vec3f barycenter(0.0f, 0.0f, 0.0f);
+		Point3f barycenter(0.0f, 0.0f, 0.0f);
 		GLuint edge_cnt = 0;
 		for (auto viter = mesh->cfv_begin(fhd); viter != mesh->cfv_end(fhd); ++viter, ++edge_cnt)
 		{
@@ -132,7 +134,7 @@ void ClothPiece::exportFaceNorm3fBuffer(GLfloat *& fBarycenterBuffer, GLfloat *&
 //	// initial with val
 //	for (PolyArrayMesh::VertexIter iter = PolyMesh.vertices_begin(); iter != PolyMesh.vertices_end(); ++iter)
 //		PolyMesh.property(vprop_handle, *iter) = value;
-//	//OpenMesh::VPropHandleT<OpenMesh::Vec3f> vph;
+//	//OpenMesh::VPropHandleT<Point3f> vph;
 //	//std::cout << PolyMesh.get_property_handle(vph, "planar_coord_3f") << std::endl;
 //	return vprop_handle;
 //}
@@ -140,7 +142,7 @@ void ClothPiece::exportFaceNorm3fBuffer(GLfloat *& fBarycenterBuffer, GLfloat *&
 template <typename PropType> 
 OpenMesh::VPropHandleT<PropType> ClothPiece::addVProp(
 	std::string propName, 
-	std::function<PropType (PolyArrayMesh::VertexHandle)> vhandle2value
+	std::function<PropType (Veridx)> vhandle2value
 	)
 {
 	OpenMesh::VPropHandleT<PropType> vprop_handle;
@@ -150,7 +152,7 @@ OpenMesh::VPropHandleT<PropType> ClothPiece::addVProp(
 	// initial with val
 	for (PolyArrayMesh::VertexIter iter = PolyMesh->vertices_begin(); iter != PolyMesh->vertices_end(); ++iter)
 		PolyMesh->property(vprop_handle, *iter) = vhandle2value(*iter);
-	//OpenMesh::VPropHandleT<OpenMesh::Vec3f> vph;
+	//OpenMesh::VPropHandleT<Point3f> vph;
 	//std::cout << PolyMesh.get_property_handle(vph, "planar_coord_3f") << std::endl;
 	return vprop_handle;
 }
@@ -161,17 +163,173 @@ bool ClothPiece::useVTexCoord2DAsVPlanarCoord3f()
 {
 	if (!PolyMesh->has_vertex_texcoords2D())
 		return false;
-	OpenMesh::VPropHandleT<OpenMesh::Vec3f> vprop_handle = this->addVProp<OpenMesh::Vec3f>(
+	OpenMesh::VPropHandleT<Point3f> vprop_handle = this->addVProp<Point3f>(
 		"planar_coord_3f", 
-		[&](PolyArrayMesh::VertexHandle vhandle) -> OpenMesh::Vec3f {
+		[&](Veridx vhandle) -> Point3f {
 				auto tex2d = PolyMesh->texcoord2D(vhandle);
-				return OpenMesh::Vec3f(tex2d[0], tex2d[1], 0.0f); }
+				return Point3f(tex2d[0], tex2d[1], 0.0f); }
 		);
 	return true;
 }
 
-bool ClothPiece::getVPlanarCoord3f(OpenMesh::VPropHandleT<OpenMesh::Vec3f> & vph)
+bool ClothPiece::getVPlanarCoord3f(OpenMesh::VPropHandleT<Point3f> & vph)
 {
 	return PolyMesh->get_property_handle(vph, "planar_coord_3f");
 }
 
+#endif
+
+#ifdef CGAL_BASED
+
+void ClothPiece::import(const Mesh mesh)
+{
+	/* load vertexes */
+	std::map<GLuint, Veridx> vindices2vhandles;
+	for (size_t i = 0; i < mesh.vertices.size(); ++i)
+	{
+		vindices2vhandles[i] = this->PolyMesh->add_vertex(
+			Point3f(mesh.vertices[i].Position[0], mesh.vertices[i].Position[1], mesh.vertices[i].Position[2]));
+	}
+	/* set faces */
+	std::vector<Veridx> face_vhandles;
+	for (GLuint vindex : mesh.indices)
+	{
+		face_vhandles.push_back(vindices2vhandles[vindex]);
+		if (face_vhandles.size() % EDGES == 0)
+		{
+			this->PolyMesh->add_face(face_vhandles);
+			face_vhandles.clear();
+		}
+	}
+	/* load texcoord 2d */
+	PolyArrayMesh::Property_map<Veridx, Point3f> texCoords = PolyMesh->add_property_map<Veridx, Point3f>(pname_texCoords).first;
+	for (size_t _i = 0; _i < mesh.vertices.size(); ++_i)
+	{
+		texCoords[vindices2vhandles[_i]] = Point3f(mesh.vertices[_i].TexCoords[0], mesh.vertices[_i].TexCoords[1], 0.0f);
+	}
+	/* compute face normal */
+	/* generate vertex normal conditioning on face normal */
+	PolyArrayMesh::Property_map<Faceidx, Vec3f> faceNormals =
+		PolyMesh->add_property_map<Faceidx, Vec3f>(pname_faceNormals, CGAL::NULL_VECTOR).first;
+	CGAL::Polygon_mesh_processing::compute_face_normals(PolyMesh, faceNormals);
+	PolyArrayMesh::Property_map<Veridx, Vec3f> vertexNormals =
+		PolyMesh->add_property_map<Veridx, Vec3f>(pname_vertexNormals, CGAL::NULL_VECTOR).first;
+	//CGAL::Polygon_mesh_processing::compute_vertex_normals(PolyMesh, vertexNormals);
+	// TODO change to compute_normals
+	//CGAL::Polygon_mesh_processing::compute_normals(PolyMesh, vertexNormals, faceNormals,
+		//boost::get(PolyMesh->points(), *PolyMesh));
+		//CGAL::Polygon_mesh_processing::parameters::vertex_point_map(PolyMesh->points()).geom_traits(CGAL::Exact_predicates_inexact_constructions_kernel()));
+
+	std::cout << "INFO::LOAD MESH " << std::endl;
+	std::cout << "> #polygon " << EDGES
+		<< ", #vertices " << PolyMesh->number_of_vertices()
+		<< ", #edges " << PolyMesh->number_of_edges()
+		<< ", #halfedges " << PolyMesh->number_of_halfedges()
+		<< ", #faces " << PolyMesh->number_of_faces() << std::endl;
+}
+
+/* export data for VBO and EBO for drawing */
+void ClothPiece::exportPos3fNorm3fBuffer(
+	GLfloat* & vertexBuffer, GLfloat* & vertexNormalBuffer, GLuint & vertexSize,
+	GLuint* & elementBuffer, GLuint & elementSize)
+{
+	PolyArrayMesh* mesh = this->PolyMesh;
+	PolyArrayMesh::Property_map<Veridx, Vec3f> vertexNormals = PolyMesh->property_map<Veridx, Vec3f>(pname_vertexNormals).first;
+	/* data for VBO */
+	vertexBuffer = new GLfloat[mesh->number_of_vertices() * 3];
+	vertexNormalBuffer = new GLfloat[mesh->number_of_vertices() * 3];
+	/* data for EBO */
+	elementBuffer = new GLuint[mesh->number_of_faces() * 3 * (EDGES - 2)];
+
+	std::map<Veridx, GLuint> vhandles2vindices;
+
+	/* export data for VBO */
+	GLuint pivot = 0;
+	BOOST_FOREACH(Veridx vhandle, mesh->vertices())
+	{
+		vhandles2vindices[vhandle] = pivot;
+		// TODO to be tested
+		memcpy_s(vertexBuffer + pivot * 3, 3 * sizeof(GLfloat), &(mesh->point(vhandle)), 3 * sizeof(GLfloat));
+		memcpy_s(vertexNormalBuffer + pivot * 3, 3 * sizeof(GLfloat), &(vertexNormals[vhandle]), 3 * sizeof(GLfloat));
+		++pivot;
+	}
+	vertexSize = pivot;
+	/* export data for EBO */
+	pivot = 0;
+	BOOST_FOREACH(Faceidx fhandle, mesh->faces())
+	{
+		CGAL::Vertex_around_face_circulator<PolyArrayMesh> cfviter(mesh->halfedge(fhandle), *mesh);
+		/* for a face with n edges, element buffer is
+		(0, 1, 2),  (0, 2, 3),  (0, 3, 4), ..., (0, n-2, n-1)
+		rearrange is
+		0, 1, (2, 0, 2), (3, 0, 3), ..., (n-2, 0, n-2), n-1
+		*/
+		Veridx v0 = *cfviter;
+		elementBuffer[pivot++] = vhandles2vindices[*(cfviter++)];
+		elementBuffer[pivot++] = vhandles2vindices[*(cfviter++)];
+		for (size_t _i = 2; _i <= EDGES - 2; ++_i, ++cfviter)
+		{
+			elementBuffer[pivot++] = vhandles2vindices[*cfviter];
+			elementBuffer[pivot++] = vhandles2vindices[v0];
+			elementBuffer[pivot++] = vhandles2vindices[*cfviter];
+		}
+		elementBuffer[pivot++] = vhandles2vindices[*cfviter];
+	}
+	elementSize = pivot;
+	return;
+}
+
+void ClothPiece::exportFaceNorm3fBuffer(GLfloat *& fBarycenterBuffer, GLfloat *& fNormalBuffer, GLuint & faceSize)
+{
+	// TODO
+	PolyArrayMesh* mesh = this->PolyMesh;
+	PolyArrayMesh::Property_map<Faceidx, Vec3f> faceNormals = mesh->property_map<Faceidx, Vec3f>(pname_faceNormals).first;
+
+	fBarycenterBuffer = new GLfloat[mesh->number_of_faces() * 3];
+	fNormalBuffer = new GLfloat[mesh->number_of_faces() * 3];
+
+	GLuint pivot = 0;
+	BOOST_FOREACH(Faceidx fhd, mesh->faces())
+	{
+		// face normal
+		Vec3f normal = faceNormals[fhd];
+		memcpy_s(fNormalBuffer + pivot * 3, 3 * sizeof(GLfloat), &normal, 3 * sizeof(GLfloat));
+		// face barycenter
+		Vec3f barycenter(0.0f, 0.0f, 0.0f);
+		size_t edge_cnt = 0;
+		BOOST_FOREACH(Veridx viter, vertices_around_face(mesh->halfedge(fhd), *mesh))
+		{
+			Point3f v = mesh->point(viter);
+			barycenter = barycenter + Vec3f(v.x(), v.y(), v.z());
+			++edge_cnt;
+		}
+		barycenter = barycenter * (1.0f / (edge_cnt > 1 ? edge_cnt : 1));
+		memcpy_s(fBarycenterBuffer + pivot * 3, 3 * sizeof(GLfloat), &barycenter, 3 * sizeof(GLfloat));
+		++pivot;
+	}
+	faceSize = pivot;
+	return;
+}
+
+bool ClothPiece::useVTexCoord2DAsVPlanarCoord3f()
+{
+	// TODO add return false case
+	PolyArrayMesh::Property_map<Veridx, Point3f> vprop_handle = 
+		PolyMesh->add_property_map<Veridx, Point3f>(pname_vertexPlanarCoords).first;
+	PolyArrayMesh::Property_map<Veridx, Point3f> texCoords =
+		PolyMesh->property_map<Veridx, Point3f>(pname_texCoords).first;
+	BOOST_FOREACH(Veridx vhd, PolyMesh->vertices())
+	{
+		vprop_handle[vhd] = texCoords[vhd];
+	}
+	return true;
+}
+
+bool ClothPiece::getVPlanarCoord3f(PolyArrayMesh::Property_map<Veridx, Vec3f> & vph)
+{
+	// TODO add return false case
+	vph = PolyMesh->property_map<Veridx, Vec3f>(pname_vertexPlanarCoords).first;
+	return true;
+}
+
+#endif

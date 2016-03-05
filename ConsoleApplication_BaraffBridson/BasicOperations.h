@@ -11,7 +11,11 @@
 #include <OpenMesh/Core/Mesh/TriMesh_ArrayKernelT.hh>
 #include <OpenMesh/Core/Mesh/PolyMesh_ArrayKernelT.hh>
 
+#include <CGAL\Simple_cartesian.h>
+
 #include "ClothPiece.h"
+
+#ifdef OPENMESH_BASED
 
 inline void copy_v3f(Eigen::Vector3f & dest, const OpenMesh::Vec3f & src)
 {
@@ -26,6 +30,43 @@ inline void copy_v3f(OpenMesh::Vec3f & dest, const Eigen::Vector3f & src)
 	dest[1] = src(1);
 	dest[2] = src(2);
 }
+
+void shiftVertices(PolyArrayMesh::VertexHandle& vhd0, PolyArrayMesh::VertexHandle& vhd1, PolyArrayMesh::VertexHandle& vhd2);
+
+
+#endif
+
+#ifdef CGAL_BASED
+
+inline void copy_v3f(Eigen::Vector3f & dest, const Vec3f & src)
+{
+	dest(0) = src.x();
+	dest(1) = src.y();
+	dest(2) = src.z();
+}
+
+// TODO to be tested
+inline void copy_v3f(Vec3f & dest, const Eigen::Vector3f & src)
+{
+	dest = Vec3f(src(0), src(1), src(2));
+}
+
+inline void copy_v3f(Eigen::Vector3f & dest, const Point3f & src)
+{
+	dest(0) = src.x();
+	dest(1) = src.y();
+	dest(2) = src.z();
+}
+
+// TODO to be tested
+inline void copy_v3f(Point3f & dest, const Eigen::Vector3f & src)
+{
+	dest = Point3f(src(0), src(1), src(2));
+}
+
+void shiftVertices(Veridx & vhd0, Veridx & vhd1, Veridx & vhd2);
+
+#endif
 
 void convert_diag2sparse_mnf(Eigen::SparseMatrix<float> & dest, const Eigen::Diagonal<const Eigen::SparseMatrix<float>> & src);
 
@@ -56,8 +97,6 @@ GLboolean checkSymmetrical(const Eigen::SparseMatrix<float> mat, float tolerance
 			-vy  vx  0]
 */
 Eigen::Matrix3f get_S_m3f(Eigen::Vector3f & v);
-
-void shiftVertices(PolyArrayMesh::VertexHandle& vhd0, PolyArrayMesh::VertexHandle& vhd1, PolyArrayMesh::VertexHandle& vhd2);
 
 #endif
 
