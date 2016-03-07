@@ -66,8 +66,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>C:\Program Files %28x86%29\CGAL-4.7\build\include;C:\Libraries\C++\boost_1.60\include\boost-1_60;C:\Program Files %28x86%29\CGAL-4.7\include;C:\Libraries\C++\Simple OpenGL Image Library\src;C:\Libraries\C++\OpenMesh 4.1\include;C:\Libraries\C++\glm-0.9.7.1\glm;C:\Libraries\C++\glfw-3.1.2.bin.WIN32\include;C:\Libraries\C++\glew-1.13.0-win32\glew-1.13.0\include;C:\Libraries\C++\eigen-3.3-beta;C:\Libraries\C++\assimp-3.1.1\include;$(IncludePath)</IncludePath>
-    <LibraryPath>C:\Libraries\C++\boost_1.60\lib;C:\Program Files %28x86%29\CGAL-4.7\build\lib\Release;C:\Libraries\C++\Simple OpenGL Image Library\lib;C:\Libraries\C++\OpenMesh 4.1\lib;C:\Libraries\C++\glfw-3.1.2.bin.WIN32\lib-vc2015;C:\Libraries\C++\glew-1.13.0-win32\glew-1.13.0\lib\Release\Win32;C:\Libraries\C++\assimp-3.1.1\Release;$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\Program Files %28x86%29\CGAL-4.7\auxiliary\gmp\include;C:\Program Files %28x86%29\CGAL-4.7\build\include;C:\Libraries\C++\boost_1.60\include\boost-1_60;C:\Program Files %28x86%29\CGAL-4.7\include;C:\Libraries\C++\Simple OpenGL Image Library\src;C:\Libraries\C++\OpenMesh 4.1\include;C:\Libraries\C++\glm-0.9.7.1\glm;C:\Libraries\C++\glfw-3.1.2.bin.WIN32\include;C:\Libraries\C++\glew-1.13.0-win32\glew-1.13.0\include;C:\Libraries\C++\eigen-3.3-beta;C:\Libraries\C++\assimp-3.1.1\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Program Files %28x86%29\CGAL-4.7\auxiliary\gmp\lib;C:\Libraries\C++\boost_1.60\lib;C:\Program Files %28x86%29\CGAL-4.7\build\lib\Release;C:\Libraries\C++\Simple OpenGL Image Library\lib;C:\Libraries\C++\OpenMesh 4.1\lib;C:\Libraries\C++\glfw-3.1.2.bin.WIN32\lib-vc2015;C:\Libraries\C++\glew-1.13.0-win32\glew-1.13.0\lib\Release\Win32;C:\Libraries\C++\assimp-3.1.1\Release;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -96,7 +96,7 @@
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>glew32s.lib;glfw3.lib;opengl32.lib;SOIL.lib;assimp.lib;OpenMeshCore.lib;OpenMeshTools.lib;CGAL_Core-vc140-mt-4.7.lib;CGAL_ImageIO-vc140-mt-4.7.lib;CGAL-vc140-mt-4.7.lib;boost_system-vc140-mt-1_60.lib;boost_system-vc140-mt-gd-1_60.lib;boost_thread-vc140-mt-1_60.lib;boost_thread-vc140-mt-gd-1_60.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>glew32s.lib;glfw3.lib;opengl32.lib;SOIL.lib;assimp.lib;OpenMeshCore.lib;OpenMeshTools.lib;CGAL_Core-vc140-mt-4.7.lib;CGAL_ImageIO-vc140-mt-4.7.lib;CGAL-vc140-mt-4.7.lib;boost_system-vc140-mt-1_60.lib;boost_system-vc140-mt-gd-1_60.lib;boost_thread-vc140-mt-1_60.lib;boost_thread-vc140-mt-gd-1_60.lib;libgmp-10.lib;libmpfr-4.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>

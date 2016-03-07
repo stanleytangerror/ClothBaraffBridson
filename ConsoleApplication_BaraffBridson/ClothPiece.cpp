@@ -202,23 +202,20 @@ void ClothPiece::import(const Mesh mesh)
 		}
 	}
 	/* load texcoord 2d */
-	PolyArrayMesh::Property_map<Veridx, Point3f> texCoords = PolyMesh->add_property_map<Veridx, Point3f>(pname_texCoords).first;
+	SurfaceMesh3f::Property_map<Veridx, Point3f> texCoords = PolyMesh->add_property_map<Veridx, Point3f>(pname_texCoords).first;
 	for (size_t _i = 0; _i < mesh.vertices.size(); ++_i)
 	{
 		texCoords[vindices2vhandles[_i]] = Point3f(mesh.vertices[_i].TexCoords[0], mesh.vertices[_i].TexCoords[1], 0.0f);
 	}
 	/* compute face normal */
 	/* generate vertex normal conditioning on face normal */
-	PolyArrayMesh::Property_map<Faceidx, Vec3f> faceNormals =
+	//PolyArrayMesh & mesh = *PolyMesh;
+	SurfaceMesh3f::Property_map<Faceidx, Vec3f> faceNormals =
 		PolyMesh->add_property_map<Faceidx, Vec3f>(pname_faceNormals, CGAL::NULL_VECTOR).first;
-	CGAL::Polygon_mesh_processing::compute_face_normals(PolyMesh, faceNormals);
-	PolyArrayMesh::Property_map<Veridx, Vec3f> vertexNormals =
+	SurfaceMesh3f::Property_map<Veridx, Vec3f> vertexNormals =
 		PolyMesh->add_property_map<Veridx, Vec3f>(pname_vertexNormals, CGAL::NULL_VECTOR).first;
-	//CGAL::Polygon_mesh_processing::compute_vertex_normals(PolyMesh, vertexNormals);
-	// TODO change to compute_normals
-	//CGAL::Polygon_mesh_processing::compute_normals(PolyMesh, vertexNormals, faceNormals,
-		//boost::get(PolyMesh->points(), *PolyMesh));
-		//CGAL::Polygon_mesh_processing::parameters::vertex_point_map(PolyMesh->points()).geom_traits(CGAL::Exact_predicates_inexact_constructions_kernel()));
+	CGAL::Polygon_mesh_processing::compute_normals(*PolyMesh, vertexNormals, faceNormals,
+		CGAL::Polygon_mesh_processing::parameters::vertex_point_map(PolyMesh->points()).geom_traits(Kernelf()));
 
 	std::cout << "INFO::LOAD MESH " << std::endl;
 	std::cout << "> #polygon " << EDGES
@@ -233,8 +230,8 @@ void ClothPiece::exportPos3fNorm3fBuffer(
 	GLfloat* & vertexBuffer, GLfloat* & vertexNormalBuffer, GLuint & vertexSize,
 	GLuint* & elementBuffer, GLuint & elementSize)
 {
-	PolyArrayMesh* mesh = this->PolyMesh;
-	PolyArrayMesh::Property_map<Veridx, Vec3f> vertexNormals = PolyMesh->property_map<Veridx, Vec3f>(pname_vertexNormals).first;
+	SurfaceMesh3f* mesh = this->PolyMesh;
+	SurfaceMesh3f::Property_map<Veridx, Vec3f> vertexNormals = PolyMesh->property_map<Veridx, Vec3f>(pname_vertexNormals).first;
 	/* data for VBO */
 	vertexBuffer = new GLfloat[mesh->number_of_vertices() * 3];
 	vertexNormalBuffer = new GLfloat[mesh->number_of_vertices() * 3];
@@ -258,7 +255,7 @@ void ClothPiece::exportPos3fNorm3fBuffer(
 	pivot = 0;
 	BOOST_FOREACH(Faceidx fhandle, mesh->faces())
 	{
-		CGAL::Vertex_around_face_circulator<PolyArrayMesh> cfviter(mesh->halfedge(fhandle), *mesh);
+		CGAL::Vertex_around_face_circulator<SurfaceMesh3f> cfviter(mesh->halfedge(fhandle), *mesh);
 		/* for a face with n edges, element buffer is
 		(0, 1, 2),  (0, 2, 3),  (0, 3, 4), ..., (0, n-2, n-1)
 		rearrange is
@@ -282,8 +279,8 @@ void ClothPiece::exportPos3fNorm3fBuffer(
 void ClothPiece::exportFaceNorm3fBuffer(GLfloat *& fBarycenterBuffer, GLfloat *& fNormalBuffer, GLuint & faceSize)
 {
 	// TODO
-	PolyArrayMesh* mesh = this->PolyMesh;
-	PolyArrayMesh::Property_map<Faceidx, Vec3f> faceNormals = mesh->property_map<Faceidx, Vec3f>(pname_faceNormals).first;
+	SurfaceMesh3f* mesh = this->PolyMesh;
+	SurfaceMesh3f::Property_map<Faceidx, Vec3f> faceNormals = mesh->property_map<Faceidx, Vec3f>(pname_faceNormals).first;
 
 	fBarycenterBuffer = new GLfloat[mesh->number_of_faces() * 3];
 	fNormalBuffer = new GLfloat[mesh->number_of_faces() * 3];
@@ -314,9 +311,9 @@ void ClothPiece::exportFaceNorm3fBuffer(GLfloat *& fBarycenterBuffer, GLfloat *&
 bool ClothPiece::useVTexCoord2DAsVPlanarCoord3f()
 {
 	// TODO add return false case
-	PolyArrayMesh::Property_map<Veridx, Point3f> vprop_handle = 
+	SurfaceMesh3f::Property_map<Veridx, Point3f> vprop_handle = 
 		PolyMesh->add_property_map<Veridx, Point3f>(pname_vertexPlanarCoords).first;
-	PolyArrayMesh::Property_map<Veridx, Point3f> texCoords =
+	SurfaceMesh3f::Property_map<Veridx, Point3f> texCoords =
 		PolyMesh->property_map<Veridx, Point3f>(pname_texCoords).first;
 	BOOST_FOREACH(Veridx vhd, PolyMesh->vertices())
 	{
@@ -325,10 +322,10 @@ bool ClothPiece::useVTexCoord2DAsVPlanarCoord3f()
 	return true;
 }
 
-bool ClothPiece::getVPlanarCoord3f(PolyArrayMesh::Property_map<Veridx, Vec3f> & vph)
+bool ClothPiece::getVPlanarCoord3f(SurfaceMesh3f::Property_map<Veridx, Point3f> & vph)
 {
 	// TODO add return false case
-	vph = PolyMesh->property_map<Veridx, Vec3f>(pname_vertexPlanarCoords).first;
+	vph = PolyMesh->property_map<Veridx, Point3f>(pname_vertexPlanarCoords).first;
 	return true;
 }
 

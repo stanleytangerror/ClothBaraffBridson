@@ -47,7 +47,7 @@ private:
 										 // according to Filling a sparse matrix section of Eigen
 
 	// --------------- variables of model ------------------
-	PolyArrayMesh::Property_map<Veridx, Vec3f> vph_planarcoord;
+	//PolyArrayMesh::Property_map<Veridx, Vec3f> vph_planarcoord;
 	// WARNING access to map should via map.at()
 	std::map<Veridx, GLuint> vertices2indices;
 	std::map<Faceidx, GLuint> faces2indices;
@@ -103,11 +103,10 @@ private:
 	void addExternForce(Veridx vhandle, Eigen::Vector3f ext_force);
 
 	void getStretchAndShearForce(Faceidx fhandle,
-		const PolyArrayMesh::Property_map<Veridx, Vec3f> & vprop_planarcoord,
+		const SurfaceMesh3f::Property_map<Veridx, Point3f> & vprop_planarcoord,
 		float k_stretch, float kd_stretch, float k_shear, float kd_shear, float bu, float bv);
 
-	void getBendForce(Faceidx fhandle0, Faceidx fhandle1,
-		Edgeidx ehandle, float k_bend, float kd_bend);
+	void getBendForce(Faceidx fhandle0, Faceidx fhandle1, Edgeidx ehandle, float k_bend, float kd_bend);
 
 };
 

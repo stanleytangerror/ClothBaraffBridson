@@ -117,7 +117,7 @@ void BaraffRequire::compute(float time_step)
 
 	this->time_step = time_step;
 
-	PolyArrayMesh* mesh = clothPiece->getMesh();
+	SurfaceMesh3f* mesh = clothPiece->getMesh();
 
 #ifdef USE_CONSTRAINTS
 	// add constraints
@@ -157,9 +157,11 @@ void BaraffRequire::compute(float time_step)
 	//std::cout << "out v_total nonzero " << std::endl << v_total.nonZeros() << std::endl;
 	//std::cout << "out v_total[0] " << std::endl << v_total.block<3, 1>(0, 0) << std::endl;
 	size_t face_cnt = 0;
-	for (auto iter = mesh->faces_begin(); iter != mesh->faces_end(); ++iter)
+	SurfaceMesh3f::Property_map<Veridx, Point3f> vph_planarcoord = 
+		mesh->property_map<Veridx, Point3f>(clothPiece->pname_vertexPlanarCoords).first;
+	BOOST_FOREACH(Faceidx fhd, mesh->faces())
 	{
-		getStretchAndShearForce(*iter, vph_planarcoord, k_stretch, kd_stretch, k_shear, kd_shear, bu, bv);
+		getStretchAndShearForce(fhd, vph_planarcoord, k_stretch, kd_stretch, k_shear, kd_shear, bu, bv);
 		face_cnt += 1;
 		//break;
 	}
@@ -183,9 +185,8 @@ void BaraffRequire::compute(float time_step)
 
 	// add bend force
 #ifdef BEND_FORCE
-	for (auto iter = mesh->edges_begin(); iter != mesh->edges_end(); ++iter)
+	BOOST_FOREACH (Edgeidx ehd, mesh->edges())
 	{
-		Edgeidx ehd = *iter;
 		Faceidx fhd0, fhd1;
 		fhd0 = mesh->face(mesh->halfedge(ehd, 0));
 		fhd1 = mesh->face(mesh->halfedge(ehd, 1));
@@ -234,7 +235,7 @@ void BaraffRequire::compute(float time_step)
 void BaraffRequire::readPositions()
 {
 	positions = Eigen::VectorXf(VERTEX_SIZE * 3);
-	PolyArrayMesh* mesh = clothPiece->getMesh();
+	SurfaceMesh3f* mesh = clothPiece->getMesh();
 	for (auto iter = mesh->vertices_begin(); iter != mesh->vertices_end(); ++iter)
 	{
 		Eigen::Vector3f pos_eigen;
@@ -246,7 +247,7 @@ void BaraffRequire::readPositions()
 
 void BaraffRequire::writePositions()
 {
-	PolyArrayMesh* mesh = clothPiece->getMesh();
+	SurfaceMesh3f* mesh = clothPiece->getMesh();
 	BOOST_FOREACH(Veridx viter, mesh->vertices())
 	{
 		Point3f pos_cgal;
@@ -257,24 +258,21 @@ void BaraffRequire::writePositions()
 	/* after changing position
 	* update normals for consistence
 	*/
-	PolyArrayMesh::Property_map<Faceidx, Vec3f> faceNormals =
+	SurfaceMesh3f::Property_map<Faceidx, Vec3f> faceNormals =
 		mesh->property_map<Faceidx, Vec3f>(clothPiece->pname_faceNormals).first;
 	//CGAL::Polygon_mesh_processing::compute_face_normals(mesh, faceNormals);
-	PolyArrayMesh::Property_map<Veridx, Vec3f> vertexNormals =
+	SurfaceMesh3f::Property_map<Veridx, Vec3f> vertexNormals =
 		mesh->property_map<Veridx, Vec3f>(clothPiece->pname_vertexNormals).first;
 	//CGAL::Polygon_mesh_processing::compute_vertex_normals(mesh, vertexNormals);
-	// TODO change to compute_normals
-	//CGAL::Polygon_mesh_processing::compute_normals(mesh, vertexNormals, faceNormals, mesh->vertices());
-	//CGAL::Polygon_mesh_processing::compute_normals(PolyMesh, vertexNormals, faceNormals,
-	//boost::get(PolyMesh->points(), *PolyMesh));
-	//CGAL::Polygon_mesh_processing::parameters::vertex_point_map(PolyMesh->points()).geom_traits(CGAL::Exact_predicates_inexact_constructions_kernel()));
+	CGAL::Polygon_mesh_processing::compute_normals(*mesh, vertexNormals, faceNormals,
+		CGAL::Polygon_mesh_processing::parameters::vertex_point_map(mesh->points()).geom_traits(Kernelf()));
 
 }
 
 /* called once, used for allocating memory */
 void BaraffRequire::initial()
 {
-	PolyArrayMesh* mesh = clothPiece->getMesh();
+	SurfaceMesh3f* mesh = clothPiece->getMesh();
 	VERTEX_SIZE = mesh->number_of_vertices();
 	FACE_SIZE = mesh->number_of_faces();
 	EDGE_SIZE = mesh->number_of_edges();
@@ -340,7 +338,8 @@ void BaraffRequire::initial()
 	identity.setFromTriplets(coeff_list.begin(), coeff_list.end());
 	
 	// initial planar coordinates
-	clothPiece->getVPlanarCoord3f(vph_planarcoord);
+	clothPiece->useVTexCoord2DAsVPlanarCoord3f();
+	//clothPiece->getVPlanarCoord3f(vph_planarcoord);
 	
 	reset(true);
 }
@@ -348,7 +347,7 @@ void BaraffRequire::initial()
 // called before each iteration
 void BaraffRequire::reset(GLboolean first)
 {
-	PolyArrayMesh* mesh = clothPiece->getMesh();
+	SurfaceMesh3f* mesh = clothPiece->getMesh();
 
 	// update face normal for bend condition 
 	// TODO need a better solution
@@ -395,13 +394,13 @@ void BaraffRequire::addExternForce(Veridx vhandle, Eigen::Vector3f ext_force)
 }
 
 void BaraffRequire::getStretchAndShearForce(Faceidx fhandle,
-	const PolyArrayMesh::Property_map<Veridx, Vec3f> & vprop_planarcoord,
+	const SurfaceMesh3f::Property_map<Veridx, Point3f> & vprop_planarcoord,
 	float k_stretch, float kd_stretch, float k_shear, float kd_shear, float bu, float bv)
 {
 	//std::cout << "in1 v_total nonzero " << std::endl << v_total.nonZeros() << std::endl;
 	//std::cout << "in1 v_total[0] " << std::endl << v_total.block<3, 1>(0, 0) << std::endl;
-	PolyArrayMesh* mesh = clothPiece->getMesh();
-	CGAL::Vertex_around_face_circulator<PolyArrayMesh> cfviter(mesh->halfedge(fhandle), *mesh);
+	SurfaceMesh3f* mesh = clothPiece->getMesh();
+	CGAL::Vertex_around_face_circulator<SurfaceMesh3f> cfviter(mesh->halfedge(fhandle), *mesh), done(cfviter);
 
 	/*
 	x0-----x1
@@ -417,8 +416,11 @@ void BaraffRequire::getStretchAndShearForce(Faceidx fhandle,
 	Veridx vhandles[3];
 	{
 		vhandles[0] = *cfviter++;
+		assert(cfviter != done);
 		vhandles[1] = *cfviter++;
-		vhandles[2] = *cfviter;
+		assert(cfviter != done);
+		vhandles[2] = *cfviter++;
+		assert(cfviter == done);
 
 		// planar coordinate
 		Eigen::Vector3f t0, t1, t2;
@@ -867,7 +869,7 @@ Eigen::Vector3f get_vector3f_block(Tensor3f & tensor, unsigned int block_i, unsi
 void BaraffRequire::getBendForce(Faceidx fhandle0, Faceidx fhandle1,
 	Edgeidx ehandle, float k_bend, float kd_bend)
 {
-	PolyArrayMesh* mesh = clothPiece->getMesh();
+	SurfaceMesh3f* mesh = clothPiece->getMesh();
 
 	// vhandles of four vertices
 	/*
@@ -940,7 +942,7 @@ void BaraffRequire::getBendForce(Faceidx fhandle0, Faceidx fhandle1,
 	
 	// normal of two faces
 	Eigen::Vector3f normal_A, normal_B, edge;
-	PolyArrayMesh::Property_map<Faceidx, Vec3f> fprop_normal =
+	SurfaceMesh3f::Property_map<Faceidx, Vec3f> fprop_normal =
 		mesh->property_map<Faceidx, Vec3f>(clothPiece->pname_faceNormals).first;
 	// <<<<<<
 	copy_v3f(normal_A, fprop_normal[fhandle0]);
@@ -1360,7 +1362,7 @@ void BaraffRequire::writeMesh()
 
 void BaraffRequire::exportShearConditionData(float* & dataBuffer, GLuint & dataSize)
 {
-	PolyArrayMesh* mesh = clothPiece->getMesh();
+	SurfaceMesh3f* mesh = clothPiece->getMesh();
 	float max = C_shear.maxCoeff(), min = C_shear.minCoeff();
 	//std::cout << "shear condition range " << min << ", " << max << std::endl;
 	Eigen::VectorXf C_shear_normalized(mesh->number_of_faces());
