@@ -92,6 +92,7 @@ const GLfloat backgroundCubeVertices[] = {
 	1.0f, -1.0f,  1.0f
 };
 
+//const std::string modelPath = "E:\\Computer Graphics\\Materials\\Models\\SquareClothLarge01\\Clothes.obj";
 const std::string modelPath = "E:\\Computer Graphics\\Materials\\Models\\SquareCloth04\\Clothes.obj";
 //const std::string modelPath = "E:/Computer Graphics/Materials/nanosuit/nanosuit.obj";
 //const std::string modelPath = "E:\\Computer Graphics\\Materials\\nanosuit\\nanosuit.obj";

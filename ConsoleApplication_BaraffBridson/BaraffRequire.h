@@ -77,8 +77,9 @@ private:
 	Eigen::VectorXf C_bend; // condition per inner edge
 
 	// matrices
-	Eigen::SparseMatrix<float> df_dx_total; // symmetric 
-	Eigen::SparseMatrix<float> df_dv_total; // symmetric 
+	Eigen::SparseMatrix<float> df_dx_internal_total; // symmetric 
+	Eigen::SparseMatrix<float> df_dx_damp_total; // symmetric 
+	Eigen::SparseMatrix<float> df_dv_damp_total; // symmetric 
 	Eigen::SparseMatrix<float> constraints;
 	Eigen::SparseMatrix<float> mass_constrainted;
 	// will not change once initialed

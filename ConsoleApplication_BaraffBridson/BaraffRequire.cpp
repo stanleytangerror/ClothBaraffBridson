@@ -21,7 +21,7 @@
 #define USE_CONSTRAINTS
 //#define USE_NEW_A_b
 
-#define DEBUG_ENERGY
+//#define DEBUG_ENERGY
 //#define DEBUG_FORCE
 
 
@@ -60,8 +60,8 @@ Eigen::SparseMatrix<float> BaraffRequire::exportA()
 #ifdef USE_NEW_A_b
 	Eigen::SparseMatrix<float> A = mass - time_step * df_dv_total - time_step * time_step * df_dx_total;
 #else
-	Eigen::SparseMatrix<float> A = identity - time_step * (mass_constrainted * df_dv_total)
-		- time_step * time_step * (mass_constrainted * df_dx_total);
+	Eigen::SparseMatrix<float> A = identity - time_step * (mass_constrainted * df_dv_damp_total)
+		- time_step * time_step * (mass_constrainted * (df_dx_internal_total + df_dx_damp_total));
 #endif
 	//std::cout << "A " << (checkSymmetrical(A, 1e-6) ? true : false) << std::endl;
 	//std::cout << "A diagonal " << std::endl << A.diagonal() << std::endl;
@@ -102,7 +102,7 @@ Eigen::VectorXf BaraffRequire::exportb()
 #ifdef USE_NEW_A_b
 	Eigen::VectorXf b = time_step * (f_total + time_step * df_dx_total * v_total);
 #else
-	Eigen::VectorXf b = mass_constrainted * (f_total + df_dx_total * v_total * time_step) * time_step;
+	Eigen::VectorXf b = mass_constrainted * (f_total + (df_dx_internal_total + df_dx_damp_total) * v_total * time_step) * time_step;
 #endif
 
 	//std::cout << "b " << std::endl << b << std::endl;
@@ -126,7 +126,12 @@ void BaraffRequire::compute(float time_step)
 	addConstraint(vh, Eigen::Vector3f(0.0f, 0.0f, 1.0f));
 	addConstraint(vh, Eigen::Vector3f(0.0f, 1.0f, 0.0f));
 	addConstraint(vh, Eigen::Vector3f(1.0f, 0.0f, 0.0f));
-	std::cout << "constraints " << (checkSymmetrical(constraints) ? true : false) << std::endl;
+	//std::cout << "constraints " << (checkSymmetrical(constraints) ? true : false) << std::endl;
+	vh = *(++iter);
+	addConstraint(vh, Eigen::Vector3f(0.0f, 0.0f, 1.0f));
+	addConstraint(vh, Eigen::Vector3f(0.0f, 1.0f, 0.0f));
+	addConstraint(vh, Eigen::Vector3f(1.0f, 0.0f, 0.0f));
+	//std::cout << "constraints " << (checkSymmetrical(constraints) ? true : false) << std::endl;
 	//for (size_t _i = 0; _i < 10; ++_i, ++iter)
 	//{
 	//	vh = *iter;
@@ -139,7 +144,7 @@ void BaraffRequire::compute(float time_step)
 	addConstraint(vh, Eigen::Vector3f(0.0f, 0.0f, 1.0f));
 	addConstraint(vh, Eigen::Vector3f(0.0f, 1.0f, 0.0f));
 	addConstraint(vh, Eigen::Vector3f(1.0f, 0.0f, 0.0f));
-	for (size_t _i = 0; _i < 10; ++_i, ++iter);
+	for (size_t _i = 0; _i < 9; ++_i, ++iter);
 	vh = *iter;
 	addConstraint(vh, Eigen::Vector3f(0.0f, 0.0f, 1.0f));
 	addConstraint(vh, Eigen::Vector3f(0.0f, 1.0f, 0.0f));
@@ -305,8 +310,9 @@ void BaraffRequire::initial()
 	coeff_list.reserve(VERTEX_SIZE * 3);
 
 	// ------------ allocate memory ------------ 
-	df_dx_total = Eigen::SparseMatrix<float>(VERTEX_SIZE * 3, VERTEX_SIZE * 3);
-	df_dv_total = Eigen::SparseMatrix<float>(VERTEX_SIZE * 3, VERTEX_SIZE * 3);
+	df_dx_internal_total = Eigen::SparseMatrix<float>(VERTEX_SIZE * 3, VERTEX_SIZE * 3);
+	df_dx_damp_total = Eigen::SparseMatrix<float>(VERTEX_SIZE * 3, VERTEX_SIZE * 3);
+	df_dv_damp_total = Eigen::SparseMatrix<float>(VERTEX_SIZE * 3, VERTEX_SIZE * 3);
 	f_total = Eigen::VectorXf(VERTEX_SIZE * 3);
 	v_total = Eigen::VectorXf(VERTEX_SIZE * 3);
 	Cu_stretch = Eigen::VectorXf(FACE_SIZE);
@@ -368,15 +374,18 @@ void BaraffRequire::reset(GLboolean first)
 	}
 
 	// reset derivatives
-	df_dv_total.setZero();
-	df_dx_total.setZero();
+	df_dv_damp_total.setZero();
+	df_dx_internal_total.setZero();
+	df_dx_damp_total.setZero();
 
 	// reset constraint
-	coeff_list.clear();
-	for (size_t _i = 0; _i < VERTEX_SIZE * 3; ++_i)
-		coeff_list.push_back(Tri_float(_i, _i, 1.0f));
-	constraints.setFromTriplets(coeff_list.begin(), coeff_list.end());
-
+	//if (first)
+	{
+		coeff_list.clear();
+		for (size_t _i = 0; _i < VERTEX_SIZE * 3; ++_i)
+			coeff_list.push_back(Tri_float(_i, _i, 1.0f));
+		constraints.setFromTriplets(coeff_list.begin(), coeff_list.end());
+	}
 }
 
 // I - p*pT == 0, p should be unit vector
@@ -654,10 +663,10 @@ void BaraffRequire::getStretchAndShearForce(Faceidx fhandle,
 				dCu_dxi[_i] * dCu_dxi[_j].transpose() + dCv_dxi[_i] * dCv_dxi[_j].transpose());
 			//std::cout << "dfi_dvj[" << _i << "]" << "[" << _j << "] " << std::endl << dfi_dvj[_i][_j] << std::endl;
 			// update to total f and total v
-			addBlock33(df_dx_total, global_indices[_j], global_indices[_i], dfi_dxj[_i][_j]);
+			addBlock33(df_dx_internal_total, global_indices[_j], global_indices[_i], dfi_dxj[_i][_j]);
 #if defined(USE_DAMP) && defined(USE_STRETCH_DAMP)
-			addBlock33(df_dx_total, global_indices[_j], global_indices[_i], dfi_dxj_damp[_i][_j]);
-			addBlock33(df_dv_total, global_indices[_j], global_indices[_i], dfi_dvj_damp[_i][_j]);
+			addBlock33(df_dx_damp_total, global_indices[_j], global_indices[_i], dfi_dxj_damp[_i][_j]);
+			addBlock33(df_dv_damp_total, global_indices[_j], global_indices[_i], dfi_dvj_damp[_i][_j]);
 #endif
 			//std::cout << "df_dx_total[" << global_indices[_j] << "]" << "[" << global_indices[_i] << "] " << std::endl 
 			//	<< df_dx_total.block(3 * global_indices[_j], 3 * global_indices[_i], 3, 3) << std::endl;
@@ -792,10 +801,10 @@ void BaraffRequire::getStretchAndShearForce(Faceidx fhandle,
 			//}
 
 			// update total data
-			addBlock33(df_dx_total, global_indices[_j], global_indices[_i], dfi_dxj[_i][_j]);
+			addBlock33(df_dx_internal_total, global_indices[_j], global_indices[_i], dfi_dxj[_i][_j]);
 #if defined(USE_DAMP) && defined(USE_SHEAR_DAMP)
-			addBlock33(df_dx_total, global_indices[_j], global_indices[_i], dfi_dxj_damp[_i][_j]);
-			addBlock33(df_dv_total, global_indices[_j], global_indices[_i], dfi_dvj_damp[_i][_j]);
+			addBlock33(df_dx_damp_total, global_indices[_j], global_indices[_i], dfi_dxj_damp[_i][_j]);
+			addBlock33(df_dv_damp_total, global_indices[_j], global_indices[_i], dfi_dvj_damp[_i][_j]);
 #endif
 
 		}
@@ -851,20 +860,20 @@ void BaraffRequire::getStretchAndShearForce(Faceidx fhandle,
 #endif
 }
 
-#ifdef BEND_FORCE
-
-// TODO : to be moved to basicoperations.cpp
-
-Eigen::Vector3f get_vector3f_block(Tensor3f & tensor, unsigned int block_i, unsigned int block_j)
-{
-	Eigen::Vector3f vec;
-	for (size_t _i = 0; _i < 3; ++_i)
-	{
-		vec[_i] = tensor.coeff(index3(block_i, block_j, _i));
-	}
-	return vec;
-}
-#endif
+//#ifdef BEND_FORCE
+//
+//// TODO : to be moved to basicoperations.cpp
+//
+//Eigen::Vector3f get_vector3f_block(Tensor3f & tensor, unsigned int block_i, unsigned int block_j)
+//{
+//	Eigen::Vector3f vec;
+//	for (size_t _i = 0; _i < 3; ++_i)
+//	{
+//		vec[_i] = tensor.coeff(index3(block_i, block_j, _i));
+//	}
+//	return vec;
+//}
+//#endif
 
 void BaraffRequire::getBendForce(Faceidx fhandle0, Faceidx fhandle1,
 	Edgeidx ehandle, float k_bend, float kd_bend)
@@ -1297,10 +1306,10 @@ void BaraffRequire::getBendForce(Faceidx fhandle0, Faceidx fhandle1,
 			//}
 
 			// update total data
-			addBlock33(df_dx_total, global_indices[_j], global_indices[_i], dfi_dxj[_i][_j]);
+			addBlock33(df_dx_internal_total, global_indices[_j], global_indices[_i], dfi_dxj[_i][_j]);
 #if defined(USE_DAMP) && defined(USE_BEND_DAMP)
-			addBlock33(df_dx_total, global_indices[_j], global_indices[_i], dfi_dxj_damp[_i][_j]);
-			addBlock33(df_dv_total, global_indices[_j], global_indices[_i], dfi_dvj_damp[_i][_j]);
+			addBlock33(df_dx_damp_total, global_indices[_j], global_indices[_i], dfi_dxj_damp[_i][_j]);
+			addBlock33(df_dv_damp_total, global_indices[_j], global_indices[_i], dfi_dvj_damp[_i][_j]);
 #endif
 
 		}

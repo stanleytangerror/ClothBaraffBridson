@@ -132,3 +132,13 @@ void shiftVertices(Veridx & vhd0, Veridx & vhd1, Veridx & vhd2)
 }
 #endif
 
+Eigen::Vector3f get_vector3f_block(Eigen::Tensor<float, 3> & tensor, unsigned int block_i, unsigned int block_j)
+{
+	Eigen::Vector3f vec;
+	for (size_t _i = 0; _i < 3; ++_i)
+	{
+		vec[_i] = tensor.coeff(Eigen::array<Eigen::DenseIndex, 3U>(block_i, block_j, _i));
+	}
+	return vec;
+}
+

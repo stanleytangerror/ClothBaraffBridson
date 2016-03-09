@@ -6,10 +6,14 @@
 
 #include <Eigen\Core>
 #include <Eigen\Sparse>
-//#include <unsupported/Eigen/CXX11/Tensor>
+#include <unsupported/Eigen/CXX11/Tensor>
+
+#ifdef OPENMESH_BASED
 
 #include <OpenMesh/Core/Mesh/TriMesh_ArrayKernelT.hh>
 #include <OpenMesh/Core/Mesh/PolyMesh_ArrayKernelT.hh>
+
+#endif
 
 #include <CGAL\Simple_cartesian.h>
 
@@ -97,6 +101,8 @@ GLboolean checkSymmetrical(const Eigen::SparseMatrix<float> mat, float tolerance
 			-vy  vx  0]
 */
 Eigen::Matrix3f get_S_m3f(Eigen::Vector3f & v);
+
+Eigen::Vector3f get_vector3f_block(Eigen::Tensor<float, 3> & tensor, unsigned int block_i, unsigned int block_j);
 
 #endif
 

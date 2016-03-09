@@ -102,6 +102,8 @@
   <ItemGroup>
     <ClCompile Include="consoleapplication_baraffbridson\BaraffRequire.cpp" />
     <ClCompile Include="consoleapplication_baraffbridson\BasicOperations.cpp" />
+    <ClCompile Include="ConsoleApplication_BaraffBridson\BridsonCollision.cpp" />
+    <ClCompile Include="ConsoleApplication_BaraffBridson\BridsonDynamic.cpp" />
     <ClCompile Include="consoleapplication_baraffbridson\ClothPiece.cpp" />
     <ClCompile Include="consoleapplication_baraffbridson\ConjugateGradientSolver.cpp" />
     <ClCompile Include="consoleapplication_baraffbridson\Control.cpp" />
@@ -116,6 +118,8 @@
   <ItemGroup>
     <ClInclude Include="consoleapplication_baraffbridson\BaraffRequire.h" />
     <ClInclude Include="consoleapplication_baraffbridson\BasicOperations.h" />
+    <ClInclude Include="ConsoleApplication_BaraffBridson\BridsonCollision.h" />
+    <ClInclude Include="ConsoleApplication_BaraffBridson\BridsonDynamic.h" />
     <ClInclude Include="consoleapplication_baraffbridson\Camera.h" />
     <ClInclude Include="consoleapplication_baraffbridson\ClothPiece.h" />
     <ClInclude Include="consoleapplication_baraffbridson\ConjugateGradientSolver.h" />
