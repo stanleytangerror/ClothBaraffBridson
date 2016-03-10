@@ -56,6 +56,7 @@ void setBlock33(Eigen::SparseMatrix<float> & augend, GLuint block_i, GLuint bloc
 	{
 		augend.coeffRef(block_i * 3 + _i, block_j * 3 + _j) = addend.coeff(_i, _j);
 	}
+
 }
 
 //Eigen::Vector3f get_vector(Eigen::Tensor<float, 3>& tensor, GLuint block_i, GLuint block_j)
@@ -113,14 +114,14 @@ GLboolean checkSymmetrical(const Eigen::SparseMatrix<float> mat, float tolerance
 	return result;
 }
 
-Eigen::Matrix3f get_S_m3f(Eigen::Vector3f & v)
-{
-	Eigen::Matrix3f S;
-	S << 0.0f, -v[2], v[1],
-		v[2], 0.0f, -v[0],
-		-v[1], v[0], 0.0f;
-	return S;
-}
+//inline Eigen::Matrix3f get_S_m3f(Eigen::Vector3f & v)
+//{
+//	Eigen::Matrix3f S;
+//	S << 0.0f, -v[2], v[1],
+//		v[2], 0.0f, -v[0],
+//		-v[1], v[0], 0.0f;
+//	return S;
+//}
 
 #ifdef OPENMESH_BASED
 // xyz -> zxy

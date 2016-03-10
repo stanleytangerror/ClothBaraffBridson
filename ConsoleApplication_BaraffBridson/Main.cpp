@@ -31,7 +31,7 @@
 // Properties
 const GLuint screenWidth = 800, screenHeight = 600;
 
-GLint const init_loop = 1000;
+GLint const init_loop = 10000;
 // Function prototypes
 //void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode);
 //void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
@@ -93,7 +93,10 @@ const GLfloat backgroundCubeVertices[] = {
 };
 
 //const std::string modelPath = "E:\\Computer Graphics\\Materials\\Models\\SquareClothLarge01\\Clothes.obj";
-const std::string modelPath = "E:\\Computer Graphics\\Materials\\Models\\SquareCloth04\\Clothes.obj";
+//const std::string modelPath = "E:\\Computer Graphics\\Materials\\Models\\SquareCloth_50m50\\Clothes.obj";
+const std::string modelPath = "E:\\Computer Graphics\\Materials\\Models\\SquareCloth_30m30\\Clothes.obj";
+//const std::string modelPath = "E:\\Computer Graphics\\Materials\\Models\\SquareCloth_20m20\\Clothes.obj";
+//const std::string modelPath = "E:\\Computer Graphics\\Materials\\Models\\SquareCloth04\\Clothes.obj";
 //const std::string modelPath = "E:/Computer Graphics/Materials/nanosuit/nanosuit.obj";
 //const std::string modelPath = "E:\\Computer Graphics\\Materials\\nanosuit\\nanosuit.obj";
 //const std::string modelPath = "E:\\Computer Graphics\\Materials\\Huang\\model02\\test01.obj";
@@ -248,7 +251,7 @@ int main()
 			glBindVertexArray(0);
 
 		}
-		//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		glDepthMask(GL_TRUE);
 
 
@@ -380,7 +383,7 @@ int main()
 			glBindVertexArray(0);
 
 			glBindVertexArray(debugVAO);
-			//glDrawArrays(GL_POINTS, 0, fSize);
+			glDrawArrays(GL_POINTS, 0, fSize);
 			glBindVertexArray(0);
 		
 		}

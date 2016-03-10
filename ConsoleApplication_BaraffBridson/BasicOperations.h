@@ -102,7 +102,14 @@ GLboolean checkSymmetrical(const Eigen::SparseMatrix<float> mat, float tolerance
 			vz  0  -vx
 			-vy  vx  0]
 */
-Eigen::Matrix3f get_S_m3f(Eigen::Vector3f & v);
+inline Eigen::Matrix3f get_S_m3f(Eigen::Vector3f & v)
+{
+	Eigen::Matrix3f S;
+	S << 0.0f, -v[2], v[1],
+		v[2], 0.0f, -v[0],
+		-v[1], v[0], 0.0f;
+	return S;
+}
 
 Eigen::Vector3f get_vector3f_block(Eigen::Tensor<float, 3> & tensor, unsigned int block_i, unsigned int block_j);
 

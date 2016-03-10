@@ -19,9 +19,10 @@
 
 #define USE_GRAVITY
 #define USE_CONSTRAINTS
+
 //#define USE_NEW_A_b
 
-//#define DEBUG_ENERGY
+#define DEBUG_ENERGY
 //#define DEBUG_FORCE
 
 
@@ -122,33 +123,33 @@ void BaraffRequire::compute(float time_step)
 #ifdef USE_CONSTRAINTS
 	// add constraints
 	auto iter = mesh->vertices_begin();
-	Veridx vh = *iter;
+	Veridx vh = *iter++;
 	addConstraint(vh, Eigen::Vector3f(0.0f, 0.0f, 1.0f));
 	addConstraint(vh, Eigen::Vector3f(0.0f, 1.0f, 0.0f));
 	addConstraint(vh, Eigen::Vector3f(1.0f, 0.0f, 0.0f));
-	//std::cout << "constraints " << (checkSymmetrical(constraints) ? true : false) << std::endl;
-	vh = *(++iter);
+	vh = *iter++;
 	addConstraint(vh, Eigen::Vector3f(0.0f, 0.0f, 1.0f));
 	addConstraint(vh, Eigen::Vector3f(0.0f, 1.0f, 0.0f));
 	addConstraint(vh, Eigen::Vector3f(1.0f, 0.0f, 0.0f));
-	//std::cout << "constraints " << (checkSymmetrical(constraints) ? true : false) << std::endl;
-	//for (size_t _i = 0; _i < 10; ++_i, ++iter)
+	//for (size_t _i = 0; _i < 8; ++_i, ++iter)
 	//{
 	//	vh = *iter;
 	//	addConstraint(vh, Eigen::Vector3f(0.0f, 0.0f, 1.0f));
 	//	addConstraint(vh, Eigen::Vector3f(0.0f, 1.0f, 0.0f));
 	//	addConstraint(vh, Eigen::Vector3f(1.0f, 0.0f, 0.0f));
 	//}
-	for (size_t _i = 0; _i < 100; ++_i, ++iter);
-	vh = *iter;
-	addConstraint(vh, Eigen::Vector3f(0.0f, 0.0f, 1.0f));
-	addConstraint(vh, Eigen::Vector3f(0.0f, 1.0f, 0.0f));
-	addConstraint(vh, Eigen::Vector3f(1.0f, 0.0f, 0.0f));
-	for (size_t _i = 0; _i < 9; ++_i, ++iter);
-	vh = *iter;
-	addConstraint(vh, Eigen::Vector3f(0.0f, 0.0f, 1.0f));
-	addConstraint(vh, Eigen::Vector3f(0.0f, 1.0f, 0.0f));
-	addConstraint(vh, Eigen::Vector3f(1.0f, 0.0f, 0.0f));
+	//for (size_t _i = 0; _i < 100; ++_i, ++iter)
+	//{
+	//	vh = *iter;
+	//	addConstraint(vh, Eigen::Vector3f(0.0f, 0.0f, 1.0f));
+	//	addConstraint(vh, Eigen::Vector3f(0.0f, 1.0f, 0.0f));
+	//	addConstraint(vh, Eigen::Vector3f(1.0f, 0.0f, 0.0f));
+	//}
+	//for (size_t _i = 0; _i < 9; ++_i, ++iter);
+	//vh = *iter;
+	//addConstraint(vh, Eigen::Vector3f(0.0f, 0.0f, 1.0f));
+	//addConstraint(vh, Eigen::Vector3f(0.0f, 1.0f, 0.0f));
+	//addConstraint(vh, Eigen::Vector3f(1.0f, 0.0f, 0.0f));
 
 
 #endif
@@ -316,8 +317,8 @@ void BaraffRequire::initial()
 	df_dx_damp_total = Eigen::SparseMatrix<float>(VERTEX_SIZE * 3, VERTEX_SIZE * 3);
 	df_dv_damp_total = Eigen::SparseMatrix<float>(VERTEX_SIZE * 3, VERTEX_SIZE * 3);
 
-	/* WARNING : preallocate enough memory and value alignment
-	 * should not use setZero(), which will remove the value alignment
+	/* WARNING : preallocate enough memory and inner alignment
+	 * should not use setZero(), which will remove the inner alignment
 	 * see http://eigen.tuxfamily.org/dox/group__TutorialSparse.html 
 	 */
 	df_dx_internal_total.reserve(reserve_sparsematrix);
@@ -384,7 +385,9 @@ void BaraffRequire::reset(GLboolean first)
 		//std::cout << "initial v_total " << std::endl << v_total.block<3, 1>(0, 0) << std::endl;
 	}
 
-	// reset derivatives by self minus
+	/* WARNING : reset derivatives by self minus
+	 * should not use setZero(), for it will remove the inner alignment
+	 */
 	df_dx_internal_total -= df_dx_internal_total;
 	df_dx_damp_total -= df_dx_damp_total;
 	df_dv_damp_total -= df_dv_damp_total;
@@ -554,8 +557,8 @@ void BaraffRequire::getStretchAndShearForce(Faceidx fhandle,
 	//float dom = max(du1(0) * du2(1) - du2(0) * du1(1), 1e-15f);
 	float dom_raw = du1(0) * du2(1) - du2(0) * du1(1);
 	float dom = (dom_raw >= 0.0f) ? 
-		max(du1(0) * du2(1) - du2(0) * du1(1), 1e-15f) :
-		min(du1(0) * du2(1) - du2(0) * du1(1), -1e-15f);
+		max(du1(0) * du2(1) - du2(0) * du1(1), 1e-40f) :
+		min(du1(0) * du2(1) - du2(0) * du1(1), -1e-40f);
 #ifdef DEBUG_FORCE
 	std::cout << "dom " << dom << std::endl;
 #endif
@@ -566,8 +569,8 @@ void BaraffRequire::getStretchAndShearForce(Faceidx fhandle,
 	std::cout << "wv " << std::endl << wv << std::endl;
 #endif
 	float wu_len, wv_len;
-	wu_len = max(wu.norm(), 1e-15f);
-	wv_len = max(wv.norm(), 1e-15f);
+	wu_len = max(wu.norm(), 1e-40f);
+	wv_len = max(wv.norm(), 1e-40f);
 	Eigen::Vector3f wu_unit, wv_unit;
 	wu_unit = wu / wu_len;
 	wv_unit = wv / wv_len;
@@ -1008,9 +1011,9 @@ void BaraffRequire::getBendForce(Faceidx fhandle0, Faceidx fhandle1,
 	//}
 
 	float normal_A_len, normal_B_len, edge_len;
-	normal_A_len = max(normal_A.norm(), 1e-15f);
-	normal_B_len = max(normal_B.norm(), 1e-15f);
-	edge_len = max(edge.norm(), 1e-15f);
+	normal_A_len = max(normal_A.norm(), 1e-40f);
+	normal_B_len = max(normal_B.norm(), 1e-40f);
+	edge_len = max(edge.norm(), 1e-40f);
 
 	Eigen::Vector3f normal_A_unit, normal_B_unit, edge_unit;
 	normal_A_unit = normal_A / normal_A_len;
