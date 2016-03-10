@@ -39,12 +39,15 @@ public:
 	}
 
 private:
-	ClothPiece* clothPiece;
+	ClothPiece * const clothPiece;
 
 	typedef Eigen::Triplet<float> Tri_float;
 
-	std::vector<Tri_float> coeff_list; // used for filling sparse matrix 
-										 // according to Filling a sparse matrix section of Eigen
+	// used for filling sparse matrix 
+	// according to Filling a sparse matrix section of Eigen
+	std::vector<Tri_float> coeff_list; 
+	// used for reserve data in sparse matrix
+	Eigen::VectorXi reserve_sparsematrix;
 
 	// --------------- variables of model ------------------
 	//PolyArrayMesh::Property_map<Veridx, Vec3f> vph_planarcoord;

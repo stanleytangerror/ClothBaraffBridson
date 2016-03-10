@@ -44,6 +44,20 @@ void addBlock33(Eigen::SparseMatrix<float> & augend, GLuint block_i, GLuint bloc
 	}
 }
 
+void setBlock33(Eigen::SparseMatrix<float> & augend, GLuint block_i, GLuint block_j, const Eigen::Matrix3f & addend)
+{
+#ifdef DEBUG_OPERATIONS
+	std::cout << "augend size " << augend.size() << std::endl;
+	std::cout << "block " << block_i << ", " << block_j << std::endl;
+	std::cout << "addend " << std::endl << addend << std::endl;
+#endif
+
+	for (size_t _i = 0; _i < 3; ++_i) for (size_t _j = 0; _j < 3; ++_j)
+	{
+		augend.coeffRef(block_i * 3 + _i, block_j * 3 + _j) = addend.coeff(_i, _j);
+	}
+}
+
 //Eigen::Vector3f get_vector(Eigen::Tensor<float, 3>& tensor, GLuint block_i, GLuint block_j)
 //{
 //

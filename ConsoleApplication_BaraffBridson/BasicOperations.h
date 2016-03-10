@@ -76,6 +76,8 @@ void convert_diag2sparse_mnf(Eigen::SparseMatrix<float> & dest, const Eigen::Dia
 
 void addBlock33(Eigen::SparseMatrix<float> & augend, GLuint block_i, GLuint block_j, const Eigen::Matrix3f & addend);
 
+void setBlock33(Eigen::SparseMatrix<float> & augend, GLuint block_i, GLuint block_j, const Eigen::Matrix3f & addend);
+
 //Eigen::Vector3f get_vector(Eigen::Tensor<float, 3> & tensor, GLuint block_i, GLuint block_j);
 
 void get_diag_mnf(Eigen::SparseMatrix<float> & dest, size_t size);

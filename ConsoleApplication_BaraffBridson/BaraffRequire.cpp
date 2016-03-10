@@ -309,10 +309,21 @@ void BaraffRequire::initial()
 
 	coeff_list.reserve(VERTEX_SIZE * 3);
 
+	reserve_sparsematrix = Eigen::VectorXi::Constant(VERTEX_SIZE * 3, 3 * 10);
+
 	// ------------ allocate memory ------------ 
 	df_dx_internal_total = Eigen::SparseMatrix<float>(VERTEX_SIZE * 3, VERTEX_SIZE * 3);
 	df_dx_damp_total = Eigen::SparseMatrix<float>(VERTEX_SIZE * 3, VERTEX_SIZE * 3);
 	df_dv_damp_total = Eigen::SparseMatrix<float>(VERTEX_SIZE * 3, VERTEX_SIZE * 3);
+
+	/* WARNING : preallocate enough memory and value alignment
+	 * should not use setZero(), which will remove the value alignment
+	 * see http://eigen.tuxfamily.org/dox/group__TutorialSparse.html 
+	 */
+	df_dx_internal_total.reserve(reserve_sparsematrix);
+	df_dx_damp_total.reserve(reserve_sparsematrix);
+	df_dv_damp_total.reserve(reserve_sparsematrix);
+
 	f_total = Eigen::VectorXf(VERTEX_SIZE * 3);
 	v_total = Eigen::VectorXf(VERTEX_SIZE * 3);
 	Cu_stretch = Eigen::VectorXf(FACE_SIZE);
@@ -373,10 +384,23 @@ void BaraffRequire::reset(GLboolean first)
 		//std::cout << "initial v_total " << std::endl << v_total.block<3, 1>(0, 0) << std::endl;
 	}
 
-	// reset derivatives
-	df_dv_damp_total.setZero();
-	df_dx_internal_total.setZero();
-	df_dx_damp_total.setZero();
+	// reset derivatives by self minus
+	df_dx_internal_total -= df_dx_internal_total;
+	df_dx_damp_total -= df_dx_damp_total;
+	df_dv_damp_total -= df_dv_damp_total;
+
+		//df_dx_internal_total.reserve(reserve_sparsematrix);
+		//df_dx_damp_total.reserve(reserve_sparsematrix);
+		//df_dv_damp_total.reserve(reserve_sparsematrix);
+
+	//else
+	//{
+	//	//df_dv_damp_total.
+	//	const Eigen::Matrix3f zero = Eigen::Matrix3f::Zero();
+	//	for (size_t _i = 0; _i < VERTEX_SIZE * 3; ++_i) for (size_t _j = 0; _j < VERTEX_SIZE * 3; ++_j)
+	//	{
+	//	}
+	//}
 
 	// reset constraint
 	//if (first)
