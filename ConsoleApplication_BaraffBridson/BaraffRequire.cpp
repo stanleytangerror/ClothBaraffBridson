@@ -10,9 +10,9 @@
 
 #define STRETCH_FORCE
 #define SHEAR_FORCE
-#define BEND_FORCE
+//#define BEND_FORCE
 
-#define USE_DAMP
+//#define USE_DAMP
 #define USE_STRETCH_DAMP
 #define USE_SHEAR_DAMP
 #define USE_BEND_DAMP
@@ -127,6 +127,7 @@ void BaraffRequire::compute(float time_step)
 	addConstraint(vh, Eigen::Vector3f(0.0f, 0.0f, 1.0f));
 	addConstraint(vh, Eigen::Vector3f(0.0f, 1.0f, 0.0f));
 	addConstraint(vh, Eigen::Vector3f(1.0f, 0.0f, 0.0f));
+	for (size_t _i = 0; _i < 38; ++_i, ++iter);
 	vh = *iter++;
 	addConstraint(vh, Eigen::Vector3f(0.0f, 0.0f, 1.0f));
 	addConstraint(vh, Eigen::Vector3f(0.0f, 1.0f, 0.0f));
@@ -310,21 +311,12 @@ void BaraffRequire::initial()
 
 	coeff_list.reserve(VERTEX_SIZE * 3);
 
-	reserve_sparsematrix = Eigen::VectorXi::Constant(VERTEX_SIZE * 3, 3 * 10);
+	reserve_sparsematrix = Eigen::VectorXi::Constant(VERTEX_SIZE * 3, 3 * 15);
 
 	// ------------ allocate memory ------------ 
 	df_dx_internal_total = Eigen::SparseMatrix<float>(VERTEX_SIZE * 3, VERTEX_SIZE * 3);
 	df_dx_damp_total = Eigen::SparseMatrix<float>(VERTEX_SIZE * 3, VERTEX_SIZE * 3);
 	df_dv_damp_total = Eigen::SparseMatrix<float>(VERTEX_SIZE * 3, VERTEX_SIZE * 3);
-
-	/* WARNING : preallocate enough memory and inner alignment
-	 * should not use setZero(), which will remove the inner alignment
-	 * see http://eigen.tuxfamily.org/dox/group__TutorialSparse.html 
-	 */
-	df_dx_internal_total.reserve(reserve_sparsematrix);
-	df_dx_damp_total.reserve(reserve_sparsematrix);
-	df_dv_damp_total.reserve(reserve_sparsematrix);
-
 	f_total = Eigen::VectorXf(VERTEX_SIZE * 3);
 	v_total = Eigen::VectorXf(VERTEX_SIZE * 3);
 	Cu_stretch = Eigen::VectorXf(FACE_SIZE);
@@ -338,23 +330,30 @@ void BaraffRequire::initial()
 	
 	// ------------ initial constant variables ------------ 
 	// initial mass matrix, should not be modified
-	coeff_list.clear();
+	//coeff_list.clear();
+	//for (size_t _i = 0; _i < VERTEX_SIZE; ++_i) for (size_t _j = 0; _j < 3; ++_j)
+	//	coeff_list.push_back(Tri_float(_i * 3 + _j, _i * 3 + _j, mass_list[_i]));
+	//mass.setFromTriplets(coeff_list.begin(), coeff_list.end());
+	mass.reserve(Eigen::VectorXi::Constant(VERTEX_SIZE * 3, 1));
 	for (size_t _i = 0; _i < VERTEX_SIZE; ++_i) for (size_t _j = 0; _j < 3; ++_j)
-		coeff_list.push_back(Tri_float(_i * 3 + _j, _i * 3 + _j, mass_list[_i]));
-	mass.setFromTriplets(coeff_list.begin(), coeff_list.end());
+		mass.coeffRef(_i * 3 + _j, _i * 3 + _j) = mass_list[_i];
 
 	// initial mass_inverse matrix, should not be modified
-	coeff_list.clear();
+	//coeff_list.clear();
+	//for (size_t _i = 0; _i < VERTEX_SIZE; ++_i) for (size_t _j = 0; _j < 3; ++_j)
+	//	coeff_list.push_back(Tri_float(_i * 3 + _j, _i * 3 + _j, 1.0f / mass_list[_i]));
+	//mass_inverse.setFromTriplets(coeff_list.begin(), coeff_list.end());
+	mass_inverse.reserve(Eigen::VectorXi::Constant(VERTEX_SIZE * 3, 1));
 	for (size_t _i = 0; _i < VERTEX_SIZE; ++_i) for (size_t _j = 0; _j < 3; ++_j)
-		coeff_list.push_back(Tri_float(_i * 3 + _j, _i * 3 + _j, 1.0f / mass_list[_i]));
-	mass_inverse.setFromTriplets(coeff_list.begin(), coeff_list.end());
+		mass_inverse.coeffRef(_i * 3 + _j, _i * 3 + _j) = 1.0f / mass_list[_i];
 
 	// initial identity matrix, should not be modified
-	coeff_list.clear();
-	for (size_t _i = 0; _i < VERTEX_SIZE * 3; ++_i)
-		coeff_list.push_back(Tri_float(_i, _i, 1.0f));
-	identity.setFromTriplets(coeff_list.begin(), coeff_list.end());
-	
+	//coeff_list.clear();
+	//for (size_t _i = 0; _i < VERTEX_SIZE * 3; ++_i)
+	//	coeff_list.push_back(Tri_float(_i, _i, 1.0f));
+	//identity.setFromTriplets(coeff_list.begin(), coeff_list.end());
+	identity.setIdentity();
+
 	// initial planar coordinates
 	clothPiece->useVTexCoord2DAsVPlanarCoord3f();
 	//clothPiece->getVPlanarCoord3f(vph_planarcoord);
@@ -385,33 +384,21 @@ void BaraffRequire::reset(GLboolean first)
 		//std::cout << "initial v_total " << std::endl << v_total.block<3, 1>(0, 0) << std::endl;
 	}
 
-	/* WARNING : reset derivatives by self minus
-	 * should not use setZero(), for it will remove the inner alignment
-	 */
-	df_dx_internal_total -= df_dx_internal_total;
-	df_dx_damp_total -= df_dx_damp_total;
-	df_dv_damp_total -= df_dv_damp_total;
-
-		//df_dx_internal_total.reserve(reserve_sparsematrix);
-		//df_dx_damp_total.reserve(reserve_sparsematrix);
-		//df_dv_damp_total.reserve(reserve_sparsematrix);
-
-	//else
-	//{
-	//	//df_dv_damp_total.
-	//	const Eigen::Matrix3f zero = Eigen::Matrix3f::Zero();
-	//	for (size_t _i = 0; _i < VERTEX_SIZE * 3; ++_i) for (size_t _j = 0; _j < VERTEX_SIZE * 3; ++_j)
-	//	{
-	//	}
-	//}
+	df_dx_internal_total.setZero();
+	df_dx_damp_total.setZero();
+	df_dv_damp_total.setZero();
+	df_dx_internal_total.reserve(reserve_sparsematrix);
+	df_dx_damp_total.reserve(reserve_sparsematrix);
+	df_dv_damp_total.reserve(reserve_sparsematrix);
 
 	// reset constraint
 	//if (first)
 	{
-		coeff_list.clear();
-		for (size_t _i = 0; _i < VERTEX_SIZE * 3; ++_i)
-			coeff_list.push_back(Tri_float(_i, _i, 1.0f));
-		constraints.setFromTriplets(coeff_list.begin(), coeff_list.end());
+		//coeff_list.clear();
+		//for (size_t _i = 0; _i < VERTEX_SIZE * 3; ++_i)
+		//	coeff_list.push_back(Tri_float(_i, _i, 1.0f));
+		//constraints.setFromTriplets(coeff_list.begin(), coeff_list.end());
+		constraints.setIdentity();
 	}
 }
 
@@ -672,7 +659,7 @@ void BaraffRequire::getStretchAndShearForce(Faceidx fhandle,
 		std::cout << "Cu_dot " << Cu_dot << std::endl;
 		std::cout << "Cv_dot " << Cv_dot << std::endl;
 #endif
-		// compute and update first order derivatives df_dx, df_dv
+		// compute and update Jacobian matrix df_dx, df_dv
 		Eigen::Matrix3f dfi_dxj[3][3], dfi_dxj_damp[3][3], dfi_dvj_damp[3][3];
 		for (size_t _i = 0; _i < 3; ++_i) for (size_t _j = 0; _j < 3; ++_j)
 		{
