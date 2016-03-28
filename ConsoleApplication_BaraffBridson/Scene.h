@@ -140,8 +140,16 @@ public:
 protected:
 	ClothPiece const * const clothPiece;
 
+	Camera * camera;
+	glm::mat4 projection;
+	glm::mat4 view;
+	glm::mat4 model;
+	glm::vec3 viewPos;
+
 	/* cloth piece surface */
 	Shader  * clothPieceShader = nullptr;
+	Shader  * debugShader = nullptr;
+	
 	GLfloat * meshVB = nullptr;
 	GLfloat * meshVNormalB = nullptr;
 	GLuint * meshEB = nullptr;
@@ -152,22 +160,17 @@ protected:
 
 	GLuint meshVAO, meshVBO, meshVNormalBO, meshEBO, conditionVBO;
 
-	Camera * camera;
-	glm::mat4 projection;
-	glm::mat4 view;
-	glm::mat4 model;
-	glm::vec3 viewPos;
-
 	/* cloth piece normal */
+	GLuint debugVAO, debugVBO, debugNormalVBO;
+	GLfloat * fBarycentreBuffer = nullptr;
+	GLfloat * fNormalBuffer = nullptr;
+	GLuint fSize;
+
 	//GLfloat * tempptr;
 	//GLuint tempuint;
 	//stepforward->exportBendConditionData(tempptr, tempuint);
 
-	GLuint debugVAO, debugVBO, debugNormalVBO;
-	GLfloat * fBarycentreBuffer = nullptr, *fNormalBuffer = nullptr;
-	GLuint fSize;
 
-	Shader  * debugShader;
 
 };
 

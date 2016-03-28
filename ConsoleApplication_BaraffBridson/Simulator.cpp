@@ -69,10 +69,6 @@ void Simulator::init()
 	eventManager->registerMouseEventHandler([this](GLfloat xpos, GLfloat ypos, GLfloat xlast, GLfloat ylast) -> void {this->viewer->move_mouse(xpos, ypos, xlast, ylast); });
 	eventManager->registerScrollEventHandler([this](GLfloat scrollX, GLfloat scrollY) -> void {this->viewer->scroll_mouse(scrollX, scrollY); });
 	eventManager->registerKeyboardEventHandler([this](bool const * const keyMask) -> void {this->pauseEventHandle(keyMask); });
-	//eventManager->registerKeyboardEventHandler(std::bind(&FOVControl::keyboard_press, std::cref(*viewer)));
-	//eventManager->registerMouseEventHandler(std::bind(&FOVControl::move_mouse, std::cref(*viewer)));
-	//eventManager->registerScrollEventHandler(std::bind(&FOVControl::scroll_mouse, std::cref(*viewer)));
-	//eventManager->registerKeyboardEventHandler(std::bind(&Simulator::pauseEventHandle, std::cref(*this)));
 
 }
 

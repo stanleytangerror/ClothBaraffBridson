@@ -102,13 +102,13 @@ void SceneEnv::update()
 void SceneClothPiece::draw()
 const 
 {
-	return;
+	//return;
+
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
 	/* ------- draw cloth piece ------- */
 	clothPieceShader->Use();
-	
-	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-	
+
 	glUniformMatrix4fv(glGetUniformLocation(clothPieceShader->Program, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 	glUniformMatrix4fv(glGetUniformLocation(clothPieceShader->Program, "view"), 1, GL_FALSE, glm::value_ptr(view));
 	glUniformMatrix4fv(glGetUniformLocation(clothPieceShader->Program, "model"), 1, GL_FALSE, glm::value_ptr(model));
@@ -136,11 +136,11 @@ const
 		glEnableVertexAttribArray(1);
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-		glBindBuffer(GL_ARRAY_BUFFER, conditionVBO);
-		glBufferData(GL_ARRAY_BUFFER, conditionCnt * 1 * sizeof(GLfloat), conditionBuffer, GL_STATIC_DRAW);
-		glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, 0 * sizeof(GLfloat), (GLvoid *)0);
-		glEnableVertexAttribArray(2);
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		//glBindBuffer(GL_ARRAY_BUFFER, conditionVBO);
+		//glBufferData(GL_ARRAY_BUFFER, conditionCnt * 1 * sizeof(GLfloat), conditionBuffer, GL_STATIC_DRAW);
+		//glVertexAttribPointer(2, 1, GL_FLOAT, GL_FALSE, 0 * sizeof(GLfloat), (GLvoid *)0);
+		//glEnableVertexAttribArray(2);
+		//glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshEBO);
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, meshEBcnt * sizeof(GLuint), meshEB, GL_STATIC_DRAW);
@@ -160,19 +160,21 @@ const
 	//glGetUniformLocation(clothPieceShader->Program, "projection");
 	//glGetUniformLocation(9, "projection");
 
+	//return;
+
 	/* ------- draw cloth normal ------- */
 	debugShader->Use();
 
-	auto p1 = ResourceManager::GetShader("cloth_piece_normal")->Program;
-	auto p2 = debugShader->Program;
-	std::cout << p1 + p2 << std::endl;
-	//glGetUniformLocation(6, "projection");
-	glGetUniformLocation(debugShader->Program, "projection");
-	glGetUniformLocation(13, "projection");
-	glGetUniformLocation(9, "projection");
-	//glGetUniformLocation(3, "projection");
-	auto loc = glGetUniformLocation(ResourceManager::GetShader("cloth_piece_normal")->Program, "projection");
-	loc = glGetUniformLocation(debugShader->Program, "projection");
+	//auto p1 = ResourceManager::GetShader("cloth_piece_normal")->Program;
+	//auto p2 = debugShader->Program;
+	//std::cout << p1 + p2 << std::endl;
+	////glGetUniformLocation(6, "projection");
+	//glGetUniformLocation(debugShader->Program, "projection");
+	//glGetUniformLocation(13, "projection");
+	//glGetUniformLocation(9, "projection");
+	////glGetUniformLocation(3, "projection");
+	//auto loc = glGetUniformLocation(ResourceManager::GetShader("cloth_piece_normal")->Program, "projection");
+	//loc = glGetUniformLocation(debugShader->Program, "projection");
 	glUniformMatrix4fv(glGetUniformLocation(debugShader->Program, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 	glUniformMatrix4fv(glGetUniformLocation(debugShader->Program, "view"), 1, GL_FALSE, glm::value_ptr(view));
 	glUniformMatrix4fv(glGetUniformLocation(debugShader->Program, "model"), 1, GL_FALSE, glm::value_ptr(model));
@@ -203,7 +205,7 @@ const
 		//glBindVertexArray(0);
 
 		//glBindVertexArray(debugVAO);
-		glDrawArrays(GL_POINTS, 0, fSize);
+		//glDrawArrays(GL_POINTS, 0, fSize);
 	}
 	glBindVertexArray(0);
 
@@ -225,8 +227,8 @@ void SceneClothPiece::update()
 	meshVNormalB = nullptr;
 	meshEB = nullptr;
 	meshVBcnt = 0, meshEBcnt = 0;
-	conditionBuffer = nullptr;
-	conditionCnt = 0;
+	//conditionBuffer = nullptr;
+	//conditionCnt = 0;
 	clothPiece->exportPos3fNorm3fBuffer(meshVB, meshVNormalB, meshVBcnt, meshEB, meshEBcnt);
 
 	fBarycentreBuffer = nullptr;
