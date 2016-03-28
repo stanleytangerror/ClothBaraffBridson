@@ -1,22 +1,22 @@
-#include "Simulate.h"
+#include "BaraffDynamics.h"
 
 #include "BasicOperations.h"
 
 #include <Eigen/IterativeLinearSolvers>
 #include <iostream>
 
-void Simulate::initial()
+void BaraffDynamics::initial()
 {
-	//variables = BaraffRequire(model);
-	last_root = Eigen::VectorXf::Zero(3 * variables->exportVertexSize());
+	//physics = BaraffPhysics(model);
+	last_root = Eigen::VectorXf::Zero(3 * physics->exportVertexSize());
 }
 
-void Simulate::simulate()
+void BaraffDynamics::stepforward(float time_step)
 {
-	variables->compute(0.02f);
-	Eigen::SparseMatrix<GLfloat> A = variables->exportA();
-	Eigen::VectorXf b = variables->exportb();
-	Eigen::SparseMatrix<GLfloat> S = variables->exportS();
+	physics->compute(time_step);
+	Eigen::SparseMatrix<GLfloat> A = physics->exportA();
+	Eigen::VectorXf b = physics->exportb();
+	Eigen::SparseMatrix<GLfloat> S = physics->exportS();
 	//std::cout << "size " << std::endl
 	//	<< "A " << A.size() << std::endl
 	//	<< "b " << b.size() << std::endl
@@ -39,9 +39,9 @@ void Simulate::simulate()
 #endif
 
 #ifdef MPCG_BARAFF
-	ModifiedPCGSolver solver2 = ModifiedPCGSolver(A, b, S);
+	BaraffMPCGSolver solver2 = BaraffMPCGSolver(A, b, S);
 	//Eigen::VectorXf v_delta2 = solver2.solve(0.05f, last_root);
-	Eigen::VectorXf v_delta2 = solver2.solve(0.05f, Eigen::VectorXf::Zero(variables->exportVertexSize() * 3));
+	Eigen::VectorXf v_delta2 = solver2.solve(0.05f, Eigen::VectorXf::Zero(physics->exportVertexSize() * 3));
 #endif
 
 #ifdef MPCG_BARAFF 
@@ -57,22 +57,22 @@ void Simulate::simulate()
 	std::cout << "solution " << std::endl << v_delta2 << std::endl;
 #endif
 	last_root = v_delta2;
-	variables->update(v_delta2);
+	physics->update(v_delta2);
 }
 
-void Simulate::writeBack()
+void BaraffDynamics::writeBack()
 {
-	variables->writeMesh();
+	physics->writeMesh();
 }
 
-void Simulate::exportShearConditionData(GLfloat *& dataBuffer, GLuint & dataSize)
+void BaraffDynamics::exportShearConditionData(GLfloat *& dataBuffer, GLuint & dataSize)
 {
-	variables->exportShearConditionData(dataBuffer, dataSize);
+	physics->exportShearConditionData(dataBuffer, dataSize);
 }
 
-void Simulate::exportBendConditionData(GLfloat *& dataBuffer, GLuint & dataSize)
+void BaraffDynamics::exportBendConditionData(GLfloat *& dataBuffer, GLuint & dataSize)
 {
 	// TODO
-	variables->exportBendConditionData(dataBuffer, dataSize);
+	physics->exportBendConditionData(dataBuffer, dataSize);
 }
 

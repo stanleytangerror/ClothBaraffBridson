@@ -14,41 +14,41 @@
 
 #include <SOIL.h>
 
-// Instantiate static variables
-std::map<std::string, Texture2D>    ResourceManager::Textures;
-std::map<std::string, Shader>       ResourceManager::Shaders;
-std::map<std::string, CubeMap>		ResourceManager::CubeMaps;
+// Instantiate static physics
+std::map<std::string, Texture2D * >    ResourceManager::Textures;
+std::map<std::string, Shader * >       ResourceManager::Shaders;
+std::map<std::string, CubeMap * >		ResourceManager::CubeMaps;
 
-Shader ResourceManager::LoadShader(std::string name, const GLchar *vShaderFile, const GLchar *fShaderFile, const GLchar *gShaderFile)
+Shader  *  ResourceManager::LoadShader(std::string name, const GLchar *vShaderFile, const GLchar *fShaderFile, const GLchar *gShaderFile)
 {
 	std::cout << "INFO::LOAD SHADER: " << name.c_str() << std::endl;
 	Shaders[name] = loadShaderFromFile(vShaderFile, fShaderFile, gShaderFile);
 	return Shaders[name];
 }
 
-Shader ResourceManager::GetShader(std::string name)
+Shader  *  ResourceManager::GetShader(std::string name)
 {
 	return Shaders.at(name);
 }
 
-Texture2D ResourceManager::LoadTexture(const GLchar *file, GLboolean alpha, std::string name)
+Texture2D  *  ResourceManager::LoadTexture(const GLchar *file, GLboolean alpha, std::string name)
 {
 	Textures[name] = loadTextureFromFile(file, alpha);
 	return Textures[name];
 }
 
-Texture2D ResourceManager::GetTexture(std::string name)
+Texture2D  *  ResourceManager::GetTexture(std::string name)
 {
 	return Textures.at(name);
 }
 
-CubeMap ResourceManager::LoadCubeMap(std::string name, std::vector<const GLchar *> faces)
+CubeMap  *  ResourceManager::LoadCubeMap(std::string name, std::vector<const GLchar *> faces)
 {
 	CubeMaps[name] = loadCubeMapFromFile(faces);
 	return CubeMaps[name];
 }
 
-CubeMap ResourceManager::GetCubeMap(std::string name)
+CubeMap  *  ResourceManager::GetCubeMap(std::string name)
 {
 	return CubeMaps.at(name);
 }
@@ -58,15 +58,15 @@ void ResourceManager::Clear()
 {
 	// (Properly) delete all shaders	
 	for (auto iter : Shaders)
-		glDeleteProgram(iter.second.Program);
+		glDeleteProgram(iter.second->Program);
 	// (Properly) delete all textures
 	for (auto iter : Textures)
-		glDeleteTextures(1, &iter.second.ID);
+		glDeleteTextures(1, &iter.second->ID);
 }
 
 //#define DEBUG_SHADER
 
-Shader ResourceManager::loadShaderFromFile(const GLchar *vShaderFile, const GLchar *fShaderFile, const GLchar *gShaderFile)
+Shader * ResourceManager::loadShaderFromFile(const GLchar *vShaderFile, const GLchar *fShaderFile, const GLchar *gShaderFile)
 {
 	// 1. Retrieve the vertex/fragment source code from filePath
 	std::string vertexCode;
@@ -110,38 +110,38 @@ Shader ResourceManager::loadShaderFromFile(const GLchar *vShaderFile, const GLch
 	const GLchar *fShaderCode = fragmentCode.c_str();
 	const GLchar *gShaderCode = geometryCode.c_str();
 	// 2. Now create shader object from source code
-	Shader shader;
-	shader.Compile(vShaderCode, fShaderCode, gShaderFile != nullptr ? gShaderCode : nullptr);
+	Shader * shader = new Shader();
+	shader->Compile(vShaderCode, fShaderCode, gShaderFile != nullptr ? gShaderCode : nullptr);
 	return shader;
 }
 
-Texture2D ResourceManager::loadTextureFromFile(const GLchar *file, GLboolean alpha)
+Texture2D *  ResourceManager::loadTextureFromFile(const GLchar *file, GLboolean alpha)
 {
 	// Create Texture object
-	Texture2D texture;
+	Texture2D * texture = new Texture2D();
 	if (alpha)
 	{
-		texture.Internal_Format = GL_RGBA;
-		texture.Image_Format = GL_RGBA;
+		texture->Internal_Format = GL_RGBA;
+		texture->Image_Format = GL_RGBA;
 	}
 	// Load image
 	int width, height;
-	unsigned char* image = SOIL_load_image(file, &width, &height, 0, texture.Image_Format == GL_RGBA ? SOIL_LOAD_RGBA : SOIL_LOAD_RGB);
+	unsigned char* image = SOIL_load_image(file, &width, &height, 0, texture->Image_Format == GL_RGBA ? SOIL_LOAD_RGBA : SOIL_LOAD_RGB);
 	// Now generate texture
-	texture.Generate(width, height, image);
+	texture->Generate(width, height, image);
 	// And finally free image data
 	SOIL_free_image_data(image);
 	return texture;
 }
 
-CubeMap ResourceManager::loadCubeMapFromFile(std::vector<const GLchar *> faces)
+CubeMap *  ResourceManager::loadCubeMapFromFile(std::vector<const GLchar *> faces)
 {
-	CubeMap cubeMap;
+	CubeMap * cubeMap = new CubeMap();
 	int width, height;
 	std::vector<unsigned char *> faceImages;
 	for (auto iter : faces)
 		faceImages.push_back(SOIL_load_image(iter, &width, &height, 0, SOIL_LOAD_RGB));
-	cubeMap.Generate(width, height, faceImages);
+	cubeMap->Generate(width, height, faceImages);
 	for (auto iter : faceImages)
 		SOIL_free_image_data(iter);
 	return cubeMap;

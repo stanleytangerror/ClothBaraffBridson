@@ -9,14 +9,7 @@
 #ifndef TEXTURE_H
 #define TEXTURE_H
 
-// GLEW
-// #ifndef GLEW_INCLUDED
-// #define GLEW_STATIC
-// #include <GL/glew.h>
-// #define GLEW_INCLUDED
-// #endif
-
-#include <GL/glew.h>
+#include "OpenGLContext.h"
 
 #include <vector>
 

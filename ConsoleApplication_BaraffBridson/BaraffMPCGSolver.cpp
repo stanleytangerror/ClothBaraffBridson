@@ -1,4 +1,4 @@
-#include "ConjugateGradientSolver.h"
+#include "BaraffMPCGSolver.h"
 
 #include "BasicOperations.h"
 
@@ -7,7 +7,7 @@
 //#define SHOW_CONVERGENCE
 //#define DEBUG_PCG
 
-const Eigen::VectorXf & ModifiedPCGSolver::solve(const GLfloat epsilon, const Eigen::VectorXf init_val)
+const Eigen::VectorXf & BaraffMPCGSolver::solve(const GLfloat epsilon, const Eigen::VectorXf init_val)
 {
 	//std::cout << "A symmetrical " << (checkSymmetrical(A) ? true : false) << std::endl;
 	//std::cout << "x before " << std::endl << x << std::endl;
@@ -17,7 +17,7 @@ const Eigen::VectorXf & ModifiedPCGSolver::solve(const GLfloat epsilon, const Ei
 	return x;
 }
 
-void ModifiedPCGSolver::initial()
+void BaraffMPCGSolver::initial()
 {
 	x = Eigen::VectorXf(dim);
 	x.setZero();
@@ -45,7 +45,7 @@ void ModifiedPCGSolver::initial()
 
 }
 
-inline Eigen::VectorXf ModifiedPCGSolver::filter(Eigen::VectorXf vec)
+inline Eigen::VectorXf BaraffMPCGSolver::filter(Eigen::VectorXf vec)
 {
 #ifdef DEBUG_PCG
 	//std::cout << "S " << S.diagonal().norm() << std::endl;
@@ -58,7 +58,7 @@ inline Eigen::VectorXf ModifiedPCGSolver::filter(Eigen::VectorXf vec)
 	//return vec;
 }
 
-void ModifiedPCGSolver::runCG(const GLfloat epsilon)
+void BaraffMPCGSolver::runCG(const GLfloat epsilon)
 {
 #ifdef SHOW_CONVERGENCE
 	std::cout << " ========== CG ============== " << std::endl;
@@ -109,7 +109,7 @@ void ModifiedPCGSolver::runCG(const GLfloat epsilon)
 	}
 }
 
-void ModifiedPCGSolver::runMPCG(const GLfloat epsilon, const Eigen::VectorXf z)
+void BaraffMPCGSolver::runMPCG(const GLfloat epsilon, const Eigen::VectorXf z)
 {
 #ifdef SHOW_CONVERGENCE
 	std::cout << " ========== MPCG ============== " << std::endl;
@@ -207,7 +207,7 @@ void ModifiedPCGSolver::runMPCG(const GLfloat epsilon, const Eigen::VectorXf z)
 	//std::cout << "x " << std::endl << x << std::endl;
 }
 
-void ModifiedPCGSolver::runProjectedCG(const GLfloat epsilon)
+void BaraffMPCGSolver::runProjectedCG(const GLfloat epsilon)
 {
 #ifdef SHOW_CONVERGENCE
 	std::cout << " ========== Projected CG ============== " << std::endl;

@@ -1,11 +1,10 @@
 #ifndef MESH_H
 #define MESH_H
 
-#include <GL/glew.h>
-#include <glm\glm.hpp>
-#include <assimp\types.h>
-
+#include "OpenGLContext.h"
 #include "Shader.h"
+
+#include <assimp\types.h>
 
 #include <string>
 #include <vector>

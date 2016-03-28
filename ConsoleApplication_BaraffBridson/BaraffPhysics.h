@@ -8,10 +8,10 @@
 #include <Eigen\Sparse>
 
 
-class BaraffRequire
+class BaraffPhysics
 {
 public:
-	BaraffRequire(ClothPiece* clothPiece):
+	BaraffPhysics(ClothPiece* clothPiece):
 		clothPiece(clothPiece) 
 	{
 		initial();
@@ -49,7 +49,7 @@ private:
 	// used for reserve data in sparse matrix
 	Eigen::VectorXi reserve_sparsematrix;
 
-	// --------------- variables of model ------------------
+	// --------------- physics of model ------------------
 	//PolyArrayMesh::Property_map<Veridx, Vec3f> vph_planarcoord;
 	// WARNING access to map should via map.at()
 	std::map<Veridx, GLuint> vertices2indices;
@@ -59,7 +59,7 @@ private:
 	std::vector<float> mass_list;
 	Eigen::VectorXf positions;
 
-	// ----------------- variables needed by Baraff ---------------- 
+	// ----------------- physics needed by Baraff ---------------- 
 	// parameters for integration
 	float time_step;
 	// parameters for cloth density
@@ -92,7 +92,7 @@ private:
 	//Eigen::DiagonalMatrix<int, Eigen::Dynamic> diagonal_matrix;
 
 
-	// -------------- pipelines between model and variables ----------------- 
+	// -------------- pipelines between model and physics ----------------- 
 	void readPositions();
 	void writePositions();
 

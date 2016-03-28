@@ -1,8 +1,7 @@
 #ifndef BASIC_OPERATIONS_H
 #define BASIC_OPERATIONS_H
 
-//#define GLEW_STATIC
-#include <GL/glew.h>
+#include "OpenGLContext.h"
 
 #include <Eigen\Core>
 #include <Eigen\Sparse>

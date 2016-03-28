@@ -27,23 +27,11 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="consoleapplication_baraffbridson\BaraffRequire.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="consoleapplication_baraffbridson\ClothPiece.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="consoleapplication_baraffbridson\ConjugateGradientSolver.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="consoleapplication_baraffbridson\Main.cpp">
       <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="consoleapplication_baraffbridson\Simulate.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="consoleapplication_baraffbridson\Control.cpp">
-      <Filter>Source Files\Render</Filter>
     </ClCompile>
     <ClCompile Include="consoleapplication_baraffbridson\Mesh.cpp">
       <Filter>Source Files\Render</Filter>
@@ -69,30 +57,42 @@
     <ClCompile Include="ConsoleApplication_BaraffBridson\BridsonDynamic.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ConsoleApplication_BaraffBridson\BaraffPhysics.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="consoleapplication_baraffbridson\BaraffMPCGSolver.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="consoleapplication_baraffbridson\BaraffDynamics.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ConsoleApplication_BaraffBridson\Screen.cpp">
+      <Filter>Source Files\Render</Filter>
+    </ClCompile>
+    <ClCompile Include="ConsoleApplication_BaraffBridson\Scene.cpp">
+      <Filter>Source Files\Render</Filter>
+    </ClCompile>
+    <ClCompile Include="ConsoleApplication_BaraffBridson\Simulator.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ConsoleApplication_BaraffBridson\Config.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ConsoleApplication_BaraffBridson\EventManager.cpp">
+      <Filter>Source Files\Render</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="consoleapplication_baraffbridson\BaraffRequire.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="consoleapplication_baraffbridson\ClothPiece.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="consoleapplication_baraffbridson\ConjugateGradientSolver.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="consoleapplication_baraffbridson\EigenMatScalar.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="consoleapplication_baraffbridson\Simulate.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="consoleapplication_baraffbridson\Types.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="consoleapplication_baraffbridson\Camera.h">
-      <Filter>Header Files\Render</Filter>
-    </ClInclude>
-    <ClInclude Include="consoleapplication_baraffbridson\Control.h">
       <Filter>Header Files\Render</Filter>
     </ClInclude>
     <ClInclude Include="consoleapplication_baraffbridson\Mesh.h">
@@ -121,6 +121,36 @@
     </ClInclude>
     <ClInclude Include="ConsoleApplication_BaraffBridson\BridsonDynamic.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ConsoleApplication_BaraffBridson\OpenGLContext.h">
+      <Filter>Header Files\Util</Filter>
+    </ClInclude>
+    <ClInclude Include="consoleapplication_baraffbridson\EventManager.h">
+      <Filter>Header Files\Render</Filter>
+    </ClInclude>
+    <ClInclude Include="ConsoleApplication_BaraffBridson\BaraffPhysics.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="consoleapplication_baraffbridson\BaraffMPCGSolver.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="consoleapplication_baraffbridson\BaraffDynamics.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ConsoleApplication_BaraffBridson\Screen.h">
+      <Filter>Header Files\Render</Filter>
+    </ClInclude>
+    <ClInclude Include="ConsoleApplication_BaraffBridson\Scene.h">
+      <Filter>Header Files\Render</Filter>
+    </ClInclude>
+    <ClInclude Include="ConsoleApplication_BaraffBridson\Simulator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ConsoleApplication_BaraffBridson\Config.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ConsoleApplication_BaraffBridson\Clock.h">
+      <Filter>Header Files\Util</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

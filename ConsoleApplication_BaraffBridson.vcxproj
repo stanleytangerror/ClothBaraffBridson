@@ -101,36 +101,46 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="consoleapplication_baraffbridson\BaraffRequire.cpp" />
+    <ClCompile Include="ConsoleApplication_BaraffBridson\BaraffPhysics.cpp" />
     <ClCompile Include="consoleapplication_baraffbridson\BasicOperations.cpp" />
     <ClCompile Include="ConsoleApplication_BaraffBridson\BridsonCollision.cpp" />
     <ClCompile Include="ConsoleApplication_BaraffBridson\BridsonDynamic.cpp" />
     <ClCompile Include="consoleapplication_baraffbridson\ClothPiece.cpp" />
-    <ClCompile Include="consoleapplication_baraffbridson\ConjugateGradientSolver.cpp" />
-    <ClCompile Include="consoleapplication_baraffbridson\Control.cpp" />
+    <ClCompile Include="consoleapplication_baraffbridson\BaraffMPCGSolver.cpp" />
+    <ClCompile Include="ConsoleApplication_BaraffBridson\Config.cpp" />
+    <ClCompile Include="ConsoleApplication_BaraffBridson\EventManager.cpp" />
     <ClCompile Include="consoleapplication_baraffbridson\Main.cpp" />
     <ClCompile Include="consoleapplication_baraffbridson\Mesh.cpp" />
     <ClCompile Include="consoleapplication_baraffbridson\Model.cpp" />
     <ClCompile Include="consoleapplication_baraffbridson\ResourceManager.cpp" />
+    <ClCompile Include="ConsoleApplication_BaraffBridson\Scene.cpp" />
+    <ClCompile Include="ConsoleApplication_BaraffBridson\Screen.cpp" />
     <ClCompile Include="consoleapplication_baraffbridson\Shader.cpp" />
-    <ClCompile Include="consoleapplication_baraffbridson\Simulate.cpp" />
+    <ClCompile Include="consoleapplication_baraffbridson\BaraffDynamics.cpp" />
+    <ClCompile Include="ConsoleApplication_BaraffBridson\Simulator.cpp" />
     <ClCompile Include="consoleapplication_baraffbridson\texture.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="consoleapplication_baraffbridson\BaraffRequire.h" />
+    <ClInclude Include="ConsoleApplication_BaraffBridson\BaraffPhysics.h" />
     <ClInclude Include="consoleapplication_baraffbridson\BasicOperations.h" />
     <ClInclude Include="ConsoleApplication_BaraffBridson\BridsonCollision.h" />
     <ClInclude Include="ConsoleApplication_BaraffBridson\BridsonDynamic.h" />
     <ClInclude Include="consoleapplication_baraffbridson\Camera.h" />
+    <ClInclude Include="ConsoleApplication_BaraffBridson\Clock.h" />
     <ClInclude Include="consoleapplication_baraffbridson\ClothPiece.h" />
-    <ClInclude Include="consoleapplication_baraffbridson\ConjugateGradientSolver.h" />
-    <ClInclude Include="consoleapplication_baraffbridson\Control.h" />
+    <ClInclude Include="consoleapplication_baraffbridson\BaraffMPCGSolver.h" />
+    <ClInclude Include="ConsoleApplication_BaraffBridson\Config.h" />
+    <ClInclude Include="consoleapplication_baraffbridson\EventManager.h" />
     <ClInclude Include="consoleapplication_baraffbridson\EigenMatScalar.h" />
     <ClInclude Include="consoleapplication_baraffbridson\Mesh.h" />
     <ClInclude Include="consoleapplication_baraffbridson\Model.h" />
+    <ClInclude Include="ConsoleApplication_BaraffBridson\OpenGLContext.h" />
+    <ClInclude Include="ConsoleApplication_BaraffBridson\Scene.h" />
+    <ClInclude Include="ConsoleApplication_BaraffBridson\Screen.h" />
     <ClInclude Include="consoleapplication_baraffbridson\ResourceManager.h" />
     <ClInclude Include="consoleapplication_baraffbridson\Shader.h" />
-    <ClInclude Include="consoleapplication_baraffbridson\Simulate.h" />
+    <ClInclude Include="consoleapplication_baraffbridson\BaraffDynamics.h" />
+    <ClInclude Include="ConsoleApplication_BaraffBridson\Simulator.h" />
     <ClInclude Include="consoleapplication_baraffbridson\Test.h" />
     <ClInclude Include="consoleapplication_baraffbridson\texture.h" />
     <ClInclude Include="consoleapplication_baraffbridson\Types.h" />

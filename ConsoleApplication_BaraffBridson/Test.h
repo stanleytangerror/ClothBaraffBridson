@@ -1,4 +1,4 @@
-#include "ConjugateGradientSolver.h"
+#include "BaraffMPCGSolver.h"
 
 #include <Eigen\IterativeLinearSolvers>
 
@@ -52,7 +52,7 @@ void testPCG()
 	//std::cout << "#iterations:     " << cg.iterations() << std::endl;
 	//std::cout << "estimated error: " << cg.error() << std::endl;
 
-	ModifiedPCGSolver solver(sA, b, S);
+	BaraffMPCGSolver solver(sA, b, S);
 	auto solution2 = solver.solve(0.01f, Eigen::VectorXf(b.size()));
 	std::cout << solution2 << std::endl;
 }

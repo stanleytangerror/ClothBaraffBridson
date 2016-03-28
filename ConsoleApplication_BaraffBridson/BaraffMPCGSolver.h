@@ -1,20 +1,19 @@
 #ifndef CONJUGATE_GRADIENT_SOLVER
 #define CONJUGATE_GRADIENT_SOLVER
 
-
+#include "OpenGLContext.h"
 #include "BasicOperations.h"
 
-#include <GL\glew.h>
 #include <Eigen\Core>
 #include <Eigen\Sparse>
 #include <Eigen\IterativeLinearSolvers>
 
 #include <iostream>
 
-class ModifiedPCGSolver
+class BaraffMPCGSolver
 {
 public:
-	ModifiedPCGSolver(Eigen::SparseMatrix<GLfloat> A, Eigen::VectorXf b, Eigen::SparseMatrix<GLfloat> S) :
+	BaraffMPCGSolver(Eigen::SparseMatrix<GLfloat> A, Eigen::VectorXf b, Eigen::SparseMatrix<GLfloat> S) :
 		//A(A), b(b), S(S)
 		A(A.transpose() * A), b(A.transpose() * b), S(S)
 	{

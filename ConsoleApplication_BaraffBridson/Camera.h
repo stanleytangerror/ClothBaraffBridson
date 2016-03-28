@@ -1,21 +1,11 @@
 #ifndef CAMERA_H
 #define CAMERA_H
 
-// GLEW
-//#ifndef GLEW_INCLUDED
-//#define GLEW_STATIC
-//#include <GL/glew.h>
-//#define GLEW_INCLUDED
-//#endif
-
+#include "OpenGLContext.h"
 
 // Std. Includes
 #include <vector>
-
-// GL Includes
-#include <GL/glew.h>
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
+#include <iostream>
 
 // Defines several possible options for camera movement. Used as abstraction to stay away from window-system specific input methods
 enum Camera_Movement {
@@ -42,6 +32,7 @@ const GLfloat ZOOM = 45.0f;
 class Camera
 {
 public:
+	//static int CameraNo;
 	// Camera Attributes
 	glm::vec3 Position;
 	glm::vec3 Front;
@@ -62,6 +53,7 @@ public:
 		GLfloat yaw = YAW, GLfloat pitch = PITCH) :
 		Front(glm::vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVTY), Zoom(ZOOM)
 	{
+		//CameraNo++;
 		this->Position = position;
 		this->WorldUp = up;
 		this->Yaw = yaw;
@@ -102,13 +94,15 @@ public:
 	}
 
 	// Processes input received from a mouse input system. Expects the offset value in both the x and y direction.
-	void ProcessMouseMovement(GLfloat xoffset, GLfloat yoffset, GLboolean constrainPitch = true)
+	void ProcessMouseMovement(GLfloat scrollX, GLfloat scrollY, GLboolean constrainPitch = true)
 	{
-		xoffset *= this->MouseSensitivity;
-		yoffset *= this->MouseSensitivity;
+		scrollX *= this->MouseSensitivity;
+		scrollY *= this->MouseSensitivity;
 
-		this->Yaw += xoffset;
-		this->Pitch += yoffset;
+		this->Yaw += scrollX;
+		this->Pitch += scrollY;
+
+		//std::cout << "Camera #" << Camera::CameraNo << " deltax = " << scrollX << " deltay = " << scrollY << std::endl;
 
 		// Make sure that when pitch is out of bounds, screen doesn't get flipped
 		if (constrainPitch)
@@ -124,10 +118,10 @@ public:
 	}
 
 	// Processes input received from a mouse scroll-wheel event. Only requires input on the vertical wheel-axis
-	void ProcessMouseScroll(GLfloat yoffset)
+	void ProcessMouseScroll(GLfloat scrollY)
 	{
 		if (this->Zoom >= 1.0f && this->Zoom <= 45.0f)
-			this->Zoom -= yoffset;
+			this->Zoom -= scrollY;
 		if (this->Zoom <= 1.0f)
 			this->Zoom = 1.0f;
 		if (this->Zoom >= 45.0f)
@@ -150,52 +144,67 @@ private:
 	}
 };
 
-class FPSCamera : public Camera
+class FOVControl
 {
 public:
-	// Constructor with vectors
-	FPSCamera(glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f),
-		glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f),
-		GLfloat yaw = YAW, GLfloat pitch = PITCH) :
-		Camera(position, up, yaw) {}
+	FOVControl() :
+		camera(new Camera(glm::vec3(0.0f, 1.0f, 3.0f), glm::vec3(0.0f, 1.0f, -0.4f)))
+	{}
 
-	// Constructor with scalar values
-	FPSCamera(GLfloat posX, GLfloat posY, GLfloat posZ,
-		GLfloat upX, GLfloat upY, GLfloat upZ,
-		GLfloat yaw, GLfloat pitch) :
-		Camera(posX, posY, posZ, upX, upY, upZ, yaw, pitch) {}
-
-	// Processes input received from any keyboard-like input system. Accepts input parameter in the form of camera defined ENUM (to abstract it from windowing systems)
-	void ProcessKeyboard(Camera_Movement direction, GLfloat deltaTime)
+	// Moves/alters the camera positions based on user input
+	void keyboard_press(bool const * const keyMask)
 	{
-		GLfloat velocity = this->MovementSpeed * deltaTime;
-		if (direction == FORWARD)
-			this->Position += this->Front * velocity;
-		if (direction == BACKWARD)
-			this->Position -= this->Front * velocity;
-		if (direction == LEFT)
-			this->Position -= this->Right * velocity;
-		if (direction == RIGHT)
-			this->Position += this->Right * velocity;
-		this->Position[1] = 0.0f;
+		if (keyMask[GLFW_KEY_W])
+		{
+			camera->ProcessKeyboard(FORWARD, deltaTime);
+		}
+		else if (keyMask[GLFW_KEY_S])
+		{
+			camera->ProcessKeyboard(BACKWARD, deltaTime);
+		}
+		else if (keyMask[GLFW_KEY_A])
+		{
+			camera->ProcessKeyboard(LEFT, deltaTime);
+		}
+		else if (keyMask[GLFW_KEY_D])
+		{
+			camera->ProcessKeyboard(RIGHT, deltaTime);
+		}
 	}
+
+	void move_mouse(GLfloat xpos, GLfloat ypos, GLfloat lastx, GLfloat lasty)
+	{
+		GLfloat scrollX = xpos - lastx;
+		GLfloat scrollY = -(ypos - lasty);
+		camera->ProcessMouseMovement(scrollX, scrollY);
+	}
+
+	void scroll_mouse(GLfloat scrollX, GLfloat scrollY)
+	{
+		camera->ProcessMouseScroll(scrollY);
+	}
+
+	Camera * getCamera() const
+	{
+		return this->camera;
+	}
+
+private:
+	Camera * const camera;
+	GLfloat deltaTime = 0.2f;
 };
 
-//class BrowserCamera : public Camera
+//class FPSCamera : public Camera
 //{
-//private:
-//	glm::vec3 dragMagnitude;
-//	glm::vec3 scrollMagnitude;
-//
 //public:
 //	// Constructor with vectors
-//	BrowserCamera(glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f),
+//	FPSCamera(glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f),
 //		glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f),
 //		GLfloat yaw = YAW, GLfloat pitch = PITCH) :
 //		Camera(position, up, yaw) {}
 //
 //	// Constructor with scalar values
-//	BrowserCamera(GLfloat posX, GLfloat posY, GLfloat posZ,
+//	FPSCamera(GLfloat posX, GLfloat posY, GLfloat posZ,
 //		GLfloat upX, GLfloat upY, GLfloat upZ,
 //		GLfloat yaw, GLfloat pitch) :
 //		Camera(posX, posY, posZ, upX, upY, upZ, yaw, pitch) {}
@@ -203,35 +212,17 @@ public:
 //	// Processes input received from any keyboard-like input system. Accepts input parameter in the form of camera defined ENUM (to abstract it from windowing systems)
 //	void ProcessKeyboard(Camera_Movement direction, GLfloat deltaTime)
 //	{
-//		//GLfloat velocity = this->MovementSpeed * deltaTime;
-//		//if (direction == FORWARD)
-//		//	this->Position += this->Front * velocity;
-//		//if (direction == BACKWARD)
-//		//	this->Position -= this->Front * velocity;
-//		//if (direction == LEFT)
-//		//	this->Position -= this->Right * velocity;
-//		//if (direction == RIGHT)
-//		//	this->Position += this->Right * velocity;
-//	}
-//
-//	void ProcessMouse(Posture_Adjustment adjustment, glm::vec3 magnitude)
-//	{
-//		if (adjustment = DRAG)
-//		{
-//			this->dragMagnitude = magnitude;
-//			glm::vec3 from = -(this->Front);
-//			from = glm::rotate(glm::vec4(from, 1.0f), magnitude);
-//
-//
-//		}
-//		if (adjustment = SCROLL)
-//			this->scrollMagnitude = magnitude;
-//	}
-//
-//	// Returns the view matrix calculated using Eular Angles and the LookAt Matrix
-//	glm::mat4 GetViewMatrix()
-//	{
-//		return glm::lookAt(this->Position, this->Position + this->Front, this->Up);
+//		GLfloat velocity = this->MovementSpeed * deltaTime;
+//		if (direction == FORWARD)
+//			this->Position += this->Front * velocity;
+//		if (direction == BACKWARD)
+//			this->Position -= this->Front * velocity;
+//		if (direction == LEFT)
+//			this->Position -= this->Right * velocity;
+//		if (direction == RIGHT)
+//			this->Position += this->Right * velocity;
+//		this->Position[1] = 0.0f;
 //	}
 //};
+
 #endif

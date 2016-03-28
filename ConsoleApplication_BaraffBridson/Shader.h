@@ -9,19 +9,9 @@
 #ifndef SHADER_H
 #define SHADER_H
 
-// GLEW
-//#ifndef GLEW_INCLUDED
-//#define GLEW_STATIC
-//#include <GL/glew.h>
-//#define GLEW_INCLUDED
-//#endif
-
+#include "OpenGLContext.h"
 
 #include <string>
-
-#include <GL/glew.h>
-#include <glm/glm.hpp>
-#include <glm/gtc/type_ptr.hpp>
 
 
 // General purpsoe shader object. Compiles from file, generates

@@ -49,6 +49,7 @@ void ClothPiece::import(const Mesh mesh)
 void ClothPiece::exportPos3fNorm3fBuffer(
 	GLfloat* & vertexBuffer, GLfloat* & vertexNormalBuffer, GLuint & vertexSize, 
 	GLuint* & elementBuffer, GLuint & elementSize)
+	const
 {
 	PolyArrayMesh* mesh = this->PolyMesh;
 	/* data for VBO */
@@ -96,6 +97,7 @@ void ClothPiece::exportPos3fNorm3fBuffer(
 }
 
 void ClothPiece::exportFaceNorm3fBuffer(GLfloat *& fBarycenterBuffer, GLfloat *& fNormalBuffer, GLuint & faceSize)
+const
 {
 	// TODO
 	PolyArrayMesh* mesh = this->PolyMesh;
@@ -228,7 +230,7 @@ void ClothPiece::import(const Mesh mesh)
 /* export data for VBO and EBO for drawing */
 void ClothPiece::exportPos3fNorm3fBuffer(
 	GLfloat* & vertexBuffer, GLfloat* & vertexNormalBuffer, GLuint & vertexSize,
-	GLuint* & elementBuffer, GLuint & elementSize)
+	GLuint* & elementBuffer, GLuint & elementSize) const
 {
 	SurfaceMesh3f* mesh = this->PolyMesh;
 	SurfaceMesh3f::Property_map<Veridx, Vec3f> vertexNormals = PolyMesh->property_map<Veridx, Vec3f>(pname_vertexNormals).first;
@@ -276,7 +278,7 @@ void ClothPiece::exportPos3fNorm3fBuffer(
 	return;
 }
 
-void ClothPiece::exportFaceNorm3fBuffer(GLfloat *& fBarycenterBuffer, GLfloat *& fNormalBuffer, GLuint & faceSize)
+void ClothPiece::exportFaceNorm3fBuffer(GLfloat *& fBarycenterBuffer, GLfloat *& fNormalBuffer, GLuint & faceSize) const
 {
 	// TODO
 	SurfaceMesh3f* mesh = this->PolyMesh;

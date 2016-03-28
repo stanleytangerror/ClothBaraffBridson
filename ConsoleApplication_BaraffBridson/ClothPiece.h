@@ -100,10 +100,10 @@ public:
 
 	void exportPos3fNorm3fBuffer(
 		GLfloat* & vertexBuffer, GLfloat* & vertexNormalBuffer, GLuint & vertexSize,
-		GLuint* & elementBuffer, GLuint & elementSize);
+		GLuint* & elementBuffer, GLuint & elementSize) const;
 
 	void exportFaceNorm3fBuffer(
-		GLfloat* & fBarycenterBuffer, GLfloat* & fNormalBuffer, GLuint & faceSize);
+		GLfloat* & fBarycenterBuffer, GLfloat* & fNormalBuffer, GLuint & faceSize) const;
 
 	bool useVTexCoord2DAsVPlanarCoord3f();
 
