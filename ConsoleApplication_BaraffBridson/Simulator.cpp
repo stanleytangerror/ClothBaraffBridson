@@ -55,6 +55,7 @@ void Simulator::init()
 	clothPiece->import(ourModel.getMeshes()[0]);
 	clothPiece->useVTexCoord2DAsVPlanarCoord3f();
 	
+	// initial planar coordinates
 	clothDynamics = new BaraffDynamics(clothPiece);
 
 	auto env = new SceneEnv(ResourceManager::GetCubeMap("background_texture"), viewer->getCamera());

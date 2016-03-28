@@ -112,17 +112,14 @@ private:
 	void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 	{
 		//std::cout << "mouse callback" << std::endl;
-		if (firstMove)
-		{
-			lastX = xpos;
-			lastY = ypos;
-			firstMove = false;
-		}
-		lastX = curX;
-		lastY = curY;
+		lastX = firstMove ? GLfloat(xpos) : curX;
+		lastY = firstMove ? GLfloat(ypos) : curY;
 
 		curX = GLfloat(xpos);
 		curY = GLfloat(ypos);
+
+		firstMove = false;
+		
 		//offsetX = curX - lastX;
 		//offsetY = lastY - curY;  // Reversed since y-coordinates go from bottom to left
 

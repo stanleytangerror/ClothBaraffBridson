@@ -183,6 +183,8 @@ bool ClothPiece::getVPlanarCoord3f(OpenMesh::VPropHandleT<Point3f> & vph)
 
 #ifdef CGAL_BASED
 
+#include "BasicOperations.h"
+
 void ClothPiece::import(const Mesh mesh)
 {
 	/* load vertexes */
@@ -219,12 +221,73 @@ void ClothPiece::import(const Mesh mesh)
 	CGAL::Polygon_mesh_processing::compute_normals(*PolyMesh, vertexNormals, faceNormals,
 		CGAL::Polygon_mesh_processing::parameters::vertex_point_map(PolyMesh->points()).geom_traits(Kernelf()));
 
+	/* initial sizes */
+	VERTEX_SIZE = PolyMesh->number_of_vertices();
+	FACE_SIZE = PolyMesh->number_of_faces();
+	EDGE_SIZE = PolyMesh->number_of_edges();
+
+	/* initial global indices */
+	vertices2indices = new std::map<Veridx, GLuint>();
+	faces2indices = new std::map<Faceidx, GLuint>();
+	edges2indices = new std::map<Edgeidx, GLuint>();
+	GLuint index = 0;
+	BOOST_FOREACH(Veridx vhd, PolyMesh->vertices())
+	{
+		(*vertices2indices)[vhd] = index++;
+	}
+	index = 0;
+	BOOST_FOREACH(Faceidx fhd, PolyMesh->faces())
+	{
+		(*faces2indices)[fhd] = index++;
+	}
+	index = 0;
+	BOOST_FOREACH(Edgeidx ehd, PolyMesh->edges())
+	{
+		(*edges2indices)[ehd] = index++;
+	}
+
 	std::cout << "INFO::LOAD MESH " << std::endl;
 	std::cout << "> #polygon " << EDGES
 		<< ", #vertices " << PolyMesh->number_of_vertices()
 		<< ", #edges " << PolyMesh->number_of_edges()
 		<< ", #halfedges " << PolyMesh->number_of_halfedges()
 		<< ", #faces " << PolyMesh->number_of_faces() << std::endl;
+}
+
+Eigen::VectorXf ClothPiece::getPositions() const
+{
+	Eigen::VectorXf positions = Eigen::VectorXf(VERTEX_SIZE * 3);
+	for (auto iter = PolyMesh->vertices_begin(); iter != PolyMesh->vertices_end(); ++iter)
+	{
+		Eigen::Vector3f pos_eigen;
+		Veridx vh = *iter;
+		copy_v3f(pos_eigen, PolyMesh->point(vh));
+		positions.block<3, 1>(vertices2indices->at(vh) * 3, 0) = pos_eigen;
+	}
+	return positions;
+}
+
+void ClothPiece::setPositions(Eigen::VectorXf const & positions)
+{
+	BOOST_FOREACH(Veridx viter, PolyMesh->vertices())
+	{
+		Point3f pos_cgal;
+		Eigen::Vector3f pos_eigen = positions.block<3, 1>(vertices2indices->at(viter) * 3, 0);
+		copy_v3f(pos_cgal, pos_eigen);
+		PolyMesh->point(viter) = pos_cgal;
+	}
+	/* after changing position
+	* update normals for consistence
+	*/
+	SurfaceMesh3f::Property_map<Faceidx, Vec3f> faceNormals =
+		PolyMesh->property_map<Faceidx, Vec3f>(pname_faceNormals).first;
+	//CGAL::Polygon_mesh_processing::compute_face_normals(mesh, faceNormals);
+	SurfaceMesh3f::Property_map<Veridx, Vec3f> vertexNormals =
+		PolyMesh->property_map<Veridx, Vec3f>(pname_vertexNormals).first;
+	//CGAL::Polygon_mesh_processing::compute_vertex_normals(mesh, vertexNormals);
+	CGAL::Polygon_mesh_processing::compute_normals(*PolyMesh, vertexNormals, faceNormals,
+		CGAL::Polygon_mesh_processing::parameters::vertex_point_map(PolyMesh->points()).geom_traits(Kernelf()));
+
 }
 
 /* export data for VBO and EBO for drawing */

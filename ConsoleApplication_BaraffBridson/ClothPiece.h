@@ -68,6 +68,10 @@ private:
 
 #include <boost/foreach.hpp>
 
+#include <Eigen\Core>
+
+#include <map>
+
 // kernel type
 typedef CGAL::Simple_cartesian<float> Kernelf;
 // primitive types
@@ -98,15 +102,6 @@ public:
 
 	void import(const Mesh mesh);
 
-	void exportPos3fNorm3fBuffer(
-		GLfloat* & vertexBuffer, GLfloat* & vertexNormalBuffer, GLuint & vertexSize,
-		GLuint* & elementBuffer, GLuint & elementSize) const;
-
-	void exportFaceNorm3fBuffer(
-		GLfloat* & fBarycenterBuffer, GLfloat* & fNormalBuffer, GLuint & faceSize) const;
-
-	bool useVTexCoord2DAsVPlanarCoord3f();
-
 	bool getVPlanarCoord3f(SurfaceMesh3f::Property_map<Veridx, Point3f> & vph);
 
 	const std::string pname_texCoords = "v:texture_coordinates";
@@ -114,12 +109,43 @@ public:
 	const std::string pname_vertexNormals = "v:vertex_normals";
 	const std::string pname_faceNormals = "v:face_normals";
 
+	/* -------- exporters for drawing ---------- */
+	void exportPos3fNorm3fBuffer(
+		GLfloat* & vertexBuffer, GLfloat* & vertexNormalBuffer, GLuint & vertexSize,
+		GLuint* & elementBuffer, GLuint & elementSize) const;
+
+	void exportFaceNorm3fBuffer(
+		GLfloat* & fBarycenterBuffer, GLfloat* & fNormalBuffer, GLuint & faceSize) const;
+
+	/* -------- set planar coordinates --------- */
+	bool useVTexCoord2DAsVPlanarCoord3f();
+
+	/* -------- getters and setters --------- */
+	Eigen::VectorXf getPositions() const;
+	void setPositions(Eigen::VectorXf const & positions);
+
+	size_t getVertexSize() { return VERTEX_SIZE; }
+	size_t getFaceSize() { return FACE_SIZE; }
+	size_t getEdgeSize() { return EDGE_SIZE; }
+	
+	std::map<Veridx, GLuint> const * getVertices2indices() { return vertices2indices; }
+	std::map<Faceidx, GLuint> const * getFaces2indices() { return faces2indices; }
+	std::map<Edgeidx, GLuint> const * getEdges2indices() { return edges2indices; }
+
 private:
 	const GLuint EDGES;
+
 	SurfaceMesh3f* PolyMesh;
-	/* mesh properties */
+
+	/* mesh properties hash tables */
+	std::map<Veridx, GLuint> * vertices2indices;
+	std::map<Faceidx, GLuint> * faces2indices;
+	std::map<Edgeidx, GLuint> * edges2indices;
+
+	GLuint VERTEX_SIZE, FACE_SIZE, EDGE_SIZE;
 
 };
+
 #endif
 
 #endif

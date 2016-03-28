@@ -8,7 +8,7 @@
 void BaraffDynamics::initial()
 {
 	//physics = BaraffPhysics(model);
-	last_root = Eigen::VectorXf::Zero(3 * physics->exportVertexSize());
+	last_root = Eigen::VectorXf::Zero(3 * model->getVertexSize());
 }
 
 void BaraffDynamics::stepforward(float time_step)
@@ -41,7 +41,7 @@ void BaraffDynamics::stepforward(float time_step)
 #ifdef MPCG_BARAFF
 	BaraffMPCGSolver solver2 = BaraffMPCGSolver(A, b, S);
 	//Eigen::VectorXf v_delta2 = solver2.solve(0.05f, last_root);
-	Eigen::VectorXf v_delta2 = solver2.solve(0.05f, Eigen::VectorXf::Zero(physics->exportVertexSize() * 3));
+	Eigen::VectorXf v_delta2 = solver2.solve(0.05f, Eigen::VectorXf::Zero(model->getVertexSize() * 3));
 #endif
 
 #ifdef MPCG_BARAFF 
@@ -62,7 +62,7 @@ void BaraffDynamics::stepforward(float time_step)
 
 void BaraffDynamics::writeBack()
 {
-	physics->writeMesh();
+	model->setPositions(physics->exportPosition());
 }
 
 void BaraffDynamics::exportShearConditionData(GLfloat *& dataBuffer, GLuint & dataSize)

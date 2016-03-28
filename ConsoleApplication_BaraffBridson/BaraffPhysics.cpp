@@ -157,7 +157,7 @@ void BaraffPhysics::compute(float time_step)
 	// add external force
 	for (auto iter = mesh->vertices_begin(); iter != mesh->vertices_end(); ++iter)
 	{
-		GLuint global_index = vertices2indices.at(*iter);
+		GLuint global_index = clothPiece->getVertices2indices()->at(*iter);
 		Eigen::Vector3f gravity(0.0f, - mass_list[global_index] * 9.8f, 0.0f);
 		addExternForce(*iter, gravity);
 		//break;
@@ -173,123 +173,125 @@ void BaraffPhysics::compute(float time_step)
 
 }
 
-void BaraffPhysics::readPositions()
-{
-	positions = Eigen::VectorXf(VERTEX_SIZE * 3);
-	SurfaceMesh3f* mesh = clothPiece->getMesh();
-	for (auto iter = mesh->vertices_begin(); iter != mesh->vertices_end(); ++iter)
-	{
-		Eigen::Vector3f pos_eigen;
-		Veridx vh = *iter;
-		copy_v3f(pos_eigen, mesh->point(vh));
-		positions.block<3, 1>(vertices2indices.at(vh) * 3, 0) = pos_eigen;
-	}
-}
-
-void BaraffPhysics::writePositions()
-{
-	SurfaceMesh3f* mesh = clothPiece->getMesh();
-	BOOST_FOREACH(Veridx viter, mesh->vertices())
-	{
-		Point3f pos_cgal;
-		Eigen::Vector3f pos_eigen = positions.block<3, 1>(vertices2indices.at(viter) * 3, 0);
-		copy_v3f(pos_cgal, pos_eigen);
-		mesh->point(viter) = pos_cgal;
-	}
-	/* after changing position
-	* update normals for consistence
-	*/
-	SurfaceMesh3f::Property_map<Faceidx, Vec3f> faceNormals =
-		mesh->property_map<Faceidx, Vec3f>(clothPiece->pname_faceNormals).first;
-	//CGAL::Polygon_mesh_processing::compute_face_normals(mesh, faceNormals);
-	SurfaceMesh3f::Property_map<Veridx, Vec3f> vertexNormals =
-		mesh->property_map<Veridx, Vec3f>(clothPiece->pname_vertexNormals).first;
-	//CGAL::Polygon_mesh_processing::compute_vertex_normals(mesh, vertexNormals);
-	CGAL::Polygon_mesh_processing::compute_normals(*mesh, vertexNormals, faceNormals,
-		CGAL::Polygon_mesh_processing::parameters::vertex_point_map(mesh->points()).geom_traits(Kernelf()));
-
-}
+//void BaraffPhysics::readPositions()
+//{
+//	positions = Eigen::VectorXf(clothPiece->getVertexSize() * 3);
+//	SurfaceMesh3f* mesh = clothPiece->getMesh();
+//	for (auto iter = mesh->vertices_begin(); iter != mesh->vertices_end(); ++iter)
+//	{
+//		Eigen::Vector3f pos_eigen;
+//		Veridx vh = *iter;
+//		copy_v3f(pos_eigen, mesh->point(vh));
+//		positions.block<3, 1>(clothPiece->getVertices2indices()->at(vh) * 3, 0) = pos_eigen;
+//	}
+//}
+//
+//void BaraffPhysics::writePositions()
+//{
+//	SurfaceMesh3f* mesh = clothPiece->getMesh();
+//	BOOST_FOREACH(Veridx viter, mesh->vertices())
+//	{
+//		Point3f pos_cgal;
+//		Eigen::Vector3f pos_eigen = positions.block<3, 1>(clothPiece->getVertices2indices()->at(viter) * 3, 0);
+//		copy_v3f(pos_cgal, pos_eigen);
+//		mesh->point(viter) = pos_cgal;
+//	}
+//	/* after changing position
+//	* update normals for consistence
+//	*/
+//	SurfaceMesh3f::Property_map<Faceidx, Vec3f> faceNormals =
+//		mesh->property_map<Faceidx, Vec3f>(clothPiece->pname_faceNormals).first;
+//	//CGAL::Polygon_mesh_processing::compute_face_normals(mesh, faceNormals);
+//	SurfaceMesh3f::Property_map<Veridx, Vec3f> vertexNormals =
+//		mesh->property_map<Veridx, Vec3f>(clothPiece->pname_vertexNormals).first;
+//	//CGAL::Polygon_mesh_processing::compute_vertex_normals(mesh, vertexNormals);
+//	CGAL::Polygon_mesh_processing::compute_normals(*mesh, vertexNormals, faceNormals,
+//		CGAL::Polygon_mesh_processing::parameters::vertex_point_map(mesh->points()).geom_traits(Kernelf()));
+//
+//}
 
 /* called once, used for allocating memory */
 void BaraffPhysics::initial()
 {
 	SurfaceMesh3f* mesh = clothPiece->getMesh();
-	VERTEX_SIZE = mesh->number_of_vertices();
-	FACE_SIZE = mesh->number_of_faces();
-	EDGE_SIZE = mesh->number_of_edges();
+	//clothPiece->getVertexSize() = mesh->number_of_vertices();
+	//clothPiece->getFaceSize() = mesh->number_of_faces();
+	//clothPiece->getEdgeSize() = mesh->number_of_edges();
 
-	// initial global indices
-	int index = 0;
-	for (auto iter = mesh->vertices_begin(); iter != mesh->vertices_end(); ++iter, ++index)
-	{
-		vertices2indices[*iter] = index;
-	}
-	index = 0;
-	for (auto iter = mesh->faces_begin(); iter != mesh->faces_end(); ++iter, ++index)
-	{
-		faces2indices[*iter] = index;
-	}
-	index = 0;
-	for (auto iter = mesh->edges_begin(); iter != mesh->edges_end(); ++iter, ++index)
-	{
-		edges2indices[*iter] = index;
-	}
+	//// initial global indices
+	//int index = 0;
+	//for (auto iter = mesh->vertices_begin(); iter != mesh->vertices_end(); ++iter, ++index)
+	//{
+	//	clothPiece->getVertices2indices()[*iter] = index;
+	//}
+	//index = 0;
+	//for (auto iter = mesh->faces_begin(); iter != mesh->faces_end(); ++iter, ++index)
+	//{
+	//	clothPiece->getFaces2indices()[*iter] = index;
+	//}
+	//index = 0;
+	//for (auto iter = mesh->edges_begin(); iter != mesh->edges_end(); ++iter, ++index)
+	//{
+	//	edges2indices[*iter] = index;
+	//}
 
 	// initial mass
-	for (size_t _i = 0; _i < VERTEX_SIZE; ++_i)
+	for (size_t _i = 0; _i < clothPiece->getVertexSize(); ++_i)
 	{
 		mass_list.push_back(density);
 	}
 
-	readPositions();
+	positions = clothPiece->getPositions();
 
-	coeff_list.reserve(VERTEX_SIZE * 3);
+	coeff_list.reserve(clothPiece->getVertexSize() * 3);
 
-	reserve_sparsematrix = Eigen::VectorXi::Constant(VERTEX_SIZE * 3, 3 * 15);
-
+	smat_reserve_force = Eigen::VectorXi::Ones(clothPiece->getVertexSize() * 3) * (3 * 15);
+	smat_reserve_property = Eigen::VectorXi::Ones(clothPiece->getVertexSize() * 3) * 1;
+	//smat_reserve_force = Eigen::VectorXi::Ones(1323) * (3 * 15);
+	//smat_reserve_property = Eigen::VectorXi::Ones(1323) * 1;
+	
 	// ------------ allocate memory ------------ 
-	df_dx_internal_total = Eigen::SparseMatrix<float>(VERTEX_SIZE * 3, VERTEX_SIZE * 3);
-	df_dx_damp_total = Eigen::SparseMatrix<float>(VERTEX_SIZE * 3, VERTEX_SIZE * 3);
-	df_dv_damp_total = Eigen::SparseMatrix<float>(VERTEX_SIZE * 3, VERTEX_SIZE * 3);
-	f_total = Eigen::VectorXf(VERTEX_SIZE * 3);
-	v_total = Eigen::VectorXf(VERTEX_SIZE * 3);
-	Cu_stretch = Eigen::VectorXf(FACE_SIZE);
-	Cv_stretch = Eigen::VectorXf(FACE_SIZE);
-	C_shear = Eigen::VectorXf(FACE_SIZE);
-	C_bend = Eigen::VectorXf(EDGE_SIZE);
-	constraints = Eigen::SparseMatrix<float>(VERTEX_SIZE * 3, VERTEX_SIZE * 3);
-	mass_inverse = Eigen::SparseMatrix<float>(VERTEX_SIZE * 3, VERTEX_SIZE * 3);
-	mass = Eigen::SparseMatrix<float>(VERTEX_SIZE * 3, VERTEX_SIZE * 3);
-	identity = Eigen::SparseMatrix<float>(VERTEX_SIZE * 3, VERTEX_SIZE * 3);
+	df_dx_internal_total = Eigen::SparseMatrix<float>(clothPiece->getVertexSize() * 3, clothPiece->getVertexSize() * 3);
+	df_dx_damp_total = Eigen::SparseMatrix<float>(clothPiece->getVertexSize() * 3, clothPiece->getVertexSize() * 3);
+	df_dv_damp_total = Eigen::SparseMatrix<float>(clothPiece->getVertexSize() * 3, clothPiece->getVertexSize() * 3);
+	f_total = Eigen::VectorXf(clothPiece->getVertexSize() * 3);
+	v_total = Eigen::VectorXf(clothPiece->getVertexSize() * 3);
+	Cu_stretch = Eigen::VectorXf(clothPiece->getFaceSize());
+	Cv_stretch = Eigen::VectorXf(clothPiece->getFaceSize());
+	C_shear = Eigen::VectorXf(clothPiece->getFaceSize());
+	C_bend = Eigen::VectorXf(clothPiece->getEdgeSize());
+	constraints = Eigen::SparseMatrix<float>(clothPiece->getVertexSize() * 3, clothPiece->getVertexSize() * 3);
+	mass_inverse = Eigen::SparseMatrix<float>(clothPiece->getVertexSize() * 3, clothPiece->getVertexSize() * 3);
+	mass = Eigen::SparseMatrix<float>(clothPiece->getVertexSize() * 3, clothPiece->getVertexSize() * 3);
+	identity = Eigen::SparseMatrix<float>(clothPiece->getVertexSize() * 3, clothPiece->getVertexSize() * 3);
 	
 	// ------------ initial constant physics ------------ 
 	// initial mass matrix, should not be modified
 	//coeff_list.clear();
-	//for (size_t _i = 0; _i < VERTEX_SIZE; ++_i) for (size_t _j = 0; _j < 3; ++_j)
+	//for (size_t _i = 0; _i < clothPiece->getVertexSize(); ++_i) for (size_t _j = 0; _j < 3; ++_j)
 	//	coeff_list.push_back(Tri_float(_i * 3 + _j, _i * 3 + _j, mass_list[_i]));
 	//mass.setFromTriplets(coeff_list.begin(), coeff_list.end());
-	mass.reserve(Eigen::VectorXi::Constant(VERTEX_SIZE * 3, 1));
-	for (size_t _i = 0; _i < VERTEX_SIZE; ++_i) for (size_t _j = 0; _j < 3; ++_j)
+	mass.reserve(smat_reserve_property);
+	for (size_t _i = 0; _i < clothPiece->getVertexSize(); ++_i) for (size_t _j = 0; _j < 3; ++_j)
 		mass.coeffRef(_i * 3 + _j, _i * 3 + _j) = mass_list[_i];
 
 	// initial mass_inverse matrix, should not be modified
 	//coeff_list.clear();
-	//for (size_t _i = 0; _i < VERTEX_SIZE; ++_i) for (size_t _j = 0; _j < 3; ++_j)
+	//for (size_t _i = 0; _i < clothPiece->getVertexSize(); ++_i) for (size_t _j = 0; _j < 3; ++_j)
 	//	coeff_list.push_back(Tri_float(_i * 3 + _j, _i * 3 + _j, 1.0f / mass_list[_i]));
 	//mass_inverse.setFromTriplets(coeff_list.begin(), coeff_list.end());
-	mass_inverse.reserve(Eigen::VectorXi::Constant(VERTEX_SIZE * 3, 1));
-	for (size_t _i = 0; _i < VERTEX_SIZE; ++_i) for (size_t _j = 0; _j < 3; ++_j)
+	mass_inverse.reserve(smat_reserve_property);
+	for (size_t _i = 0; _i < clothPiece->getVertexSize(); ++_i) for (size_t _j = 0; _j < 3; ++_j)
 		mass_inverse.coeffRef(_i * 3 + _j, _i * 3 + _j) = 1.0f / mass_list[_i];
 
 	// initial identity matrix, should not be modified
 	//coeff_list.clear();
-	//for (size_t _i = 0; _i < VERTEX_SIZE * 3; ++_i)
+	//for (size_t _i = 0; _i < clothPiece->getVertexSize() * 3; ++_i)
 	//	coeff_list.push_back(Tri_float(_i, _i, 1.0f));
 	//identity.setFromTriplets(coeff_list.begin(), coeff_list.end());
 	identity.setIdentity();
 
-	// initial planar coordinates
-	clothPiece->useVTexCoord2DAsVPlanarCoord3f();
+	//clothPiece->useVTexCoord2DAsVPlanarCoord3f();
 	//clothPiece->getVPlanarCoord3f(vph_planarcoord);
 	
 	reset(true);
@@ -303,7 +305,7 @@ void BaraffPhysics::reset(GLboolean first)
 	// update face normal for bend condition 
 	// TODO need a better solution
 	// if already writted, then skip and update directly
-	writePositions();
+	//writePositions();
 
 	// reset vectors
 	f_total.setZero();
@@ -321,15 +323,15 @@ void BaraffPhysics::reset(GLboolean first)
 	df_dx_internal_total.setZero();
 	df_dx_damp_total.setZero();
 	df_dv_damp_total.setZero();
-	df_dx_internal_total.reserve(reserve_sparsematrix);
-	df_dx_damp_total.reserve(reserve_sparsematrix);
-	df_dv_damp_total.reserve(reserve_sparsematrix);
+	df_dx_internal_total.reserve(smat_reserve_force);
+	df_dx_damp_total.reserve(smat_reserve_force);
+	df_dv_damp_total.reserve(smat_reserve_force);
 
 	// reset constraint
 	//if (first)
 	{
 		//coeff_list.clear();
-		//for (size_t _i = 0; _i < VERTEX_SIZE * 3; ++_i)
+		//for (size_t _i = 0; _i < clothPiece->getVertexSize() * 3; ++_i)
 		//	coeff_list.push_back(Tri_float(_i, _i, 1.0f));
 		//constraints.setFromTriplets(coeff_list.begin(), coeff_list.end());
 		constraints.setIdentity();
@@ -339,14 +341,14 @@ void BaraffPhysics::reset(GLboolean first)
 // I - p*pT == 0, p should be unit vector
 void BaraffPhysics::addConstraint(Veridx vhandle, Eigen::Vector3f direction)
 {
-	GLuint global_index = vertices2indices.at(vhandle);
+	GLuint global_index = clothPiece->getVertices2indices()->at(vhandle);
 	Eigen::Vector3f dir_unit = direction.normalized();
 	addBlock33(constraints, global_index, global_index, -dir_unit * dir_unit.transpose());
 }
 
 void BaraffPhysics::addExternForce(Veridx vhandle, Eigen::Vector3f ext_force)
 {
-	GLuint global_index = vertices2indices.at(vhandle);
+	GLuint global_index = clothPiece->getVertices2indices()->at(vhandle);
 	f_total.block<3, 1>(global_index * 3, 0) += ext_force;
 }
 
@@ -401,9 +403,9 @@ void BaraffPhysics::getStretchAndShearForce(Faceidx fhandle,
 	}
 	// global indices of three vertices
 	GLuint global_indices[3];
-	global_indices[0] = vertices2indices.at(vhandles[0]);
-	global_indices[1] = vertices2indices.at(vhandles[1]);
-	global_indices[2] = vertices2indices.at(vhandles[2]);
+	global_indices[0] = clothPiece->getVertices2indices()->at(vhandles[0]);
+	global_indices[1] = clothPiece->getVertices2indices()->at(vhandles[1]);
+	global_indices[2] = clothPiece->getVertices2indices()->at(vhandles[2]);
 #ifdef DEBUG_FORCE
 	std::cout << "global indices ";
 	for (size_t _i = 0; _i < 3; ++_i)
@@ -419,7 +421,7 @@ void BaraffPhysics::getStretchAndShearForce(Faceidx fhandle,
 	//	
 	//}
 
-	GLuint face_index = faces2indices.at(fhandle);
+	GLuint face_index = clothPiece->getFaces2indices()->at(fhandle);
 	
 	// vertices velocity
 #ifdef DEBUG_FORCE
@@ -464,9 +466,9 @@ void BaraffPhysics::getStretchAndShearForce(Faceidx fhandle,
 
 	// world coordinate
 	Eigen::Vector3f x0, x1, x2;
-	x0 = positions.block<3, 1>(vertices2indices.at(vhandles[0]) * 3, 0);
-	x1 = positions.block<3, 1>(vertices2indices.at(vhandles[1]) * 3, 0);
-	x2 = positions.block<3, 1>(vertices2indices.at(vhandles[2]) * 3, 0);
+	x0 = positions.block<3, 1>(clothPiece->getVertices2indices()->at(vhandles[0]) * 3, 0);
+	x1 = positions.block<3, 1>(clothPiece->getVertices2indices()->at(vhandles[1]) * 3, 0);
+	x2 = positions.block<3, 1>(clothPiece->getVertices2indices()->at(vhandles[2]) * 3, 0);
 #ifdef DEBUG_FORCE
 	std::cout << "x[" << global_indices[0] << "]" << std::endl << x0 << std::endl;
 	std::cout << "x[" << global_indices[1] << "]" << std::endl << x1 << std::endl;
@@ -858,10 +860,10 @@ void BaraffPhysics::getBendForce(Faceidx fhandle0, Faceidx fhandle1,
 
 	// global indices of three vertices
 	GLuint global_indices[4];
-	global_indices[0] = vertices2indices.at(vhandles[0]);
-	global_indices[1] = vertices2indices.at(vhandles[1]);
-	global_indices[2] = vertices2indices.at(vhandles[2]);
-	global_indices[3] = vertices2indices.at(vhandles[3]);
+	global_indices[0] = clothPiece->getVertices2indices()->at(vhandles[0]);
+	global_indices[1] = clothPiece->getVertices2indices()->at(vhandles[1]);
+	global_indices[2] = clothPiece->getVertices2indices()->at(vhandles[2]);
+	global_indices[3] = clothPiece->getVertices2indices()->at(vhandles[3]);
 #ifdef DEBUG_FORCE
 	std::cout << "global indices ";
 	for (size_t _i = 0; _i < 4; ++_i)
@@ -883,10 +885,10 @@ void BaraffPhysics::getBendForce(Faceidx fhandle0, Faceidx fhandle1,
 	
 	// world coordinate
 	Eigen::Vector3f x0, x1, x2, x3;
-	x0 = positions.block<3, 1>(vertices2indices.at(vhandles[0]) * 3, 0);
-	x1 = positions.block<3, 1>(vertices2indices.at(vhandles[1]) * 3, 0);
-	x2 = positions.block<3, 1>(vertices2indices.at(vhandles[2]) * 3, 0);
-	x3 = positions.block<3, 1>(vertices2indices.at(vhandles[3]) * 3, 0);
+	x0 = positions.block<3, 1>(clothPiece->getVertices2indices()->at(vhandles[0]) * 3, 0);
+	x1 = positions.block<3, 1>(clothPiece->getVertices2indices()->at(vhandles[1]) * 3, 0);
+	x2 = positions.block<3, 1>(clothPiece->getVertices2indices()->at(vhandles[2]) * 3, 0);
+	x3 = positions.block<3, 1>(clothPiece->getVertices2indices()->at(vhandles[3]) * 3, 0);
 #ifdef DEBUG_FORCE
 	std::cout << "x[" << global_indices[0] << "]" << std::endl << x0 << std::endl;
 	std::cout << "x[" << global_indices[1] << "]" << std::endl << x1 << std::endl;
@@ -894,8 +896,8 @@ void BaraffPhysics::getBendForce(Faceidx fhandle0, Faceidx fhandle1,
 	std::cout << "x[" << global_indices[3] << "]" << std::endl << x3 << std::endl;
 #endif
 
-	GLuint faceA_index = faces2indices.at(fhandle0);
-	GLuint faceB_index = faces2indices.at(fhandle1);
+	GLuint faceA_index = clothPiece->getFaces2indices()->at(fhandle0);
+	GLuint faceB_index = clothPiece->getFaces2indices()->at(fhandle1);
 	
 	// normal of two faces
 	Eigen::Vector3f normal_A, normal_B, edge;
@@ -1009,7 +1011,7 @@ void BaraffPhysics::getBendForce(Faceidx fhandle0, Faceidx fhandle1,
 	{
 		// bend condition
 		float C = atan2(sin_theta, cos_theta);
-		C_bend[edges2indices.at(ehandle)] = C;
+		C_bend[edges2indices->at(ehandle)] = C;
 #ifdef DEBUG_FORCE
 		std::cout << "bend condition " << C << std::endl;
 #endif
@@ -1312,11 +1314,6 @@ void BaraffPhysics::update(const Eigen::VectorXf & v_delta)
 	//std::cout << "delta position " << std::endl << v_total << std::endl;
 }
 
-void BaraffPhysics::writeMesh()
-{
-	writePositions();
-}
-
 void BaraffPhysics::exportShearConditionData(float* & dataBuffer, GLuint & dataSize)
 {
 	SurfaceMesh3f* mesh = clothPiece->getMesh();
@@ -1337,9 +1334,9 @@ void BaraffPhysics::exportShearConditionData(float* & dataBuffer, GLuint & dataS
 	//	GLuint cnt = 0;
 	//	for (auto cvfiter = mesh->cvf_begin(vhd); cvfiter != mesh->cvf_end(vhd); ++cvfiter, ++cnt)
 	//	{
-	//		condition += C_shear_normalized[faces2indices.at(*cvfiter)];
+	//		condition += C_shear_normalized[clothPiece->getFaces2indices()->at(*cvfiter)];
 	//	}
-	//	dataBuffer[vertices2indices.at(vhd)] = condition / (float) cnt;
+	//	dataBuffer[clothPiece->getVertices2indices()->at(vhd)] = condition / (float) cnt;
 	//}
 }
 

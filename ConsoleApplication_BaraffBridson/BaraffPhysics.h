@@ -23,20 +23,24 @@ public:
 
 	void compute(float time_step);
 	void update(const Eigen::VectorXf & v_delta);
-	void writeMesh();
 
 	void exportShearConditionData(float* & dataBuffer, GLuint & dataSize);
 	void exportBendConditionData(float* & dataBuffer, GLuint & dataSize);
 
-	Eigen::VectorXf const exportVelocity()
+	Eigen::VectorXf const & exportVelocity()
 	{
 		return v_total;
 	}
 
-	size_t exportVertexSize()
+	Eigen::VectorXf const & exportPosition()
 	{
-		return VERTEX_SIZE;
+		return positions;
 	}
+
+	//size_t exportVertexSize()
+	//{
+	//	return VERTEX_SIZE;
+	//}
 
 private:
 	ClothPiece * const clothPiece;
@@ -47,17 +51,17 @@ private:
 	// according to Filling a sparse matrix section of Eigen
 	std::vector<Tri_float> coeff_list; 
 	// used for reserve data in sparse matrix
-	Eigen::VectorXi reserve_sparsematrix;
+	Eigen::VectorXi smat_reserve_force;
+	Eigen::VectorXi smat_reserve_property;
 
 	// --------------- physics of model ------------------
 	//PolyArrayMesh::Property_map<Veridx, Vec3f> vph_planarcoord;
 	// WARNING access to map should via map.at()
-	std::map<Veridx, GLuint> vertices2indices;
-	std::map<Faceidx, GLuint> faces2indices;
-	std::map<Edgeidx, GLuint> edges2indices;
-	GLuint VERTEX_SIZE, FACE_SIZE, EDGE_SIZE;
+	//std::map<Veridx, GLuint> vertices2indices;
+	//std::map<Faceidx, GLuint> faces2indices;
+	//std::map<Edgeidx, GLuint> edges2indices;
+	//GLuint VERTEX_SIZE, FACE_SIZE, EDGE_SIZE;
 	std::vector<float> mass_list;
-	Eigen::VectorXf positions;
 
 	// ----------------- physics needed by Baraff ---------------- 
 	// parameters for integration
@@ -73,7 +77,8 @@ private:
 	float k_bend = 1e-3f, kd_bend = 0.02f;
 
 	// vectors
-	Eigen::VectorXf f_total; 
+	Eigen::VectorXf positions;
+	Eigen::VectorXf f_total;
 	Eigen::VectorXf v_total; 
 	Eigen::VectorXf Cu_stretch, Cv_stretch; // condition per face
 	Eigen::VectorXf C_shear; // condition per face
@@ -93,8 +98,8 @@ private:
 
 
 	// -------------- pipelines between model and physics ----------------- 
-	void readPositions();
-	void writePositions();
+	//void readPositions();
+	//void writePositions();
 
 	// -------------- compute functions ----------------- 
 	/* called once, used for allocating memory */
