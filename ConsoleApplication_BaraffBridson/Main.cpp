@@ -1,4 +1,4 @@
-// include OpenGl environment
+/* include OpenGl environment */
 #include "OpenGLContext.h"
 
 #include "Shader.h"

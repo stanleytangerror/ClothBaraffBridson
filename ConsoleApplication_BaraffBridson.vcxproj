@@ -101,6 +101,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="ConsoleApplication_BaraffBridson\AABBTree\AABBTree.cpp" />
     <ClCompile Include="ConsoleApplication_BaraffBridson\BaraffPhysics.cpp" />
     <ClCompile Include="consoleapplication_baraffbridson\BasicOperations.cpp" />
     <ClCompile Include="ConsoleApplication_BaraffBridson\BridsonCollision.cpp" />
@@ -112,6 +113,7 @@
     <ClCompile Include="consoleapplication_baraffbridson\Main.cpp" />
     <ClCompile Include="consoleapplication_baraffbridson\Mesh.cpp" />
     <ClCompile Include="consoleapplication_baraffbridson\Model.cpp" />
+    <ClCompile Include="ConsoleApplication_BaraffBridson\OtaduyContact.cpp" />
     <ClCompile Include="consoleapplication_baraffbridson\ResourceManager.cpp" />
     <ClCompile Include="ConsoleApplication_BaraffBridson\Scene.cpp" />
     <ClCompile Include="ConsoleApplication_BaraffBridson\Screen.cpp" />
@@ -121,8 +123,10 @@
     <ClCompile Include="consoleapplication_baraffbridson\texture.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ConsoleApplication_BaraffBridson\AABBTree\AABBTree.h" />
     <ClInclude Include="ConsoleApplication_BaraffBridson\BaraffPhysics.h" />
     <ClInclude Include="consoleapplication_baraffbridson\BasicOperations.h" />
+    <ClInclude Include="ConsoleApplication_BaraffBridson\BasicTypes.h" />
     <ClInclude Include="ConsoleApplication_BaraffBridson\BridsonCollision.h" />
     <ClInclude Include="ConsoleApplication_BaraffBridson\BridsonDynamic.h" />
     <ClInclude Include="consoleapplication_baraffbridson\Camera.h" />
@@ -135,6 +139,7 @@
     <ClInclude Include="consoleapplication_baraffbridson\Mesh.h" />
     <ClInclude Include="consoleapplication_baraffbridson\Model.h" />
     <ClInclude Include="ConsoleApplication_BaraffBridson\OpenGLContext.h" />
+    <ClInclude Include="ConsoleApplication_BaraffBridson\OtaduyContact.h" />
     <ClInclude Include="ConsoleApplication_BaraffBridson\Scene.h" />
     <ClInclude Include="ConsoleApplication_BaraffBridson\Screen.h" />
     <ClInclude Include="consoleapplication_baraffbridson\ResourceManager.h" />
@@ -148,6 +153,9 @@
   <ItemGroup>
     <None Include="ConsoleApplication_BaraffBridson\background_cube.frag" />
     <None Include="ConsoleApplication_BaraffBridson\background_cube.vs" />
+    <None Include="ConsoleApplication_BaraffBridson\bounding_box.frag" />
+    <None Include="ConsoleApplication_BaraffBridson\bounding_box.gs" />
+    <None Include="ConsoleApplication_BaraffBridson\bounding_box.vs" />
     <None Include="ConsoleApplication_BaraffBridson\cloth_piece.frag" />
     <None Include="ConsoleApplication_BaraffBridson\cloth_piece.vs" />
     <None Include="ConsoleApplication_BaraffBridson\cloth_piece_debug.frag" />

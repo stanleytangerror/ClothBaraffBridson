@@ -2,6 +2,7 @@
 #define SIMULATOR_H
 
 #include "BaraffDynamics.h"
+#include "Scene.h"
 #include "EventManager.h"
 #include "Camera.h"
 #include "Clock.h"
@@ -28,6 +29,8 @@ private:
 	Clock * clock;
 
 	GLuint loopCount;
+
+	Scene::Index boxSceneIndex;
 
 	void updateData();
 

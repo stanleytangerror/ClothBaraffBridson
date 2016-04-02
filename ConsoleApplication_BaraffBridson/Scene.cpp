@@ -6,9 +6,19 @@
 
 std::vector<SceneComponent *> Scene::render_list;
 
-void Scene::add_component(SceneComponent * com)
+Scene::Index Scene::add_component(SceneComponent * com)
 {
+	int index = Scene::render_list.size();
 	Scene::render_list.push_back(com);
+	return index;
+}
+
+void Scene::erase_component(Scene::Index index)
+{
+	assert(index >= 0 && index < Scene::render_list.size());
+	auto iter = Scene::render_list.begin();
+	for (int _i = 0; _i < index; ++_i, ++iter);
+	Scene::render_list.erase(iter);
 }
 
 void Scene::draw()
@@ -76,8 +86,6 @@ const
 
 void SceneEnv::load()
 {
-	shader = ResourceManager::GetShader("background_cube");
-
 	glGenVertexArrays(1, &vao);
 	glBindVertexArray(vao);
 	{
@@ -102,8 +110,7 @@ void SceneEnv::update()
 void SceneClothPiece::draw()
 const 
 {
-	//return;
-
+	glDepthMask(GL_TRUE);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
 	/* ------- draw cloth piece ------- */
@@ -205,12 +212,10 @@ const
 		//glBindVertexArray(0);
 
 		//glBindVertexArray(debugVAO);
-		//glDrawArrays(GL_POINTS, 0, fSize);
+		glDrawArrays(GL_POINTS, 0, fSize);
 	}
 	glBindVertexArray(0);
-
-
-
+	
 }
 
 void SceneClothPiece::update()
@@ -241,7 +246,7 @@ void SceneClothPiece::update()
 void SceneClothPiece::load()
 {
 	// cloth piece surface
-	clothPieceShader = ResourceManager::GetShader("cloth_piece");
+	//clothPieceShader = ResourceManager::GetShader("cloth_piece");
 
 	glGenVertexArrays(1, &meshVAO);
 	std::cout << "mesh vao " << meshVAO << std::endl;
@@ -256,7 +261,7 @@ void SceneClothPiece::load()
 
 
 	// cloth piece normal
-	debugShader = ResourceManager::GetShader("cloth_piece_normal");
+	//debugShader = ResourceManager::GetShader("cloth_piece_normal");
 
 	glGenVertexArrays(1, &debugVAO);
 	std::cout << "debug vao " << debugVAO << std::endl;
@@ -265,4 +270,59 @@ void SceneClothPiece::load()
 	glGenBuffers(1, &debugNormalVBO);
 	std::cout << "debug normal vbo " << debugNormalVBO << std::endl;
 
+}
+
+/* ----------- SceneAABBTree ------------- */
+
+void SceneAABBox::draw()
+const
+{
+	if (tree == nullptr)
+		return;
+
+	glDepthMask(GL_TRUE);
+	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	
+	shader->Use();
+
+	glUniformMatrix4fv(glGetUniformLocation(shader->Program, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+	glUniformMatrix4fv(glGetUniformLocation(shader->Program, "view"), 1, GL_FALSE, glm::value_ptr(view));
+	glUniformMatrix4fv(glGetUniformLocation(shader->Program, "model"), 1, GL_FALSE, glm::value_ptr(model));
+
+	glBindVertexArray(vao);
+	{
+		glBindBuffer(GL_ARRAY_BUFFER, vbo);
+		glBufferData(GL_ARRAY_BUFFER, pointSize * 3 * sizeof(GLfloat), boxVerticesBuffer, GL_STATIC_DRAW);
+		glEnableVertexAttribArray(0);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid *)0);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+		glDrawArrays(GL_LINES, 0, pointSize);
+	}
+	glBindVertexArray(0);
+
+}
+
+void SceneAABBox::load()
+{
+	//shader = ResourceManager::GetShader("bounding_box");
+
+	glGenVertexArrays(1, &vao);
+	std::cout << "aabbox vao " << vao << std::endl;
+	glGenBuffers(1, &vbo);
+	std::cout << "aabbox vbo " << vbo << std::endl;
+
+}
+
+void SceneAABBox::update()
+{
+	if (tree == nullptr)
+		return;
+
+	projection = glm::perspective(camera->Zoom, Screen::aspectRatio, 0.1f, 100.0f);
+	view = camera->GetViewMatrix();
+	model = glm::scale(glm::mat4(), glm::vec3(0.20f, 0.20f, 0.20f));
+	model = glm::translate(model, glm::vec3(0.0f, 0.40f, 0.0f)); // Translate it down a bit so it's at the center of the scene
+
+	tree->exportAABBoxPositions(boxVerticesBuffer, pointSize);
 }

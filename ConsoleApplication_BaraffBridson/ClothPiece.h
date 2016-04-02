@@ -2,6 +2,7 @@
 #define CLOTH_MODEL
 
 #include "Model.h"
+#include "BasicTypes.h"
 
 #include <assimp\types.h>
 #include <map>
@@ -15,8 +16,8 @@
 #include <OpenMesh/Core/Mesh/TriMesh_ArrayKernelT.hh>
 #include <OpenMesh/Core/Mesh/PolyMesh_ArrayKernelT.hh>
 
-typedef OpenMesh::TriMesh_ArrayKernelT<> TriArrayMesh;
-typedef OpenMesh::PolyMesh_ArrayKernelT<> PolyArrayMesh;
+//typedef OpenMesh::TriMesh_ArrayKernelT<> TriArrayMesh;
+//typedef OpenMesh::PolyMesh_ArrayKernelT<> PolyArrayMesh;
 
 class ClothPiece
 {
@@ -72,21 +73,21 @@ private:
 
 #include <map>
 
-// kernel type
-typedef CGAL::Simple_cartesian<float> Kernelf;
-// primitive types
-typedef Kernelf::FT FT;
-typedef Kernelf::Point_3 Point3f;
-typedef Kernelf::Vector_3 Vec3f;
-typedef Kernelf::Triangle_3 Triangle3f;
-typedef Kernelf::Segment_3 Segment3f;
-// surface mesh type
-typedef CGAL::Surface_mesh<Point3f> SurfaceMesh3f;
-// primitive index types
-typedef SurfaceMesh3f::Vertex_index Veridx;
-typedef SurfaceMesh3f::Face_index Faceidx;
-typedef SurfaceMesh3f::Edge_index Edgeidx;
-typedef SurfaceMesh3f::Halfedge_index Halfedgeidx;
+//// kernel type
+//typedef CGAL::Simple_cartesian<float> Kernelf;
+//// primitive types
+//typedef Kernelf::FT FT;
+//typedef Kernelf::Point_3 Point3f;
+//typedef Kernelf::Vector_3 Vec3f;
+//typedef Kernelf::Triangle_3 Triangle3f;
+//typedef Kernelf::Segment_3 Segment3f;
+//// surface mesh type
+//typedef CGAL::Surface_mesh<Point3f> SurfaceMesh3f;
+//// primitive index types
+//typedef SurfaceMesh3f::Vertex_index Veridx;
+//typedef SurfaceMesh3f::Face_index Faceidx;
+//typedef SurfaceMesh3f::Edge_index Edgeidx;
+//typedef SurfaceMesh3f::Halfedge_index Halfedgeidx;
 
 class ClothPiece
 {

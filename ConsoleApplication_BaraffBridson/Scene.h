@@ -5,6 +5,7 @@
 #include "texture.h"
 #include "Camera.h"
 #include "ClothPiece.h"
+#include "OtaduyContact.h"
 
 #include <vector>
 
@@ -13,7 +14,17 @@ class SceneComponent;
 class Scene
 {
 public:
-	static void add_component(SceneComponent * com);
+	typedef int Index;
+
+	static Index add_component(SceneComponent * com);
+
+	static void erase_component(Index index);
+	
+	static SceneComponent * get_component(Index index)
+	{
+		assert(index >= 0 && index <= render_list.size());
+		return render_list[index];
+	}
 
 	static void load();
 
@@ -52,8 +63,8 @@ class SceneEnv : public SceneComponent
 {
 public:
 
-	SceneEnv(CubeMap const * cubeMap, Camera * camera) :
-		SceneComponent(), cubeMap(cubeMap), shader(nullptr), camera(camera)
+	SceneEnv(Shader * shader, CubeMap const * cubeMap, Camera * camera) :
+		SceneComponent(), cubeMap(cubeMap), shader(shader), camera(camera)
 	{}
 
 	virtual void draw() const;
@@ -124,9 +135,9 @@ class SceneClothPiece : public SceneComponent
 {
 public:
 
-	SceneClothPiece(ClothPiece const * const clothPiece, Camera * camera) :
+	SceneClothPiece(Shader * clothPieceShader, Shader * debugShader, ClothPiece const * const clothPiece, Camera * camera) :
 		SceneComponent(), clothPiece(clothPiece), camera(camera),
-		clothPieceShader(nullptr), debugShader(nullptr)
+		clothPieceShader(clothPieceShader), debugShader(debugShader)
 	{}
 
 	virtual void draw() const;
@@ -174,4 +185,48 @@ protected:
 
 };
 
+class TriangleTree;
+
+class SceneAABBox : public SceneComponent
+{
+public:
+
+	SceneAABBox(Shader * shader, Camera * camera) :
+		SceneComponent(), camera(camera),
+		shader(shader), tree(nullptr)
+	{}
+
+	virtual void draw() const;
+
+	virtual void load();
+
+	virtual void update();
+
+	virtual ~SceneAABBox() {}
+
+	void setTree(TriangleTree * tree)
+	{
+		this->tree = tree;
+	}
+
+private:
+
+	TriangleTree * tree;
+
+	Shader * shader;
+
+	Camera * camera;
+	glm::mat4 projection;
+	glm::mat4 view;
+	glm::mat4 model;
+
+	GLuint vao, vbo;
+	GLfloat * boxVerticesBuffer;
+	//[6] = {
+	//	0.2f, 0.2f, 0.2f, 
+	//	0.6f, 0.6f, 0.6f };
+	//GLfloat * boxVerticesBuffer;
+	GLuint pointSize;
+
+};
 #endif

@@ -81,6 +81,12 @@
     <ClCompile Include="ConsoleApplication_BaraffBridson\EventManager.cpp">
       <Filter>Source Files\Render</Filter>
     </ClCompile>
+    <ClCompile Include="ConsoleApplication_BaraffBridson\AABBTree\AABBTree.cpp">
+      <Filter>Source Files\Util</Filter>
+    </ClCompile>
+    <ClCompile Include="ConsoleApplication_BaraffBridson\OtaduyContact.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="consoleapplication_baraffbridson\ClothPiece.h">
@@ -152,6 +158,15 @@
     <ClInclude Include="ConsoleApplication_BaraffBridson\Scene.h">
       <Filter>Header Files\Render</Filter>
     </ClInclude>
+    <ClInclude Include="ConsoleApplication_BaraffBridson\AABBTree\AABBTree.h">
+      <Filter>Header Files\Util</Filter>
+    </ClInclude>
+    <ClInclude Include="ConsoleApplication_BaraffBridson\BasicTypes.h">
+      <Filter>Header Files\Util</Filter>
+    </ClInclude>
+    <ClInclude Include="ConsoleApplication_BaraffBridson\OtaduyContact.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="ConsoleApplication_BaraffBridson\model_loading.vs">
@@ -179,6 +194,15 @@
       <Filter>Resource Files</Filter>
     </None>
     <None Include="ConsoleApplication_BaraffBridson\cloth_piece_debug.vs">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="ConsoleApplication_BaraffBridson\bounding_box.frag">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="ConsoleApplication_BaraffBridson\bounding_box.gs">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="ConsoleApplication_BaraffBridson\bounding_box.vs">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>

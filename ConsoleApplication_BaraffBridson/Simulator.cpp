@@ -33,9 +33,9 @@ void Simulator::init()
 	ResourceManager::LoadShader("background_cube", "E:\\Microsoft Visual Studio 2015\\Workspace\\ConsoleApplication_BaraffBridson\\ConsoleApplication_BaraffBridson\\background_cube.vs", "E:\\Microsoft Visual Studio 2015\\Workspace\\ConsoleApplication_BaraffBridson\\ConsoleApplication_BaraffBridson\\background_cube.frag");
 	ResourceManager::LoadShader("cloth_piece", "E:\\Microsoft Visual Studio 2015\\Workspace\\ConsoleApplication_BaraffBridson\\ConsoleApplication_BaraffBridson\\cloth_piece.vs", "E:\\Microsoft Visual Studio 2015\\Workspace\\ConsoleApplication_BaraffBridson\\ConsoleApplication_BaraffBridson\\cloth_piece.frag");
 	ResourceManager::LoadShader("cloth_piece_normal", "E:\\Microsoft Visual Studio 2015\\Workspace\\ConsoleApplication_BaraffBridson\\ConsoleApplication_BaraffBridson\\cloth_piece_debug.vs", "E:\\Microsoft Visual Studio 2015\\Workspace\\ConsoleApplication_BaraffBridson\\ConsoleApplication_BaraffBridson\\cloth_piece_debug.frag", "E:\\Microsoft Visual Studio 2015\\Workspace\\ConsoleApplication_BaraffBridson\\ConsoleApplication_BaraffBridson\\cloth_piece_debug.gs");
+	ResourceManager::LoadShader("bounding_box", "E:\\Microsoft Visual Studio 2015\\Workspace\\ConsoleApplication_BaraffBridson\\ConsoleApplication_BaraffBridson\\bounding_box.vs", "E:\\Microsoft Visual Studio 2015\\Workspace\\ConsoleApplication_BaraffBridson\\ConsoleApplication_BaraffBridson\\bounding_box.frag", "E:\\Microsoft Visual Studio 2015\\Workspace\\ConsoleApplication_BaraffBridson\\ConsoleApplication_BaraffBridson\\bounding_box.gs");
 	//ResourceManager::LoadShader("model_loading", ".\\model_loading.vs", ".\\model_loading.frag");
 	//ResourceManager::LoadShader("background_cube", ".\\background_cube.vs", ".\\background_cube.frag");
-	//ResourceManager::LoadShader("cloth_piece", ".\\cloth_piece.vs", ".\\cloth_piece.frag");
 
 	// ----------- load cube map ----------------
 	std::vector<const GLchar*> faces;
@@ -58,10 +58,15 @@ void Simulator::init()
 	// initial planar coordinates
 	clothDynamics = new BaraffDynamics(clothPiece);
 
-	auto env = new SceneEnv(ResourceManager::GetCubeMap("background_texture"), viewer->getCamera());
+	auto env = new SceneEnv(ResourceManager::GetShader("background_cube"),
+		ResourceManager::GetCubeMap("background_texture"), viewer->getCamera());
 	Scene::add_component(env);
-	auto clo = new SceneClothPiece(clothPiece, viewer->getCamera());
+	auto clo = new SceneClothPiece(ResourceManager::GetShader("cloth_piece"),
+		ResourceManager::GetShader("cloth_piece_normal"),
+		clothPiece, viewer->getCamera());
 	Scene::add_component(clo);
+	boxSceneIndex = Scene::add_component(new SceneAABBox(ResourceManager::GetShader("bounding_box"),
+		viewer->getCamera()));
 	Scene::load();
 
 	// ------------ register event handlers ------------
@@ -105,6 +110,11 @@ void Simulator::updateData()
 		clothDynamics->writeBack();
 			
 #endif
+
+		std::cout << "create temp tree" << std::endl;
+		auto tempTree = new TriangleTree(clothPiece->getMesh());
+		(dynamic_cast<SceneAABBox *>(Scene::get_component(boxSceneIndex)))
+			->setTree(tempTree);
 }
 
 void Simulator::pauseEventHandle(bool const * const keyMask)
