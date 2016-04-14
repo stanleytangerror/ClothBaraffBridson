@@ -32,6 +32,7 @@ void Simulator::init()
 	ResourceManager::LoadShader("model_loading", "E:\\Microsoft Visual Studio 2015\\Workspace\\ConsoleApplication_BaraffBridson\\ConsoleApplication_BaraffBridson\\model_loading.vs", "E:\\Microsoft Visual Studio 2015\\Workspace\\ConsoleApplication_BaraffBridson\\ConsoleApplication_BaraffBridson\\model_loading.frag");
 	ResourceManager::LoadShader("background_cube", "E:\\Microsoft Visual Studio 2015\\Workspace\\ConsoleApplication_BaraffBridson\\ConsoleApplication_BaraffBridson\\background_cube.vs", "E:\\Microsoft Visual Studio 2015\\Workspace\\ConsoleApplication_BaraffBridson\\ConsoleApplication_BaraffBridson\\background_cube.frag");
 	ResourceManager::LoadShader("cloth_piece", "E:\\Microsoft Visual Studio 2015\\Workspace\\ConsoleApplication_BaraffBridson\\ConsoleApplication_BaraffBridson\\cloth_piece.vs", "E:\\Microsoft Visual Studio 2015\\Workspace\\ConsoleApplication_BaraffBridson\\ConsoleApplication_BaraffBridson\\cloth_piece.frag");
+	ResourceManager::LoadShader("rigid_body", "E:\\Microsoft Visual Studio 2015\\Workspace\\ConsoleApplication_BaraffBridson\\ConsoleApplication_BaraffBridson\\rigid_body.vs", "E:\\Microsoft Visual Studio 2015\\Workspace\\ConsoleApplication_BaraffBridson\\ConsoleApplication_BaraffBridson\\rigid_body.frag");
 	ResourceManager::LoadShader("cloth_piece_normal", "E:\\Microsoft Visual Studio 2015\\Workspace\\ConsoleApplication_BaraffBridson\\ConsoleApplication_BaraffBridson\\cloth_piece_debug.vs", "E:\\Microsoft Visual Studio 2015\\Workspace\\ConsoleApplication_BaraffBridson\\ConsoleApplication_BaraffBridson\\cloth_piece_debug.frag", "E:\\Microsoft Visual Studio 2015\\Workspace\\ConsoleApplication_BaraffBridson\\ConsoleApplication_BaraffBridson\\cloth_piece_debug.gs");
 	ResourceManager::LoadShader("bounding_box", "E:\\Microsoft Visual Studio 2015\\Workspace\\ConsoleApplication_BaraffBridson\\ConsoleApplication_BaraffBridson\\bounding_box.vs", "E:\\Microsoft Visual Studio 2015\\Workspace\\ConsoleApplication_BaraffBridson\\ConsoleApplication_BaraffBridson\\bounding_box.frag", "E:\\Microsoft Visual Studio 2015\\Workspace\\ConsoleApplication_BaraffBridson\\ConsoleApplication_BaraffBridson\\bounding_box.gs");
 	//ResourceManager::LoadShader("model_loading", ".\\model_loading.vs", ".\\model_loading.frag");
@@ -65,8 +66,19 @@ void Simulator::init()
 		ResourceManager::GetShader("cloth_piece_normal"),
 		clothPiece, viewer->getCamera());
 	Scene::add_component(clo);
-	boxSceneIndex = Scene::add_component(new SceneAABBox(ResourceManager::GetShader("bounding_box"),
+	clothPieceBoxSceneIndex = Scene::add_component(new SceneAABBox(ResourceManager::GetShader("bounding_box"),
 		viewer->getCamera()));
+
+	Model rigidBodyModel((GLchar *)Config::spherePath.c_str(),
+		(aiPostProcessSteps)(aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_JoinIdenticalVertices));
+	rigidBody = new ClothPiece(3);
+	rigidBody->import(rigidBodyModel.getMeshes()[0]);
+	auto sph = new SceneRigidBody(ResourceManager::GetShader("rigid_body"),
+		rigidBody, viewer->getCamera());
+	Scene::add_component(sph);
+	rigidBodyBoxSceneIndex = Scene::add_component(new SceneAABBox(ResourceManager::GetShader("bounding_box"),
+		viewer->getCamera()));
+
 	Scene::load();
 
 	// ------------ register event handlers ------------
@@ -113,7 +125,10 @@ void Simulator::updateData()
 
 		std::cout << "create temp tree" << std::endl;
 		auto tempTree = new TriangleTree(clothPiece->getMesh());
-		(dynamic_cast<SceneAABBox *>(Scene::get_component(boxSceneIndex)))
+		(dynamic_cast<SceneAABBox *>(Scene::get_component(clothPieceBoxSceneIndex)))
+			->setTree(tempTree);
+		tempTree = new TriangleTree(rigidBody->getMesh());
+		(dynamic_cast<SceneAABBox *>(Scene::get_component(rigidBodyBoxSceneIndex)))
 			->setTree(tempTree);
 }
 

@@ -7,6 +7,7 @@ class Config
 {
 public:
 	static std::string const modelPath;
+	static std::string const spherePath;
 
 private:
 	Config() {}

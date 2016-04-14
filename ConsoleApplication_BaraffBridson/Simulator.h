@@ -23,6 +23,7 @@ public:
 private:
 
 	ClothPiece * clothPiece;
+	ClothPiece * rigidBody;
 	BaraffDynamics * clothDynamics;
 	EventManager * eventManager;
 	FOVControl * viewer;
@@ -30,7 +31,8 @@ private:
 
 	GLuint loopCount;
 
-	Scene::Index boxSceneIndex;
+	Scene::Index clothPieceBoxSceneIndex;
+	Scene::Index rigidBodyBoxSceneIndex;
 
 	void updateData();
 

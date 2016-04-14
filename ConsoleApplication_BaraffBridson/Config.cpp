@@ -6,6 +6,7 @@
 //std::string const Config::modelPath = "E:\\Computer Graphics\\Materials\\Models\\SquareCloth_50m50\\Clothes.obj";
 //std::string const Config::modelPath = "E:\\Computer Graphics\\Materials\\Models\\SquareCloth_30m30\\Clothes.obj";
 std::string const Config::modelPath = "E:\\Computer Graphics\\Materials\\Models\\SquareCloth_20m20\\Clothes.obj";
+std::string const Config::spherePath = "E:\\Computer Graphics\\Materials\\Models\\Sphere01\\Sphere.obj";
 //std::string const Config::modelPath = "E:\\Computer Graphics\\Materials\\Models\\SquareCloth04\\Clothes.obj";
 //std::string const Config::modelPath = "E:/Computer Graphics/Materials/nanosuit/nanosuit.obj";
 //std::string const Config::modelPath = "E:\\Computer Graphics\\Materials\\nanosuit\\nanosuit.obj";

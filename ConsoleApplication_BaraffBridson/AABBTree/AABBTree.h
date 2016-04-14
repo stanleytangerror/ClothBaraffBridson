@@ -2,6 +2,7 @@
 #define AABBTREE_H
 
 #include "../BasicTypes.h"
+#include "../BasicOperations.h"
 
 #include <boost\geometry.hpp>
 #include <boost\geometry\index\rtree.hpp>
@@ -12,24 +13,19 @@
 #include <algorithm>
 #include <list>
 
-inline Point3f & interpolate(Point3f const & a, Point3f const & b, float t)
-{
-	return Point3f(
-		a.x() * t + b.x() * (1.0f - t), 
-		a.y() * t + b.y() * (1.0f - t), 
-		a.z() * t + b.z() * (1.0f - t));
-}
+/* --------------- AABBox class definition --------------- */
 
+template <typename PointType>
 class AABBox
 {
 public:
-	AABBox(Point3f minCor, Point3f maxCor) :
+	AABBox(PointType minCor, PointType maxCor) :
 		m_minCor(minCor), m_maxCor(maxCor)
 	{
 		m_center = interpolate(m_minCor, m_maxCor, 0.5f);
 	}
 
-	float distance(AABBox const & rhs) const
+	float squared_distance(AABBox const & rhs) const
 	{
 		if (intersection(rhs))
 			return 0.0f;
@@ -41,7 +37,19 @@ public:
 		return delta_x * delta_x + delta_y * delta_y + delta_z * delta_z;
 	}
 
-	bool intersection(AABBox const & rhs) const
+	template <typename Obj>
+	float squared_distance(Obj const & obj)
+	{
+		BOOST_STATIC_ASSERT(sizeof(T) == 0);
+	}
+
+	template <typename Obj>
+	bool intersection(Obj const & obj, float tolerance)
+	{
+		BOOST_STATIC_ASSERT(sizeof(T) == 0);
+	}
+
+	bool intersection(AABBox<PointType> const & rhs) const
 	{
 		if (this->m_minCor.x() > rhs.m_maxCor.x() || this->m_maxCor.x() < rhs.m_minCor.x())
 			return false;
@@ -52,50 +60,51 @@ public:
 		return true;
 	}
 	
-	friend AABBox const & operator+(AABBox const & lhs, AABBox const & rhs)
+	friend AABBox<PointType> const & operator+(AABBox<PointType> const & lhs, AABBox<PointType> const & rhs)
 	{
-		return AABBox(
-			Point3f((std::min)(lhs.m_minCor.x(), rhs.m_minCor.x()),
+		return AABBox<PointType>(
+			PointType((std::min)(lhs.m_minCor.x(), rhs.m_minCor.x()),
 				(std::min)(lhs.m_minCor.y(), rhs.m_minCor.y()),
 				(std::min)(lhs.m_minCor.z(), rhs.m_minCor.z())),
-			Point3f((std::min)(lhs.m_maxCor.x(), rhs.m_maxCor.x()),
+			PointType((std::min)(lhs.m_maxCor.x(), rhs.m_maxCor.x()),
 				(std::min)(lhs.m_maxCor.y(), rhs.m_maxCor.y()),
 				(std::min)(lhs.m_maxCor.z(), rhs.m_maxCor.z()))
 			);
 	}
 
-	Point3f const & minCor()
+	PointType const & minCor()
 	{
 		return m_minCor;
 	}
 
-	Point3f const & maxCor()
+	PointType const & maxCor()
 	{
 		return m_maxCor;
 	}
 
+
 private:
-	Point3f const m_minCor;
-	Point3f const m_maxCor;
-	Point3f m_center;
+	PointType const m_minCor;
+	PointType const m_maxCor;
+	PointType m_center;
 
 };
 
-//template <typename Object, typename Primitive>
-//bool intersection(Object const & obj, Primitive const & pri);
-//
-//template <>
-//bool intersection<Point3f, Triangle3f>(Point3f const & point, Triangle3f const & triangle)
-//{
-//	
-//	return false;
-//}
+template <> template <>
+bool AABBox<Point3f>::intersection<Point3f>(Point3f const & point, float tolerance);
 
-template <typename Primitive>
+template <> template <>
+float AABBox<Point3f>::squared_distance<Point3f>(Point3f const & point);
+
+
+/* --------------- AABBTree class definition --------------- */
+
+template <typename Primitive, typename PointType>
 class AABBTree
 {
 public:
-	typedef std::pair<AABBox *, Primitive *> NodeType;
+	typedef std::pair<AABBox<PointType> *, Primitive *> NodeType;
+	typedef int Index;
 
 	template <typename IterType, typename toPair>
 	AABBTree(IterType & begin, IterType const & end, toPair & topair):
@@ -128,17 +137,22 @@ public:
 		return tree->size();
 	}
 
+	template <typename Obj>
+	std::list<std::pair<Index, float> > * contaceDetection(Obj const & obj, float tolerance);
+
 private:
 	std::list<NodeType *> * tree;
 
 };
+
+/* --------------- conversions implementations --------------- */
 
 struct FaceIter2Triangle3fAABBoxPair
 {
 	SurfaceMesh3f const * const m_mesh;
 	FaceIter2Triangle3fAABBoxPair(SurfaceMesh3f * mesh) : m_mesh(mesh) {}
 
-	AABBTree<Triangle3f>::NodeType * operator() (/*SurfaceMesh3f const * mesh, */Faceiter const & iter) const
+	AABBTree<Triangle3f, Point3f>::NodeType * operator() (/*SurfaceMesh3f const * mesh, */Faceiter const & iter) const
 	{ 
 		Faceidx fid = *iter;
 		//std::cout << "face index " << fid << std::endl;
@@ -171,189 +185,13 @@ struct FaceIter2Triangle3fAABBoxPair
 			//	<< maxx << " " << maxy << " " << maxz << std::endl;
 		}
 		assert(ps.size() == 3);
-		auto box = new AABBox(Point3f(minx, miny, minz), Point3f(maxx, maxy, maxz));
+		auto box = new AABBox<Point3f>(Point3f(minx, miny, minz), Point3f(maxx, maxy, maxz));
 		auto tri = new Triangle3f(ps[0], ps[1], ps[2]);
 		//std::cout << "box" << std::endl << box->minCor() << std::endl << box->maxCor() << std::endl;
 		//std::cout << "triangle" << std::endl << ps[0] << std::endl << ps[1] << std::endl << ps[2] << std::endl;
-		return new AABBTree<Triangle3f>::NodeType(box, tri);
+		return new AABBTree<Triangle3f, Point3f>::NodeType(box, tri);
 	}
 
 };
-
-
-////BOOST_GEOMETRY_REGISTER_POINT_3D(Point3f, float, CGAL::Simple_cartesian<float>, x, y, z)
-////BOOST_GEOMETRY_REGISTER_BOX(CGAL::Bbox_3, Point3f, bottom, top)
-//
-//namespace bg = boost::geometry;
-//namespace bgi = boost::geometry::index;
-//namespace bgm = boost::geometry::model;
-//
-//
-///* see http://stackoverflow.com/questions/14195111/r-trees-should-i-reinvent-the-wheel
-//* and http://www.boost.org/doc/libs/1_60_0/libs/geometry/doc/html/geometry/reference/adapted/register/boost_geometry_register_box.html
-//*/
-//
-//
-//// OR use predefined ones
-////typedef bgm::point<float, 3, bg::cs::cartesian> Point;
-//typedef bgm::box<Point3f> AABB;
-//
-//class TriangleBox
-//{
-//public:
-//	TriangleBox(Triangle3f & triangle) : 
-//		m_triangle(triangle)
-//	{
-//		
-//		//m_aabb.min_corner();
-//		//m_aabb.max_corner();
-//	}
-//	
-//	virtual ~TriangleBox() {}
-//	
-//	AABB const & bounding_box() const
-//	{
-//		return m_aabb; 
-//	}
-//
-//private:
-//	Triangle3f & m_triangle;
-//	AABB m_aabb;
-//};
-//
-//// Tell the rtree how to extract the AABB from the Shape
-//namespace boost {
-//	namespace geometry {
-//		namespace index {
-//
-//			template <>
-//			struct indexable< boost::shared_ptr<TriangleBox> >
-//			{
-//				typedef boost::shared_ptr<TriangleBox> V;
-//				typedef AABB const& result_type;
-//
-//				result_type operator()(V const& v) const 
-//				{
-//					return v->bounding_box(); 
-//				}
-//			};
-//
-//		}
-//	}
-//} // namespace boost::geometry::index
-//
-//  void test()
-//  {
-//  	bgi::rtree< boost::shared_ptr<TriangleBox>, bgi::rstar<32> > rtree;
-//  }
-
-//
-//struct AABBox
-//{
-//	Point3f top;
-//	Point3f bottom;
-//
-//};
-//
-//struct Node
-//{
-//	Node *parent;
-//	Node *children[2];
-//
-//	// these will be explained later
-//	bool childrenCrossed;
-//	AABB aabb;
-//	AABB *data;
-//	Node(void)
-//		: parent(nullptr)
-//		, data(nullptr)
-//	{
-//		children[0] = nullptr;
-//		children[1] = nullptr;
-//	}
-//
-//	bool IsLeaf(void) const
-//	{
-//		return children[0] = nullptr;
-//	}
-//
-//	// make this ndoe a branch
-//	void SetBranch(Node *n0, Node *n1)
-//	{
-//		n0->parent = this;
-//		n1->parent = this;
-//
-//		children[0] = n0;
-//		children[1] = n1;
-//	}
-//
-//	// make this node a leaf
-//	void SetLeaf(AABB *data)
-//	{
-//		// create two-way link
-//		this->data = data;
-//		data->userData = this;
-//
-//		children[0] = nullptr;
-//		children[1] = nullptr;
-//	}
-//
-//	void UpdateAABB(float margin)
-//	{
-//		if (IsLeaf())
-//		{
-//			// make fat AABB
-//			const Vec3 marginVec(margin, margin, margin);
-//			aabb.minPoint = data->minPoint - marginVec;
-//			aabb.maxPoint = data->maxPoint + marginVec;
-//		}
-//		else
-//			// make union of child AABBs of child nodes
-//			aabb =
-//			children[0]->aabb.Union(children[1]->aabb);
-//	}
-//
-//	Node *GetSibling(void) const
-//	{
-//		return
-//			this == parent->children[0]
-//			? parent->children[1]
-//			: parent->children[0];
-//	}
-//};
-//
-//class AABBTree : public Broadphase
-//{
-//public:
-//
-//	AABBTree(void)
-//		: m_root(nullptr)
-//		, m_margin(0.2f) // 20cm
-//	{ }
-//
-//	virtual void Add(AABB *aabb);
-//	virtual void Remove(AABB *aabb);
-//	virtual void Update(void);
-//	virtual ColliderPairList &ComputePairs(void);
-//	virtual Collider *Pick(const Vec3 &point) const;
-//	virtual Query(const AABB &aabb, ColliderList &out) const;
-//	virtual RayCastResult RayCast(const Ray3 &ray) const;
-//
-//private:
-//
-//	typedef std::vector<Node *> NodeList;
-//
-//	void UpdateNodeHelper(Node *node, NodeList &invalidNodes);
-//	void InsertNode(Node *node, Node **parent);
-//	void RemoveNode(Node *node);
-//	void ComputePairsHelper(Node *n0, Node *n1);
-//	void ClearChildrenCrossFlagHelper(Node *node);
-//	void CrossChildren(Node *node);
-//
-//	Node *m_root;
-//	ColliderPairList m_pairs;
-//	float m_margin;
-//	NodeList m_invalidNodes;
-//};
 
 #endif

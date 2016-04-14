@@ -167,6 +167,9 @@
     <ClInclude Include="ConsoleApplication_BaraffBridson\OtaduyContact.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ConsoleApplication_BaraffBridson\Geometry.h">
+      <Filter>Header Files\Util</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="ConsoleApplication_BaraffBridson\model_loading.vs">
@@ -203,6 +206,12 @@
       <Filter>Resource Files</Filter>
     </None>
     <None Include="ConsoleApplication_BaraffBridson\bounding_box.vs">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="ConsoleApplication_BaraffBridson\rigid_body.frag">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="ConsoleApplication_BaraffBridson\rigid_body.vs">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>

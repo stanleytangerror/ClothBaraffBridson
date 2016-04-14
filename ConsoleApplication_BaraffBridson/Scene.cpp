@@ -247,6 +247,7 @@ void SceneClothPiece::load()
 {
 	// cloth piece surface
 	//clothPieceShader = ResourceManager::GetShader("cloth_piece");
+	std::cout << "INFO::LOAD SCENE cloth piece scene" << std::endl;
 
 	glGenVertexArrays(1, &meshVAO);
 	std::cout << "mesh vao " << meshVAO << std::endl;
@@ -269,6 +270,86 @@ void SceneClothPiece::load()
 	std::cout << "debug vbo " << debugVBO << std::endl;
 	glGenBuffers(1, &debugNormalVBO);
 	std::cout << "debug normal vbo " << debugNormalVBO << std::endl;
+
+}
+
+/* ----------- SceneRigidBody ------------- */
+
+void SceneRigidBody::draw()
+const
+{
+	glDepthMask(GL_TRUE);
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+	/* ------- draw cloth piece ------- */
+	shader->Use();
+
+	glUniformMatrix4fv(glGetUniformLocation(shader->Program, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+	glUniformMatrix4fv(glGetUniformLocation(shader->Program, "view"), 1, GL_FALSE, glm::value_ptr(view));
+	glUniformMatrix4fv(glGetUniformLocation(shader->Program, "model"), 1, GL_FALSE, glm::value_ptr(model));
+
+	glUniform3f(glGetUniformLocation(shader->Program, "viewPos"), viewPos.x, viewPos.y, viewPos.z);
+	glUniform3f(glGetUniformLocation(shader->Program, "light.direction"), 0.0f, 1.0f, 0.0f);
+	glUniform3f(glGetUniformLocation(shader->Program, "light.color"), 0.45f, 0.45f, 0.45f);
+	/* from http://devernay.free.fr/cours/opengl/materials.html */
+	glUniform3f(glGetUniformLocation(shader->Program, "material.ambient"), 0.19225f, 0.19225f, 0.19225f);
+	glUniform3f(glGetUniformLocation(shader->Program, "material.diffuse"), 0.50754f, 0.50754f, 0.50754f);
+	glUniform3f(glGetUniformLocation(shader->Program, "material.specular"), 0.508273f, 0.508273f, 0.508273f);
+	glUniform1f(glGetUniformLocation(shader->Program, "material.shininess"), 0.4f);
+
+	glBindVertexArray(meshVAO);
+	{
+		glBindBuffer(GL_ARRAY_BUFFER, meshVBO);
+		glBufferData(GL_ARRAY_BUFFER, meshVBcnt * 3 * sizeof(GLfloat), meshVB, GL_STATIC_DRAW);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0 * sizeof(GLfloat), (GLvoid *)0);
+		glEnableVertexAttribArray(0);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+		glBindBuffer(GL_ARRAY_BUFFER, meshVNormalBO);
+		glBufferData(GL_ARRAY_BUFFER, meshVBcnt * 3 * sizeof(GLfloat), meshVNormalB, GL_STATIC_DRAW);
+		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0 * sizeof(GLfloat), (GLvoid *)0);
+		glEnableVertexAttribArray(1);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, meshEBO);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, meshEBcnt * sizeof(GLuint), meshEB, GL_STATIC_DRAW);
+		glDrawElements(GL_TRIANGLES, meshEBcnt, GL_UNSIGNED_INT, 0);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+	}
+	glBindVertexArray(0);
+
+}
+
+void SceneRigidBody::update()
+{
+	projection = glm::perspective(camera->Zoom, Screen::aspectRatio, 0.1f, 100.0f);
+	view = camera->GetViewMatrix();
+	model = glm::scale(glm::mat4(), glm::vec3(0.20f, 0.20f, 0.20f));
+	model = glm::translate(model, glm::vec3(0.0f, 0.40f, 0.0f)); // Translate it down a bit so it's at the center of the scene
+
+	viewPos = camera->Position;
+
+	meshVB = nullptr;
+	meshVNormalB = nullptr;
+	meshEB = nullptr;
+	meshVBcnt = 0, meshEBcnt = 0;
+	
+	rigidBody->exportPos3fNorm3fBuffer(meshVB, meshVNormalB, meshVBcnt, meshEB, meshEBcnt);
+
+}
+
+void SceneRigidBody::load()
+{
+	std::cout << "INFO::LOAD SCENE rigid body scene" << std::endl;
+	glGenVertexArrays(1, &meshVAO);
+	std::cout << "mesh vao " << meshVAO << std::endl;
+	glGenBuffers(1, &meshVBO);
+	std::cout << "mesh vbo " << meshVBO << std::endl;
+	glGenBuffers(1, &meshVNormalBO);
+	std::cout << "mesh vbNormalo " << meshVNormalBO << std::endl;
+	glGenBuffers(1, &meshEBO);
+	std::cout << "mesh ebo " << meshEBO << std::endl;
 
 }
 
@@ -306,6 +387,7 @@ const
 void SceneAABBox::load()
 {
 	//shader = ResourceManager::GetShader("bounding_box");
+	std::cout << "INFO::LOAD SCENE AABBox scene" << std::endl;
 
 	glGenVertexArrays(1, &vao);
 	std::cout << "aabbox vao " << vao << std::endl;

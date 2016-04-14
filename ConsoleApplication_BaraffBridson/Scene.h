@@ -185,6 +185,43 @@ protected:
 
 };
 
+class SceneRigidBody: public SceneComponent
+{
+public:
+
+	SceneRigidBody(Shader * shader, ClothPiece const * const rigidBody, Camera * camera) :
+		SceneComponent(), rigidBody(rigidBody), camera(camera), shader(shader)
+	{}
+
+	virtual void draw() const;
+
+	virtual void load();
+
+	virtual void update();
+
+	virtual ~SceneRigidBody() {}
+
+protected:
+	ClothPiece const * const rigidBody;
+
+	Camera * camera;
+	glm::mat4 projection;
+	glm::mat4 view;
+	glm::mat4 model;
+	glm::vec3 viewPos;
+
+	/* surface */
+	Shader  * shader = nullptr;
+
+	GLfloat * meshVB = nullptr;
+	GLfloat * meshVNormalB = nullptr;
+	GLuint * meshEB = nullptr;
+	GLuint meshVBcnt = 0, meshEBcnt = 0;
+
+	GLuint meshVAO, meshVBO, meshVNormalBO, meshEBO, conditionVBO;
+
+};
+
 class TriangleTree;
 
 class SceneAABBox : public SceneComponent

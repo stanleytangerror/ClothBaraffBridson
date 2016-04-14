@@ -134,6 +134,7 @@
     <ClInclude Include="consoleapplication_baraffbridson\ClothPiece.h" />
     <ClInclude Include="consoleapplication_baraffbridson\BaraffMPCGSolver.h" />
     <ClInclude Include="ConsoleApplication_BaraffBridson\Config.h" />
+    <ClInclude Include="ConsoleApplication_BaraffBridson\Geometry.h" />
     <ClInclude Include="consoleapplication_baraffbridson\EventManager.h" />
     <ClInclude Include="consoleapplication_baraffbridson\EigenMatScalar.h" />
     <ClInclude Include="consoleapplication_baraffbridson\Mesh.h" />
@@ -163,6 +164,8 @@
     <None Include="ConsoleApplication_BaraffBridson\cloth_piece_debug.vs" />
     <None Include="ConsoleApplication_BaraffBridson\model_loading.frag" />
     <None Include="ConsoleApplication_BaraffBridson\model_loading.vs" />
+    <None Include="ConsoleApplication_BaraffBridson\rigid_body.frag" />
+    <None Include="ConsoleApplication_BaraffBridson\rigid_body.vs" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
