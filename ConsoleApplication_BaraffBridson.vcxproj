@@ -106,7 +106,7 @@
     <ClCompile Include="consoleapplication_baraffbridson\BasicOperations.cpp" />
     <ClCompile Include="ConsoleApplication_BaraffBridson\BridsonCollision.cpp" />
     <ClCompile Include="ConsoleApplication_BaraffBridson\BridsonDynamic.cpp" />
-    <ClCompile Include="consoleapplication_baraffbridson\ClothPiece.cpp" />
+    <ClCompile Include="consoleapplication_baraffbridson\SurfaceMeshObject.cpp" />
     <ClCompile Include="consoleapplication_baraffbridson\BaraffMPCGSolver.cpp" />
     <ClCompile Include="ConsoleApplication_BaraffBridson\Config.cpp" />
     <ClCompile Include="ConsoleApplication_BaraffBridson\EventManager.cpp" />
@@ -131,7 +131,7 @@
     <ClInclude Include="ConsoleApplication_BaraffBridson\BridsonDynamic.h" />
     <ClInclude Include="consoleapplication_baraffbridson\Camera.h" />
     <ClInclude Include="ConsoleApplication_BaraffBridson\Clock.h" />
-    <ClInclude Include="consoleapplication_baraffbridson\ClothPiece.h" />
+    <ClInclude Include="consoleapplication_baraffbridson\SurfaceMeshObject.h" />
     <ClInclude Include="consoleapplication_baraffbridson\BaraffMPCGSolver.h" />
     <ClInclude Include="ConsoleApplication_BaraffBridson\Config.h" />
     <ClInclude Include="ConsoleApplication_BaraffBridson\Geometry.h" />

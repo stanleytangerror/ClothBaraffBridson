@@ -1,7 +1,7 @@
 #ifndef OTADUY_CONTACT_H
 #define OTADUY_CONTACT_H
 
-#include "ClothPiece.h"
+#include "SurfaceMeshObject.h"
 #include "Scene.h"
 #include "AABBTree\AABBTree.h"
 
@@ -50,14 +50,14 @@ class OtaduyContact
 public:
 	typedef std::list<std::pair<typename AABBTree<Triangle3f, Point3f>::Index, float> > Contact2Triangle;
 	
-	OtaduyContact(ClothPiece * clothPiece):
+	OtaduyContact(SurfaceMeshObject * clothPiece):
 		m_clothPiece(clothPiece), m_triangleTree(new TriangleTree(clothPiece->getMesh()))
 	{}
 
 	std::map<Veridx, Contact2Triangle *> * point2triangleDetection(GLfloat tolerance);
 
 private:
-	ClothPiece * const m_clothPiece;
+	SurfaceMeshObject * const m_clothPiece;
 	TriangleTree * m_triangleTree;
 	
 };

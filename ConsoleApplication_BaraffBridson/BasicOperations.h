@@ -16,7 +16,7 @@
 
 #include <CGAL\Simple_cartesian.h>
 
-#include "ClothPiece.h"
+#include "SurfaceMeshObject.h"
 
 #ifdef OPENMESH_BASED
 

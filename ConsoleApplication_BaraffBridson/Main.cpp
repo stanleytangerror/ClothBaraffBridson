@@ -7,7 +7,7 @@
 #include "Control.h"
 #include "ResourceManager.h"
 
-#include "ClothPiece.h"
+#include "SurfaceMeshObject.h"
 #include "BaraffDynamics.h"
 #include "Test.h"
 #include "Simulator.h"
@@ -163,7 +163,7 @@ int main_old()
 
 	//// Load models
 	//Model ourModel((GLchar *)modelPath.c_str(), (aiPostProcessSteps)(aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_JoinIdenticalVertices));
-	//ClothPiece* clothPiece = new ClothPiece(3);
+	//SurfaceMeshObject* clothPiece = new SurfaceMeshObject(3);
 	//clothPiece->import(ourModel.getMeshes()[0]);
 	//clothPiece->useVTexCoord2DAsVPlanarCoord3f();
 	//BaraffDynamics * stepforward = new BaraffDynamics(clothPiece);

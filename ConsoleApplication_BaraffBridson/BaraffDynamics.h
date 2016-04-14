@@ -1,7 +1,7 @@
 #ifndef SIMULATE_H
 #define SIMULATE_H
 
-#include "ClothPiece.h"
+#include "SurfaceMeshObject.h"
 #include "BaraffPhysics.h"
 #include "BaraffMPCGSolver.h"
 
@@ -10,7 +10,7 @@ class BaraffDynamics
 {
 
 public:
-	BaraffDynamics(ClothPiece * model) : 
+	BaraffDynamics(SurfaceMeshObject * model) : 
 		model(model), physics(new BaraffPhysics(model))
 	{
 		initial();
@@ -20,7 +20,7 @@ public:
 
 	void writeBack();
 
-	ClothPiece* getClothPiece()
+	SurfaceMeshObject* getClothPiece()
 	{
 		return model;
 	}
@@ -29,7 +29,7 @@ public:
 	void exportBendConditionData(GLfloat* & dataBuffer, GLuint & dataSize);
 
 private:
-	ClothPiece* model;
+	SurfaceMeshObject* model;
 	BaraffPhysics* physics;
 	Eigen::VectorXf last_root;
 	//BaraffMPCGSolver solver;

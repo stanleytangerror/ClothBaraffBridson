@@ -19,10 +19,10 @@
 //typedef OpenMesh::TriMesh_ArrayKernelT<> TriArrayMesh;
 //typedef OpenMesh::PolyMesh_ArrayKernelT<> PolyArrayMesh;
 
-class ClothPiece
+class SurfaceMeshObject
 {
 public:
-	ClothPiece(GLuint edges) :
+	SurfaceMeshObject(GLuint edges) :
 		EDGES(edges) {}
 
 	PolyArrayMesh* getMesh()
@@ -48,7 +48,7 @@ private:
 	PolyArrayMesh* PolyMesh = new PolyArrayMesh();
 
 	//template <typename PropType>
-	//OpenMesh::VPropHandleT<PropType> ClothPiece::addVProp(std::string propName, PropType value);
+	//OpenMesh::VPropHandleT<PropType> SurfaceMeshObject::addVProp(std::string propName, PropType value);
 
 	template <typename PropType>
 	OpenMesh::VPropHandleT<PropType> addVProp(
@@ -89,10 +89,10 @@ private:
 //typedef SurfaceMesh3f::Edge_index Edgeidx;
 //typedef SurfaceMesh3f::Halfedge_index Halfedgeidx;
 
-class ClothPiece
+class SurfaceMeshObject
 {
 public:
-	ClothPiece(GLuint edges) :
+	SurfaceMeshObject(GLuint edges) :
 		EDGES(edges), PolyMesh(new SurfaceMesh3f())
 	{}
 

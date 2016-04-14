@@ -1,9 +1,9 @@
-#include "ClothPiece.h"
+#include "SurfaceMeshObject.h"
 #include <iostream>
 
 #ifdef OPENMESH_BASED
 
-void ClothPiece::import(const Mesh mesh)
+void SurfaceMeshObject::import(const Mesh mesh)
 {
 	/* load vertexes */
 	std::map<GLuint, Veridx> vindices2vhandles;
@@ -46,7 +46,7 @@ void ClothPiece::import(const Mesh mesh)
 }
 
 /* export data for VBO and EBO for drawing */
-void ClothPiece::exportPos3fNorm3fBuffer(
+void SurfaceMeshObject::exportPos3fNorm3fBuffer(
 	GLfloat* & vertexBuffer, GLfloat* & vertexNormalBuffer, GLuint & vertexSize, 
 	GLuint* & elementBuffer, GLuint & elementSize)
 	const
@@ -96,7 +96,7 @@ void ClothPiece::exportPos3fNorm3fBuffer(
 	return ;
 }
 
-void ClothPiece::exportFaceNorm3fBuffer(GLfloat *& fBarycenterBuffer, GLfloat *& fNormalBuffer, GLuint & faceSize)
+void SurfaceMeshObject::exportFaceNorm3fBuffer(GLfloat *& fBarycenterBuffer, GLfloat *& fNormalBuffer, GLuint & faceSize)
 const
 {
 	// TODO
@@ -127,7 +127,7 @@ const
 }
 
 //template <typename PropType> 
-//OpenMesh::VPropHandleT<PropType> ClothPiece::addVProp(std::string propName, PropType value)
+//OpenMesh::VPropHandleT<PropType> SurfaceMeshObject::addVProp(std::string propName, PropType value)
 //{
 //	OpenMesh::VPropHandleT<PropType> vprop_handle;
 //	// new property handle
@@ -142,7 +142,7 @@ const
 //}
 
 template <typename PropType> 
-OpenMesh::VPropHandleT<PropType> ClothPiece::addVProp(
+OpenMesh::VPropHandleT<PropType> SurfaceMeshObject::addVProp(
 	std::string propName, 
 	std::function<PropType (Veridx)> vhandle2value
 	)
@@ -161,7 +161,7 @@ OpenMesh::VPropHandleT<PropType> ClothPiece::addVProp(
 
 
 
-bool ClothPiece::useVTexCoord2DAsVPlanarCoord3f()
+bool SurfaceMeshObject::useVTexCoord2DAsVPlanarCoord3f()
 {
 	if (!PolyMesh->has_vertex_texcoords2D())
 		return false;
@@ -174,7 +174,7 @@ bool ClothPiece::useVTexCoord2DAsVPlanarCoord3f()
 	return true;
 }
 
-bool ClothPiece::getVPlanarCoord3f(OpenMesh::VPropHandleT<Point3f> & vph)
+bool SurfaceMeshObject::getVPlanarCoord3f(OpenMesh::VPropHandleT<Point3f> & vph)
 {
 	return PolyMesh->get_property_handle(vph, "planar_coord_3f");
 }
@@ -185,7 +185,7 @@ bool ClothPiece::getVPlanarCoord3f(OpenMesh::VPropHandleT<Point3f> & vph)
 
 #include "BasicOperations.h"
 
-void ClothPiece::import(const Mesh mesh)
+void SurfaceMeshObject::import(const Mesh mesh)
 {
 	/* load vertexes */
 	std::map<GLuint, Veridx> vindices2vhandles;
@@ -254,7 +254,7 @@ void ClothPiece::import(const Mesh mesh)
 		<< ", #faces " << PolyMesh->number_of_faces() << std::endl;
 }
 
-Eigen::VectorXf ClothPiece::getPositions() const
+Eigen::VectorXf SurfaceMeshObject::getPositions() const
 {
 	Eigen::VectorXf positions = Eigen::VectorXf(VERTEX_SIZE * 3);
 	for (auto iter = PolyMesh->vertices_begin(); iter != PolyMesh->vertices_end(); ++iter)
@@ -267,7 +267,7 @@ Eigen::VectorXf ClothPiece::getPositions() const
 	return positions;
 }
 
-void ClothPiece::setPositions(Eigen::VectorXf const & positions)
+void SurfaceMeshObject::setPositions(Eigen::VectorXf const & positions)
 {
 	BOOST_FOREACH(Veridx viter, PolyMesh->vertices())
 	{
@@ -291,7 +291,7 @@ void ClothPiece::setPositions(Eigen::VectorXf const & positions)
 }
 
 /* export data for VBO and EBO for drawing */
-void ClothPiece::exportPos3fNorm3fBuffer(
+void SurfaceMeshObject::exportPos3fNorm3fBuffer(
 	GLfloat* & vertexBuffer, GLfloat* & vertexNormalBuffer, GLuint & vertexSize,
 	GLuint* & elementBuffer, GLuint & elementSize) const
 {
@@ -341,7 +341,7 @@ void ClothPiece::exportPos3fNorm3fBuffer(
 	return;
 }
 
-void ClothPiece::exportFaceNorm3fBuffer(GLfloat *& fBarycenterBuffer, GLfloat *& fNormalBuffer, GLuint & faceSize) const
+void SurfaceMeshObject::exportFaceNorm3fBuffer(GLfloat *& fBarycenterBuffer, GLfloat *& fNormalBuffer, GLuint & faceSize) const
 {
 	// TODO
 	SurfaceMesh3f* mesh = this->PolyMesh;
@@ -373,7 +373,7 @@ void ClothPiece::exportFaceNorm3fBuffer(GLfloat *& fBarycenterBuffer, GLfloat *&
 	return;
 }
 
-bool ClothPiece::useVTexCoord2DAsVPlanarCoord3f()
+bool SurfaceMeshObject::useVTexCoord2DAsVPlanarCoord3f()
 {
 	// TODO add return false case
 	SurfaceMesh3f::Property_map<Veridx, Point3f> vprop_handle = 
@@ -387,7 +387,7 @@ bool ClothPiece::useVTexCoord2DAsVPlanarCoord3f()
 	return true;
 }
 
-bool ClothPiece::getVPlanarCoord3f(SurfaceMesh3f::Property_map<Veridx, Point3f> & vph)
+bool SurfaceMeshObject::getVPlanarCoord3f(SurfaceMesh3f::Property_map<Veridx, Point3f> & vph)
 {
 	// TODO add return false case
 	vph = PolyMesh->property_map<Veridx, Point3f>(pname_vertexPlanarCoords).first;

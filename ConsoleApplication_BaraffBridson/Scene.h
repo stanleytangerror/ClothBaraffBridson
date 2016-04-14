@@ -4,7 +4,7 @@
 #include "Shader.h"
 #include "texture.h"
 #include "Camera.h"
-#include "ClothPiece.h"
+#include "SurfaceMeshObject.h"
 #include "OtaduyContact.h"
 
 #include <vector>
@@ -135,7 +135,7 @@ class SceneClothPiece : public SceneComponent
 {
 public:
 
-	SceneClothPiece(Shader * clothPieceShader, Shader * debugShader, ClothPiece const * const clothPiece, Camera * camera) :
+	SceneClothPiece(Shader * clothPieceShader, Shader * debugShader, SurfaceMeshObject const * const clothPiece, Camera * camera) :
 		SceneComponent(), clothPiece(clothPiece), camera(camera),
 		clothPieceShader(clothPieceShader), debugShader(debugShader)
 	{}
@@ -149,7 +149,7 @@ public:
 	virtual ~SceneClothPiece() {}
 
 protected:
-	ClothPiece const * const clothPiece;
+	SurfaceMeshObject const * const clothPiece;
 
 	Camera * camera;
 	glm::mat4 projection;
@@ -189,7 +189,7 @@ class SceneRigidBody: public SceneComponent
 {
 public:
 
-	SceneRigidBody(Shader * shader, ClothPiece const * const rigidBody, Camera * camera) :
+	SceneRigidBody(Shader * shader, SurfaceMeshObject const * const rigidBody, Camera * camera) :
 		SceneComponent(), rigidBody(rigidBody), camera(camera), shader(shader)
 	{}
 
@@ -202,7 +202,7 @@ public:
 	virtual ~SceneRigidBody() {}
 
 protected:
-	ClothPiece const * const rigidBody;
+	SurfaceMeshObject const * const rigidBody;
 
 	Camera * camera;
 	glm::mat4 projection;

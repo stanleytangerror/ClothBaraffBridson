@@ -52,7 +52,7 @@ void Simulator::init()
 	Model ourModel((GLchar *)Config::modelPath.c_str(), 
 		(aiPostProcessSteps)(aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_JoinIdenticalVertices));
 	
-	clothPiece = new ClothPiece(3);
+	clothPiece = new SurfaceMeshObject(3);
 	clothPiece->import(ourModel.getMeshes()[0]);
 	clothPiece->useVTexCoord2DAsVPlanarCoord3f();
 	
@@ -71,7 +71,7 @@ void Simulator::init()
 
 	Model rigidBodyModel((GLchar *)Config::spherePath.c_str(),
 		(aiPostProcessSteps)(aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_JoinIdenticalVertices));
-	rigidBody = new ClothPiece(3);
+	rigidBody = new SurfaceMeshObject(3);
 	rigidBody->import(rigidBodyModel.getMeshes()[0]);
 	auto sph = new SceneRigidBody(ResourceManager::GetShader("rigid_body"),
 		rigidBody, viewer->getCamera());

@@ -1,7 +1,7 @@
 #ifndef BARAFF_REQUIRE
 #define BARAFF_REQUIRE
 
-#include "ClothPiece.h"
+#include "SurfaceMeshObject.h"
 
 #include <Eigen\Core>
 #include <Eigen\Dense>
@@ -11,7 +11,7 @@
 class BaraffPhysics
 {
 public:
-	BaraffPhysics(ClothPiece* clothPiece):
+	BaraffPhysics(SurfaceMeshObject* clothPiece):
 		clothPiece(clothPiece) 
 	{
 		initial();
@@ -43,7 +43,7 @@ public:
 	//}
 
 private:
-	ClothPiece * const clothPiece;
+	SurfaceMeshObject * const clothPiece;
 
 	typedef Eigen::Triplet<float> Tri_float;
 

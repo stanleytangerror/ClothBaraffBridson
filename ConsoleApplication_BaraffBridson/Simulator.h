@@ -22,8 +22,8 @@ public:
 
 private:
 
-	ClothPiece * clothPiece;
-	ClothPiece * rigidBody;
+	SurfaceMeshObject * clothPiece;
+	SurfaceMeshObject * rigidBody;
 	BaraffDynamics * clothDynamics;
 	EventManager * eventManager;
 	FOVControl * viewer;
