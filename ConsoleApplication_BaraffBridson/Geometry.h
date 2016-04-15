@@ -25,16 +25,24 @@ float const NEAR_SQUARE_DISTANCE = 1e-30f;
 template <typename Primitive, typename RefPrimitive>
 float squared_distance(Primitive const & p, RefPrimitive const & rp);
 
+/* WARNING: just for approximation
+ * return distance between point and triangle's support plane,
+ * precise method may go to http://www.geometrictools.com/Documentation/DistancePoint3Triangle3.pdf
+ */
 template <>
 inline float squared_distance<Point3f, Triangle3f>(Point3f const & point, Triangle3f const & triangle)
 {
-	Point3f po[1] = { point };
-	Point3f tri[3] = { triangle.vertex(0), triangle.vertex(1), triangle.vertex(2) };
-	Polytope_distance pd(po, po + 1, tri, tri + 8);
-	assert(pd.is_valid());
-	double sqdis = CGAL::to_double(pd.squared_distance_numerator()) /
-		CGAL::to_double(pd.squared_distance_denominator());
-	return float(sqdis);
+	//Point3f po[1] = { point };
+	//Point3f tri[3] = { triangle.vertex(0), triangle.vertex(1), triangle.vertex(2) };
+	//Polytope_distance pd(po, po + 1, tri, tri + 3);
+	//assert(pd.is_valid());
+	//double sqdis = CGAL::to_double(pd.squared_distance_numerator()) /
+	//	CGAL::to_double(pd.squared_distance_denominator());
+	//return float(sqdis);
+
+	Plane3f plane = triangle.supporting_plane();
+	return squared_distance(point, plane);
+
 }
 
 template <>

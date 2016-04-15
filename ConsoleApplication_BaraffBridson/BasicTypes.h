@@ -52,5 +52,6 @@ typedef SurfaceMesh3f::Face_iterator Faceiter;
 
 float const POSITIVE_MAX_FLOAT = (std::numeric_limits<float>::max)();
 float const NEGATIVE_MAX_FLOAT = -POSITIVE_MAX_FLOAT;
+float const DISTANCE_NEAR_THRESHOLD = 1e-20;
 
 #endif

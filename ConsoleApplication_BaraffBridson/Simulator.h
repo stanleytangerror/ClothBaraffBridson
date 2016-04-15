@@ -25,14 +25,14 @@ private:
 	SurfaceMeshObject * clothPiece;
 	SurfaceMeshObject * rigidBody;
 	BaraffDynamics * clothDynamics;
+	OtaduyContact * contactHandler;
 	EventManager * eventManager;
 	FOVControl * viewer;
 	Clock * clock;
 
 	GLuint loopCount;
 
-	Scene::Index clothPieceBoxSceneIndex;
-	Scene::Index rigidBodyBoxSceneIndex;
+	Scene::Index contactSceneIndex;
 
 	void updateData();
 

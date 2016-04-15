@@ -35,9 +35,10 @@ void Simulator::init()
 	ResourceManager::LoadShader("rigid_body", "E:\\Microsoft Visual Studio 2015\\Workspace\\ConsoleApplication_BaraffBridson\\ConsoleApplication_BaraffBridson\\rigid_body.vs", "E:\\Microsoft Visual Studio 2015\\Workspace\\ConsoleApplication_BaraffBridson\\ConsoleApplication_BaraffBridson\\rigid_body.frag");
 	ResourceManager::LoadShader("cloth_piece_normal", "E:\\Microsoft Visual Studio 2015\\Workspace\\ConsoleApplication_BaraffBridson\\ConsoleApplication_BaraffBridson\\cloth_piece_debug.vs", "E:\\Microsoft Visual Studio 2015\\Workspace\\ConsoleApplication_BaraffBridson\\ConsoleApplication_BaraffBridson\\cloth_piece_debug.frag", "E:\\Microsoft Visual Studio 2015\\Workspace\\ConsoleApplication_BaraffBridson\\ConsoleApplication_BaraffBridson\\cloth_piece_debug.gs");
 	ResourceManager::LoadShader("bounding_box", "E:\\Microsoft Visual Studio 2015\\Workspace\\ConsoleApplication_BaraffBridson\\ConsoleApplication_BaraffBridson\\bounding_box.vs", "E:\\Microsoft Visual Studio 2015\\Workspace\\ConsoleApplication_BaraffBridson\\ConsoleApplication_BaraffBridson\\bounding_box.frag", "E:\\Microsoft Visual Studio 2015\\Workspace\\ConsoleApplication_BaraffBridson\\ConsoleApplication_BaraffBridson\\bounding_box.gs");
+	ResourceManager::LoadShader("contact_point", "E:\\Microsoft Visual Studio 2015\\Workspace\\ConsoleApplication_BaraffBridson\\ConsoleApplication_BaraffBridson\\contact_point.vs", "E:\\Microsoft Visual Studio 2015\\Workspace\\ConsoleApplication_BaraffBridson\\ConsoleApplication_BaraffBridson\\contact_point.frag");
 	//ResourceManager::LoadShader("model_loading", ".\\model_loading.vs", ".\\model_loading.frag");
 	//ResourceManager::LoadShader("background_cube", ".\\background_cube.vs", ".\\background_cube.frag");
-
+	
 	// ----------- load cube map ----------------
 	std::vector<const GLchar*> faces;
 	faces.push_back("E:\\Computer Graphics\\Materials\\CubeMaps\\background01\\side.jpg");
@@ -66,8 +67,8 @@ void Simulator::init()
 		ResourceManager::GetShader("cloth_piece_normal"),
 		clothPiece, viewer->getCamera());
 	Scene::add_component(clo);
-	clothPieceBoxSceneIndex = Scene::add_component(new SceneAABBox(ResourceManager::GetShader("bounding_box"),
-		viewer->getCamera()));
+	//clothPieceBoxSceneIndex = Scene::add_component(new SceneAABBox(ResourceManager::GetShader("bounding_box"),
+	//	viewer->getCamera()));
 
 	Model rigidBodyModel((GLchar *)Config::spherePath.c_str(),
 		(aiPostProcessSteps)(aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_JoinIdenticalVertices));
@@ -76,7 +77,9 @@ void Simulator::init()
 	auto sph = new SceneRigidBody(ResourceManager::GetShader("rigid_body"),
 		rigidBody, viewer->getCamera());
 	Scene::add_component(sph);
-	rigidBodyBoxSceneIndex = Scene::add_component(new SceneAABBox(ResourceManager::GetShader("bounding_box"),
+
+	contactSceneIndex = Scene::add_component(new SceneContact(
+		ResourceManager::GetShader("bounding_box"), ResourceManager::GetShader("contact_point"),
 		viewer->getCamera()));
 
 	Scene::load();
@@ -123,13 +126,11 @@ void Simulator::updateData()
 			
 #endif
 
-		std::cout << "create temp tree" << std::endl;
-		auto tempTree = new TriangleTree(clothPiece->getMesh());
-		(dynamic_cast<SceneAABBox *>(Scene::get_component(clothPieceBoxSceneIndex)))
-			->setTree(tempTree);
-		tempTree = new TriangleTree(rigidBody->getMesh());
-		(dynamic_cast<SceneAABBox *>(Scene::get_component(rigidBodyBoxSceneIndex)))
-			->setTree(tempTree);
+		contactHandler = new OtaduyContact(clothPiece, rigidBody);
+		contactHandler->pointTriangleDetection(0.1f);
+		(dynamic_cast<SceneContact *>(Scene::get_component(contactSceneIndex)))
+			->setContacts(contactHandler);
+
 }
 
 void Simulator::pauseEventHandle(bool const * const keyMask)

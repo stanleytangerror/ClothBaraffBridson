@@ -25,18 +25,33 @@ void TriangleTree::exportAABBoxPositions(GLfloat *& verticesBuffer, GLuint & poi
 std::list<std::pair<typename AABBTree<Triangle3f, Point3f>::Index, float> > *
 TriangleTree::pointTriangleContactDetection(Point3f const & point, GLfloat tolerance)
 {
-	return m_tree->contaceDetection(point, tolerance);
+	return m_tree->contactDetection(point, tolerance);
 }
 
-std::map<Veridx, OtaduyContact::Contact2Triangle *> *
-OtaduyContact::point2triangleDetection(GLfloat tolerance)
+void OtaduyContact::pointTriangleDetection(GLfloat tolerance)
 {
-	std::map<Veridx, OtaduyContact::Contact2Triangle *> * contacts_pointTriangle =
-		new std::map<Veridx, OtaduyContact::Contact2Triangle *>();
+	m_pointTriangeContact = new std::map<Veridx, OtaduyContact::Contact2Triangle *>();
 	auto mesh = m_clothPiece->getMesh();
 	for (Veridx vid : mesh->vertices())
 	{
-		(*contacts_pointTriangle)[vid] = m_triangleTree->pointTriangleContactDetection(mesh->point(vid), tolerance);
+		(*m_pointTriangeContact)[vid] = m_rigidBodyBoxTree->pointTriangleContactDetection(mesh->point(vid), tolerance);
 	}
-	return contacts_pointTriangle;
+}
+
+void OtaduyContact::exportContactPoints(GLfloat *& buffer, GLuint & size)
+{
+	size = 0;
+	buffer = new GLfloat[m_clothPiece->getVertexSize() * 3];
+	int pivot = 0;
+	for (auto contact : *m_pointTriangeContact)
+	{
+		auto colls = contact.second;
+		if (colls->empty())
+			continue;
+		size += 1;
+		auto p = m_clothPiece->getMesh()->point(contact.first);
+		buffer[pivot++] = p.x();
+		buffer[pivot++] = p.y();
+		buffer[pivot++] = p.z();
+	}
 }

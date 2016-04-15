@@ -214,5 +214,11 @@
     <None Include="ConsoleApplication_BaraffBridson\rigid_body.vs">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="ConsoleApplication_BaraffBridson\contact_point.frag">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="ConsoleApplication_BaraffBridson\contact_point.vs">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

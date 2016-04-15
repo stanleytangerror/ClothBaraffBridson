@@ -50,15 +50,24 @@ class OtaduyContact
 public:
 	typedef std::list<std::pair<typename AABBTree<Triangle3f, Point3f>::Index, float> > Contact2Triangle;
 	
-	OtaduyContact(SurfaceMeshObject * clothPiece):
-		m_clothPiece(clothPiece), m_triangleTree(new TriangleTree(clothPiece->getMesh()))
+	TriangleTree * m_clothPieceBoxTree;
+	TriangleTree * m_rigidBodyBoxTree;
+
+	explicit OtaduyContact(SurfaceMeshObject * clothPiece, SurfaceMeshObject * rigidBody):
+		m_clothPiece(clothPiece), m_rigidBody(rigidBody),
+		m_clothPieceBoxTree(new TriangleTree(clothPiece->getMesh())),
+		m_rigidBodyBoxTree(new TriangleTree(rigidBody->getMesh()))
 	{}
 
-	std::map<Veridx, Contact2Triangle *> * point2triangleDetection(GLfloat tolerance);
+	void pointTriangleDetection(GLfloat tolerance);
+
+	void exportContactPoints(GLfloat * & buffer, GLuint & size);
 
 private:
 	SurfaceMeshObject * const m_clothPiece;
-	TriangleTree * m_triangleTree;
+	SurfaceMeshObject * const m_rigidBody;
+	
+	std::map<Veridx, Contact2Triangle *> * m_pointTriangeContact;
 	
 };
 

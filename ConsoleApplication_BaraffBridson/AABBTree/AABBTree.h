@@ -138,7 +138,7 @@ public:
 	}
 
 	template <typename Obj>
-	std::list<std::pair<Index, float> > * contaceDetection(Obj const & obj, float tolerance);
+	std::list<std::pair<Index, float> > * contactDetection(Obj const & obj, float tolerance);
 
 private:
 	std::list<NodeType *> * tree;

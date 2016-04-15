@@ -172,6 +172,7 @@ protected:
 	GLuint meshVAO, meshVBO, meshVNormalBO, meshEBO, conditionVBO;
 
 	/* cloth piece normal */
+	GLboolean drawNormal = false;
 	GLuint debugVAO, debugVBO, debugNormalVBO;
 	GLfloat * fBarycentreBuffer = nullptr;
 	GLfloat * fNormalBuffer = nullptr;
@@ -222,15 +223,15 @@ protected:
 
 };
 
-class TriangleTree;
+class OtaduyContact;
 
-class SceneAABBox : public SceneComponent
+class SceneContact: public SceneComponent
 {
 public:
 
-	SceneAABBox(Shader * shader, Camera * camera) :
+	SceneContact(Shader * boxShader, Shader * pointShader, Camera * camera) :
 		SceneComponent(), camera(camera),
-		shader(shader), tree(nullptr)
+		boxShader(boxShader), pointShader(pointShader), contacts(nullptr)
 	{}
 
 	virtual void draw() const;
@@ -239,31 +240,42 @@ public:
 
 	virtual void update();
 
-	virtual ~SceneAABBox() {}
+	virtual ~SceneContact() {}
 
-	void setTree(TriangleTree * tree)
+	void setContacts(OtaduyContact * contacts)
 	{
-		this->tree = tree;
+		this->contacts = contacts;
 	}
 
 private:
 
-	TriangleTree * tree;
+	OtaduyContact * contacts;
 
-	Shader * shader;
+	Shader * boxShader;
+	Shader * pointShader;
 
 	Camera * camera;
 	glm::mat4 projection;
 	glm::mat4 view;
 	glm::mat4 model;
 
-	GLuint vao, vbo;
-	GLfloat * boxVerticesBuffer;
+	GLboolean drawTrees = false;
+	GLuint treeVAO0, treeVBO0;
+	GLuint treeVAO1, treeVBO1;
+	GLuint pointVAO, pointVBO;
+	GLfloat * boxTreeVerticesBuffer0;
+	GLuint treeVerticesCount0;
+	GLfloat * boxTreeVerticesBuffer1;
+	GLuint treeVerticesCount1;
+	GLfloat * pointVerticesBuffer;
+	GLuint pointVerticesCount;
+
 	//[6] = {
 	//	0.2f, 0.2f, 0.2f, 
 	//	0.6f, 0.6f, 0.6f };
 	//GLfloat * boxVerticesBuffer;
-	GLuint pointSize;
+	//GLuint pointSize;
 
 };
+
 #endif
