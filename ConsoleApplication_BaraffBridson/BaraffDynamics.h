@@ -1,5 +1,5 @@
-#ifndef SIMULATE_H
-#define SIMULATE_H
+#ifndef BARAFF_DYNAMICS_H
+#define BARAFF_DYNAMICS_H
 
 #include "SurfaceMeshObject.h"
 #include "BaraffPhysics.h"

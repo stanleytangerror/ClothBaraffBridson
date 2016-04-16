@@ -127,6 +127,7 @@
     <ClInclude Include="ConsoleApplication_BaraffBridson\BaraffPhysics.h" />
     <ClInclude Include="consoleapplication_baraffbridson\BasicOperations.h" />
     <ClInclude Include="ConsoleApplication_BaraffBridson\BasicTypes.h" />
+    <ClInclude Include="ConsoleApplication_BaraffBridson\BenderDynamics.h" />
     <ClInclude Include="ConsoleApplication_BaraffBridson\BridsonCollision.h" />
     <ClInclude Include="ConsoleApplication_BaraffBridson\BridsonDynamic.h" />
     <ClInclude Include="consoleapplication_baraffbridson\Camera.h" />
