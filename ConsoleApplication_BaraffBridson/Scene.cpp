@@ -3,6 +3,7 @@
 #include "Screen.h"
 #include "Camera.h"
 #include "ResourceManager.h"
+#include "AABBTree\AABBTree.h"
 
 std::vector<SceneComponent *> Scene::render_list;
 
@@ -471,8 +472,8 @@ void SceneContact::update()
 
 	if (drawTrees)
 	{
-		contacts->m_clothPieceBoxTree->exportAABBoxPositions(boxTreeVerticesBuffer0, treeVerticesCount0);
-		contacts->m_rigidBodyBoxTree->exportAABBoxPositions(boxTreeVerticesBuffer1, treeVerticesCount1);
+		contacts->m_clothPieceFaceBoxTree->getTree()->exportAABBoxPositions(boxTreeVerticesBuffer0, treeVerticesCount0);
+		contacts->m_rigidBodyFaceBoxTree->getTree()->exportAABBoxPositions(boxTreeVerticesBuffer1, treeVerticesCount1);
 	}
 	contacts->exportContactPoints(pointVerticesBuffer, pointVerticesCount);
 }

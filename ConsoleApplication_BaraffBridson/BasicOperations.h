@@ -41,7 +41,15 @@ void shiftVertices(PolyArrayMesh::VertexHandle& vhd0, PolyArrayMesh::VertexHandl
 
 #ifdef CGAL_BASED
 
-inline Point3f & interpolate(Point3f const & a, Point3f const & b, float t)
+inline Eigen::Vector3f & displacement(Point3f const & dest, Point3f const & src)
+{
+	return Eigen::Vector3f(
+		dest.x() - src.x(),
+		dest.y() - src.y(),
+		dest.z() - src.z());
+}
+
+inline Point3f const & interpolate(Point3f const & a, Point3f const & b, float t)
 {
 	return Point3f(
 		a.x() * t + b.x() * (1.0f - t),

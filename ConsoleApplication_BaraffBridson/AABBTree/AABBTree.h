@@ -25,17 +25,20 @@ public:
 		m_center = interpolate(m_minCor, m_maxCor, 0.5f);
 	}
 
-	float squared_distance(AABBox const & rhs) const
-	{
-		if (intersection(rhs))
-			return 0.0f;
+	AABBox(AABBox<PointType> && box) noexcept :
+	m_minCor(std::move(box.m_minCor)), m_maxCor(std::move(box.m_maxCor)) {}
 
-		float delta_x = (std::max)((std::min)(rhs.m_maxCor.x() - this->m_minCor.x(), this->m_maxCor.x() - rhs.m_minCor.x()), 0.0f);
-		float delta_y = (std::max)((std::min)(rhs.m_maxCor.y() - this->m_minCor.y(), this->m_maxCor.y() - rhs.m_minCor.y()), 0.0f);
-		float delta_z = (std::max)((std::min)(rhs.m_maxCor.z() - this->m_minCor.z(), this->m_maxCor.z() - rhs.m_minCor.z()), 0.0f);
+	//float squared_distance(AABBox const & rhs) const
+	//{
+	//	if (intersection(rhs))
+	//		return 0.0f;
 
-		return delta_x * delta_x + delta_y * delta_y + delta_z * delta_z;
-	}
+	//	float delta_x = (std::max)((std::min)(rhs.m_maxCor.x() - this->m_minCor.x(), this->m_maxCor.x() - rhs.m_minCor.x()), 0.0f);
+	//	float delta_y = (std::max)((std::min)(rhs.m_maxCor.y() - this->m_minCor.y(), this->m_maxCor.y() - rhs.m_minCor.y()), 0.0f);
+	//	float delta_z = (std::max)((std::min)(rhs.m_maxCor.z() - this->m_minCor.z(), this->m_maxCor.z() - rhs.m_minCor.z()), 0.0f);
+
+	//	return delta_x * delta_x + delta_y * delta_y + delta_z * delta_z;
+	//}
 
 	template <typename Obj>
 	float squared_distance(Obj const & obj)
@@ -72,6 +75,19 @@ public:
 			);
 	}
 
+	friend AABBox<PointType> const & operator+(AABBox<PointType> const & lhs, PointType const & rhs)
+	{
+		return AABBox<PointType>(
+			PointType(
+			(std::min)(lhs.m_minCor.x(), rhs.x()),
+			(std::min)(lhs.m_minCor.y(), rhs.y()),
+			(std::min)(lhs.m_minCor.z(), rhs.z())),
+			PointType(
+			(std::max)(lhs.m_maxCor.x(), rhs.x()),
+			(std::max)(lhs.m_maxCor.y(), rhs.y()),
+			(std::max)(lhs.m_maxCor.z(), rhs.z())));
+	}
+
 	PointType const & minCor()
 	{
 		return m_minCor;
@@ -96,6 +112,11 @@ bool AABBox<Point3f>::intersection<Point3f>(Point3f const & point, float toleran
 template <> template <>
 float AABBox<Point3f>::squared_distance<Point3f>(Point3f const & point);
 
+template <typename PointType, typename Obj>
+AABBox<PointType> const & AABBoxOf(Obj const & obj);
+//{
+//	Obj::unimplemented;
+//}
 
 /* --------------- AABBTree class definition --------------- */
 
@@ -137,9 +158,33 @@ public:
 		return tree->size();
 	}
 
-	template <typename Obj>
-	std::list<std::pair<Index, float> > * contactDetection(Obj const & obj, float tolerance);
+	void exportAABBoxPositions(GLfloat * & verticesBuffer, GLuint & pointSize) const
+	{
+		pointSize = tree->size() * 2;
+		verticesBuffer = new GLfloat[pointSize * 3];
+		int pivot = 0;
+		for (auto iter = tree->begin(); iter != tree->end(); ++iter)
+		{
+			AABBox<Point3f> * box = (*iter)->first;
+			Point3f const p = box->minCor();
+			verticesBuffer[pivot++] = p.x();
+			verticesBuffer[pivot++] = p.y();
+			verticesBuffer[pivot++] = p.z();
+			Point3f const q = box->maxCor();
+			verticesBuffer[pivot++] = q.x();
+			verticesBuffer[pivot++] = q.y();
+			verticesBuffer[pivot++] = q.z();
+		}
+	}
 
+	template <typename Obj>
+	std::list<Index> * 
+	contactDetection(Obj const & obj, float tolerance);
+	//{
+	//	//std::cout << "WARNING: default contact detection calling" << std::endl;
+	//	return new std::list<Index>();
+	//}
+	
 private:
 	std::list<NodeType *> * tree;
 
@@ -194,4 +239,28 @@ struct FaceIter2Triangle3fAABBoxPair
 
 };
 
+struct EdgeIter2Segment3fAABBoxPair
+{
+	SurfaceMesh3f const * const m_mesh;
+	EdgeIter2Segment3fAABBoxPair(SurfaceMesh3f * mesh) : m_mesh(mesh) {}
+
+	AABBTree<Segment3f, Point3f>::NodeType * operator() (/*SurfaceMesh3f const * mesh, */Edgeiter const & iter) const
+	{
+		Edgeidx eid = *iter;
+		Point3f v0 = m_mesh->point(m_mesh->target(m_mesh->halfedge(eid, 0)));
+		Point3f v1 = m_mesh->point(m_mesh->target(m_mesh->halfedge(eid, 1)));
+		float maxx = (std::max)(v0.x(), v1.x());
+		float maxy = (std::max)(v0.y(), v1.y());
+		float maxz = (std::max)(v0.z(), v1.z());
+		float minx = (std::min)(v0.x(), v1.x());
+		float miny = (std::min)(v0.y(), v1.y());
+		float minz = (std::min)(v0.z(), v1.z());
+		auto box = new AABBox<Point3f>(Point3f(minx, miny, minz), Point3f(maxx, maxy, maxz));
+		auto seg = new Segment3f(v0, v1);
+		//std::cout << "box" << std::endl << box->minCor() << std::endl << box->maxCor() << std::endl;
+		//std::cout << "triangle" << std::endl << ps[0] << std::endl << ps[1] << std::endl << ps[2] << std::endl;
+		return new AABBTree<Segment3f, Point3f>::NodeType(box, seg);
+	}
+
+};
 #endif

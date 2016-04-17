@@ -87,6 +87,9 @@
     <ClCompile Include="consoleapplication_baraffbridson\SurfaceMeshObject.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ConsoleApplication_BaraffBridson\Constraints.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="consoleapplication_baraffbridson\EigenMatScalar.h">
@@ -171,6 +174,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ConsoleApplication_BaraffBridson\BenderDynamics.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ConsoleApplication_BaraffBridson\Constraints.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

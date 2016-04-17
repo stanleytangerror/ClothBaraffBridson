@@ -1,32 +1,30 @@
 #include "OtaduyContact.h"
+#include "AABBTree\AABBTree.h"
 
 #include <map>
 
-void TriangleTree::exportAABBoxPositions(GLfloat *& verticesBuffer, GLuint & pointSize)
-{
-	pointSize = m_tree->size() * 2;
-	verticesBuffer = new GLfloat[pointSize * 3];
-	std::list<AABBTree<Triangle3f, Point3f>::NodeType *> const * boxes = m_tree->getBoxes();
-	int pivot = 0;
-	for (auto iter = boxes->begin(); iter != boxes->end(); ++iter)
-	{
-		AABBox<Point3f> * box = (*iter)->first;
-		Point3f const p = box->minCor();
-		verticesBuffer[pivot++] = p.x();
-		verticesBuffer[pivot++] = p.y();
-		verticesBuffer[pivot++] = p.z();
-		Point3f const q = box->maxCor();
-		verticesBuffer[pivot++] = q.x();
-		verticesBuffer[pivot++] = q.y();
-		verticesBuffer[pivot++] = q.z();
-	}
-}
+/* -------------- TriangleTree ------------- */
 
-std::list<std::pair<typename AABBTree<Triangle3f, Point3f>::Index, float> > *
+//template<> template<>
+//std::list<AABBTree<Triangle3f, Point3f>::Index> *
+//AABBTree<Triangle3f, Point3f>::contactDetection<Point3f>(Point3f const & point, float tolerance);
+
+std::list<typename AABBTree<Triangle3f, Point3f>::Index> *
 TriangleTree::pointTriangleContactDetection(Point3f const & point, GLfloat tolerance)
 {
 	return m_tree->contactDetection(point, tolerance);
 }
+
+/* -------------- EdgeTree ------------- */
+
+std::list<typename AABBTree<Segment3f, Point3f>::Index> *
+EdgeTree::edgeEdgeContactDetection(Segment3f const & segment, GLfloat tolerance)
+{
+	return m_tree->contactDetection(segment, tolerance);
+	//return nullptr;
+}
+
+/* -------------- contact ------------- */
 
 void OtaduyContact::pointTriangleDetection(GLfloat tolerance)
 {
@@ -34,8 +32,13 @@ void OtaduyContact::pointTriangleDetection(GLfloat tolerance)
 	auto mesh = m_clothPiece->getMesh();
 	for (Veridx vid : mesh->vertices())
 	{
-		(*m_pointTriangeContact)[vid] = m_rigidBodyBoxTree->pointTriangleContactDetection(mesh->point(vid), tolerance);
+		(*m_pointTriangeContact)[vid] = m_rigidBodyFaceBoxTree->pointTriangleContactDetection(mesh->point(vid), tolerance);
 	}
+}
+
+void OtaduyContact::generatePointTriangleConstraints()
+{
+
 }
 
 void OtaduyContact::exportContactPoints(GLfloat *& buffer, GLuint & size)

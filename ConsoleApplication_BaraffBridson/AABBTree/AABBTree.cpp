@@ -30,15 +30,23 @@ float AABBox<Point3f>::squared_distance<Point3f>(Point3f const & point)
 	return delta_x * delta_x + delta_y * delta_y + delta_z * delta_z;
 }
 
+template <>
+AABBox<Point3f> const & AABBoxOf<Point3f, Segment3f>(Segment3f const & segment)
+{
+	AABBox<Point3f> box(segment.start(), segment.start());
+	return box + segment.end();
+}
+
+
 /* --------- AABBTree specialization implementations ------------ */
 
 template<> template<>
-std::list<std::pair<typename AABBTree<Triangle3f, Point3f>::Index, float> > *
-AABBTree<Triangle3f, Point3f>::contactDetection(Point3f const & point, float tolerance)
+std::list<typename AABBTree<Triangle3f, Point3f>::Index> *
+AABBTree<Triangle3f, Point3f>::contactDetection<Point3f>(Point3f const & point, float tolerance)
 {
-	typedef std::pair<typename AABBTree<Triangle3f, Point3f>::Index, float> DisItem;
-	std::list<DisItem> * result = new std::list<DisItem>();
-	Index idx = 0;
+	typedef AABBTree<Triangle3f, Point3f>::Index Idx;
+	std::list<Idx> * result = new std::list<Idx>();
+	Idx idx = 0;
 	for (auto iter = tree->begin(); iter != tree->end(); ++iter, ++idx)
 	{
 		auto pairPtr = (*iter);
@@ -50,10 +58,36 @@ AABBTree<Triangle3f, Point3f>::contactDetection(Point3f const & point, float tol
 			continue;
 		//std::cout << "box " << std::endl
 		//	<< box->minCor() << std::endl << box->maxCor() << std::endl;
-		sqdis = squared_distance(point, *tri);
-		if (sqdis >= tolerance)
+		if (!intersection(point, *tri, tolerance))
 			continue;
-		result->push_back(DisItem(idx, sqdis));
+		result->push_back(idx);
 	}
 	return result;
+}
+
+template<> template<>
+std::list<typename AABBTree<Segment3f, Point3f>::Index> *
+AABBTree<Segment3f, Point3f>::contactDetection<Segment3f>(Segment3f const & segment, float tolerance)
+{
+	typedef AABBTree<Segment3f, Point3f>::Index Idx;
+	std::list<Idx> * result = new std::list<Idx>();
+	Idx idx = 0;
+	for (auto iter = tree->begin(); iter != tree->end(); ++iter, ++idx)
+	{
+		auto pairPtr = (*iter);
+		AABBox<Point3f> * box = pairPtr->first;
+		Segment3f const * seg = pairPtr->second;
+		float sqdis = 0.0f;
+		// should near the bounding box
+		if (!box->intersection(AABBoxOf<Point3f, Segment3f>(*seg)))
+			continue;
+		//std::cout << "box " << std::endl
+		//	<< box->minCor() << std::endl << box->maxCor() << std::endl;
+		sqdis = squared_distance(*seg, segment);
+		if (sqdis > tolerance)
+			continue;
+		result->push_back(idx);
+	}
+	return result;
+	//return nullptr;
 }
