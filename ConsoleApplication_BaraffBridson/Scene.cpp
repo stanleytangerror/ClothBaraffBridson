@@ -212,9 +212,6 @@ const
 			glEnableVertexAttribArray(1);
 			glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-			//glBindVertexArray(0);
-
-			//glBindVertexArray(debugVAO);
 			glDrawArrays(GL_POINTS, 0, fSize);
 		}
 		glBindVertexArray(0);
@@ -435,6 +432,31 @@ const
 		delete[] pointVerticesBuffer;
 	}
 
+	if (edgeVerticesCount > 0)
+	{
+		pointShader->Use();
+
+		glPointSize(3.0f);
+
+		glUniformMatrix4fv(glGetUniformLocation(pointShader->Program, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+		glUniformMatrix4fv(glGetUniformLocation(pointShader->Program, "view"), 1, GL_FALSE, glm::value_ptr(view));
+		glUniformMatrix4fv(glGetUniformLocation(pointShader->Program, "model"), 1, GL_FALSE, glm::value_ptr(model));
+
+		glBindVertexArray(edgeVAO);
+		{
+			glBindBuffer(GL_ARRAY_BUFFER, edgeVBO);
+			glBufferData(GL_ARRAY_BUFFER, edgeVerticesCount * 3 * sizeof(GLfloat), edgeVerticesBuffer, GL_STATIC_DRAW);
+			glEnableVertexAttribArray(0);
+			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (GLvoid *)0);
+			glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+			glDrawArrays(GL_LINES, 0, edgeVerticesCount);
+		}
+		glBindVertexArray(0);
+
+		delete[] edgeVerticesBuffer;
+	}
+
 }
 
 void SceneContact::load()
@@ -457,6 +479,10 @@ void SceneContact::load()
 	std::cout << "aabbox vao " << pointVAO << std::endl;
 	glGenBuffers(1, &pointVBO);
 	std::cout << "aabbox vbo " << pointVBO << std::endl;
+	glGenVertexArrays(1, &edgeVAO);
+	std::cout << "aabbox vao " << edgeVAO << std::endl;
+	glGenBuffers(1, &edgeVBO);
+	std::cout << "aabbox vbo " << edgeVBO << std::endl;
 
 }
 
@@ -476,4 +502,5 @@ void SceneContact::update()
 		contacts->m_rigidBodyFaceBoxTree->getTree()->exportAABBoxPositions(boxTreeVerticesBuffer1, treeVerticesCount1);
 	}
 	contacts->exportContactPoints(pointVerticesBuffer, pointVerticesCount);
+	contacts->exportContactEdges(edgeVerticesBuffer, edgeVerticesCount);
 }

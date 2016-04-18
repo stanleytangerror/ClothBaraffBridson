@@ -128,6 +128,7 @@ void Simulator::updateData()
 
 		contactHandler = new OtaduyContact(clothPiece, rigidBody);
 		contactHandler->pointTriangleDetection(0.1f);
+		contactHandler->edgeEdgeDetection(0.1f);
 		(dynamic_cast<SceneContact *>(Scene::get_component(contactSceneIndex)))
 			->setContacts(contactHandler);
 
@@ -144,6 +145,3 @@ void Simulator::pauseEventHandle(bool const * const keyMask)
 		clock->resume();
 	}
 }
-
-
-

@@ -79,15 +79,17 @@ AABBTree<Segment3f, Point3f>::contactDetection<Segment3f>(Segment3f const & segm
 		Segment3f const * seg = pairPtr->second;
 		float sqdis = 0.0f;
 		// should near the bounding box
-		if (!box->intersection(AABBoxOf<Point3f, Segment3f>(*seg)))
+		if (!box->intersection(AABBoxOf<Point3f, Segment3f>(segment)))
 			continue;
 		//std::cout << "box " << std::endl
 		//	<< box->minCor() << std::endl << box->maxCor() << std::endl;
-		sqdis = squared_distance(*seg, segment);
-		if (sqdis > tolerance)
+
+		//sqdis = squared_distance(*seg, segment);
+		//if (sqdis > tolerance)
+		//	continue;
+		if (!intersection(*seg, segment, tolerance))
 			continue;
 		result->push_back(idx);
 	}
 	return result;
-	//return nullptr;
 }

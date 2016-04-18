@@ -260,15 +260,22 @@ private:
 	glm::mat4 model;
 
 	GLboolean drawTrees = false;
+	
 	GLuint treeVAO0, treeVBO0;
 	GLuint treeVAO1, treeVBO1;
-	GLuint pointVAO, pointVBO;
+
 	GLfloat * boxTreeVerticesBuffer0;
 	GLuint treeVerticesCount0;
 	GLfloat * boxTreeVerticesBuffer1;
 	GLuint treeVerticesCount1;
+
+	GLuint pointVAO, pointVBO;
+	GLuint edgeVAO, edgeVBO;
+
 	GLfloat * pointVerticesBuffer;
 	GLuint pointVerticesCount;
+	GLfloat * edgeVerticesBuffer;
+	GLuint edgeVerticesCount;
 
 	//[6] = {
 	//	0.2f, 0.2f, 0.2f, 

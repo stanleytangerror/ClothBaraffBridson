@@ -136,4 +136,40 @@ bool intersection<Point3f, Triangle3f>(Point3f const & point, Triangle3f const &
 	}
 }
 
+template <>
+bool intersection<Segment3f, Segment3f>(Segment3f const & seg1, Segment3f const & seg2, float tolerance)
+{
+	Point3f v1 = seg1.start();
+	Point3f v2 = seg1.end();
+	Point3f v3 = seg2.start();
+	Point3f v4 = seg2.end();
+	Eigen::Vector3f x21 = displacement(v2, v1);
+	Eigen::Vector3f x31 = displacement(v3, v1);
+	Eigen::Vector3f x43 = displacement(v4, v3);
+
+	// parallel
+	if (x21.cross(x43).squaredNorm() < DISTANCE_OVERLAP_SQUARED_THRESHOLD)
+	{
+		return (intersection(AABBoxOf<Point3f, Segment3f>(seg1), 
+			AABBoxOf<Point3f, Segment3f>(seg2), tolerance)) 
+			? true : false;
+	}
+	else
+	{
+		float x21tx21 = x21.squaredNorm();
+		float x21tx43 = x21.transpose() * x43;
+		float x43tx43 = x43.squaredNorm();
+
+		Eigen::Matrix2f A;
+		A << x21tx21, -x21tx43,
+			-x21tx43, x43tx43;
+		Eigen::Vector2f b;
+		b << x21.transpose() * x31, -x43.transpose() * x31;
+		Eigen::Vector2f x = A.householderQr().solve(b);
+		if (x[0] < 0.0f || x[0] > 1.0f || x[1] < 0.0f || x[1] > 1.0f)
+			return false;
+		return true;
+	}
+}
+
 #endif

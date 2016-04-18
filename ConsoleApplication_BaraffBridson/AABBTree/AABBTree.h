@@ -114,6 +114,9 @@ float AABBox<Point3f>::squared_distance<Point3f>(Point3f const & point);
 
 template <typename PointType, typename Obj>
 AABBox<PointType> const & AABBoxOf(Obj const & obj);
+
+template <>
+AABBox<Point3f> const & AABBoxOf<Point3f, Segment3f>(Segment3f const & segment);
 //{
 //	Obj::unimplemented;
 //}
@@ -247,8 +250,8 @@ struct EdgeIter2Segment3fAABBoxPair
 	AABBTree<Segment3f, Point3f>::NodeType * operator() (/*SurfaceMesh3f const * mesh, */Edgeiter const & iter) const
 	{
 		Edgeidx eid = *iter;
-		Point3f v0 = m_mesh->point(m_mesh->target(m_mesh->halfedge(eid, 0)));
-		Point3f v1 = m_mesh->point(m_mesh->target(m_mesh->halfedge(eid, 1)));
+		Point3f v0 = m_mesh->point(m_mesh->vertex(eid, 0));
+		Point3f v1 = m_mesh->point(m_mesh->vertex(eid, 1));
 		float maxx = (std::max)(v0.x(), v1.x());
 		float maxy = (std::max)(v0.y(), v1.y());
 		float maxz = (std::max)(v0.z(), v1.z());

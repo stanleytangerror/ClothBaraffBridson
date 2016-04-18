@@ -36,6 +36,18 @@ void OtaduyContact::pointTriangleDetection(GLfloat tolerance)
 	}
 }
 
+void OtaduyContact::edgeEdgeDetection(GLfloat tolerance)
+{
+	m_edgeEdgeContact = new std::map<Edgeidx, OtaduyContact::Contact2Edge *>();
+	auto mesh = m_clothPiece->getMesh();
+	for (Edgeidx eid : mesh->edges())
+	{
+		Segment3f seg(mesh->point(mesh->vertex(eid, 0)), mesh->point(mesh->vertex(eid, 1)));
+		(*m_edgeEdgeContact)[eid] = m_rigidBodyEdgeBoxTree->edgeEdgeContactDetection(seg, tolerance);
+	}
+}
+
+
 void OtaduyContact::generatePointTriangleConstraints()
 {
 
@@ -53,6 +65,29 @@ void OtaduyContact::exportContactPoints(GLfloat *& buffer, GLuint & size)
 			continue;
 		size += 1;
 		auto p = m_clothPiece->getMesh()->point(contact.first);
+		buffer[pivot++] = p.x();
+		buffer[pivot++] = p.y();
+		buffer[pivot++] = p.z();
+	}
+}
+
+void OtaduyContact::exportContactEdges(GLfloat *& buffer, GLuint & size)
+{
+	size = 0;
+	buffer = new GLfloat[m_clothPiece->getEdgeSize() * 2 * 3];
+	int pivot = 0;
+	auto mesh = m_clothPiece->getMesh();
+	for (auto contact : *m_edgeEdgeContact)
+	{
+		auto colls = contact.second;
+		if (colls->empty())
+			continue;
+		size += 2;
+		auto p = mesh->point(mesh->vertex(contact.first, 0));
+		buffer[pivot++] = p.x();
+		buffer[pivot++] = p.y();
+		buffer[pivot++] = p.z();
+		p = mesh->point(mesh->vertex(contact.first, 1));
 		buffer[pivot++] = p.x();
 		buffer[pivot++] = p.y();
 		buffer[pivot++] = p.z();
