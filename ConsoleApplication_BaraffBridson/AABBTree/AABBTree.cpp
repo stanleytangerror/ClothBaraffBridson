@@ -41,11 +41,13 @@ AABBox<Point3f> const & AABBoxOf<Point3f, Segment3f>(Segment3f const & segment)
 /* --------- AABBTree specialization implementations ------------ */
 
 template<> template<>
-std::list<typename AABBTree<Triangle3f, Point3f>::Index> *
-AABBTree<Triangle3f, Point3f>::contactDetection<Point3f>(Point3f const & point, float tolerance)
+std::list<std::pair<typename AABBTree<Triangle3f, Point3f>::Index, Eigen::Vector3f> * > *
+AABBTree<Triangle3f, Point3f>::contactDetection<Point3f, Eigen::Vector3f>
+(Point3f const & point, float tolerance)
 {
 	typedef AABBTree<Triangle3f, Point3f>::Index Idx;
-	std::list<Idx> * result = new std::list<Idx>();
+	typedef std::pair<Idx, Eigen::Vector3f> Pair;
+	std::list< Pair* > * result = new std::list<Pair* >();
 	Idx idx = 0;
 	for (auto iter = tree->begin(); iter != tree->end(); ++iter, ++idx)
 	{
@@ -58,19 +60,22 @@ AABBTree<Triangle3f, Point3f>::contactDetection<Point3f>(Point3f const & point, 
 			continue;
 		//std::cout << "box " << std::endl
 		//	<< box->minCor() << std::endl << box->maxCor() << std::endl;
-		if (!intersection(point, *tri, tolerance))
+		Eigen::Vector3f coord;
+		if (!intersection(point, *tri, tolerance, coord))
 			continue;
-		result->push_back(idx);
+		result->push_back(new Pair(idx, coord));
 	}
 	return result;
 }
 
 template<> template<>
-std::list<typename AABBTree<Segment3f, Point3f>::Index> *
-AABBTree<Segment3f, Point3f>::contactDetection<Segment3f>(Segment3f const & segment, float tolerance)
+std::list<std::pair<typename AABBTree<Segment3f, Point3f>::Index, Eigen::Vector2f> * > *
+AABBTree<Segment3f, Point3f>::contactDetection<Segment3f, Eigen::Vector2f>
+(Segment3f const & segment, float tolerance)
 {
 	typedef AABBTree<Segment3f, Point3f>::Index Idx;
-	std::list<Idx> * result = new std::list<Idx>();
+	typedef std::pair<Idx, Eigen::Vector2f> Pair;
+	std::list<Pair *> * result = new std::list<Pair *>();
 	Idx idx = 0;
 	for (auto iter = tree->begin(); iter != tree->end(); ++iter, ++idx)
 	{
@@ -87,9 +92,10 @@ AABBTree<Segment3f, Point3f>::contactDetection<Segment3f>(Segment3f const & segm
 		//sqdis = squared_distance(*seg, segment);
 		//if (sqdis > tolerance)
 		//	continue;
-		if (!intersection(*seg, segment, tolerance))
+		Eigen::Vector2f coord;
+		if (!intersection(*seg, segment, tolerance, coord))
 			continue;
-		result->push_back(idx);
+		result->push_back(new Pair(idx, coord));
 	}
 	return result;
 }

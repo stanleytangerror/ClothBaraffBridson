@@ -108,6 +108,8 @@ public:
 	const std::string pname_texCoords = "v:texture_coordinates";
 	const std::string pname_vertexPlanarCoords = "v:vertex_planar_coordinates";
 	const std::string pname_vertexNormals = "v:vertex_normals";
+	const std::string pname_vertexLastPositions = "v:vertex_last_positions";
+	const std::string pname_vertexPredictPositions = "v:vertex_predict_positions";
 	const std::string pname_faceNormals = "v:face_normals";
 
 	/* -------- exporters for drawing ---------- */
@@ -118,8 +120,20 @@ public:
 	void exportFaceNorm3fBuffer(
 		GLfloat* & fBarycenterBuffer, GLfloat* & fNormalBuffer, GLuint & faceSize) const;
 
-	/* -------- set planar coordinates --------- */
+	/* -------- set vertices' properties --------- */
 	bool useVTexCoord2DAsVPlanarCoord3f();
+
+	void addPositionsProperty()
+	{
+		SurfaceMesh3f::Property_map<Veridx, Point3f> vprop_handle =
+			PolyMesh->add_property_map<Veridx, Point3f>(pname_vertexLastPositions).first;
+		for (Veridx vhd : PolyMesh->vertices())
+			vprop_handle[vhd] = PolyMesh->point(vhd);
+		vprop_handle =
+			PolyMesh->add_property_map<Veridx, Point3f>(pname_vertexPredictPositions).first;
+		for (Veridx vhd : PolyMesh->vertices())
+			vprop_handle[vhd] = PolyMesh->point(vhd);
+	}
 
 	/* -------- getters and setters --------- */
 	Eigen::VectorXf getPositions() const;

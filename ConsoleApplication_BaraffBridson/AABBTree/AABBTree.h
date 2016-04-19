@@ -180,8 +180,8 @@ public:
 		}
 	}
 
-	template <typename Obj>
-	std::list<Index> * 
+	template <typename Obj, typename Foot>
+	std::list<std::pair<Index, Foot> * > *
 	contactDetection(Obj const & obj, float tolerance);
 	//{
 	//	//std::cout << "WARNING: default contact detection calling" << std::endl;

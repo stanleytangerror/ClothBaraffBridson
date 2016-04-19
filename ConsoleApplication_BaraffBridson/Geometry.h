@@ -71,39 +71,40 @@ inline float squared_distance<Point3f, Point3f>(Point3f const & point, Point3f c
 }
 
 /* ---------------- intersection -------------------- */
-template <typename Primitive, typename RefPrimitive>
-bool intersection(Primitive const & p, RefPrimitive const & rp, float tolerance) 
+template <typename Primitive, typename RefPrimitive, typename Foot>
+bool intersection(Primitive const & p, RefPrimitive const & rp, float tolerance, Foot & result)
 {
 	return false;
 }
 
 template <>
-bool intersection<Point3f, Triangle3f>(Point3f const & point, Triangle3f const & triangle, float tolerance)
+bool intersection<Point3f, Triangle3f, Eigen::Vector3f>(
+	Point3f const & point, Triangle3f const & triangle, float tolerance, 
+	Eigen::Vector3f & baryceterCoord)
 {
 	Point3f const & v1 = triangle.vertex(0);
 	Point3f const & v2 = triangle.vertex(1);
 	Point3f const & v3 = triangle.vertex(2);
-	bool d12 = squared_distance(v1, v2) < DISTANCE_OVERLAP_SQUARED_THRESHOLD;
-	bool d23 = squared_distance(v2, v3) < DISTANCE_OVERLAP_SQUARED_THRESHOLD;
-	bool d31 = squared_distance(v3, v1) < DISTANCE_OVERLAP_SQUARED_THRESHOLD;
-	// point
-	if (d12 && d23 && d31)
-	{
-		return (squared_distance(point, v1) < tolerance) ? true : false;
-	}
-	// segment
-	else if (d12 || d23 || d31)
-	{
-		if (d12)
-			return (squared_distance(point, new Segment3f(v2, v3)) < tolerance) ? true : false;
-		else if (d23)
-			return (squared_distance(point, new Segment3f(v3, v1)) < tolerance) ? true : false;
-		else
-			return (squared_distance(point, new Segment3f(v1, v2)) < tolerance) ? true : false;
-
-	}
-	// triangle
-	else
+	//bool d12 = squared_distance(v1, v2) < DISTANCE_OVERLAP_SQUARED_THRESHOLD;
+	//bool d23 = squared_distance(v2, v3) < DISTANCE_OVERLAP_SQUARED_THRESHOLD;
+	//bool d31 = squared_distance(v3, v1) < DISTANCE_OVERLAP_SQUARED_THRESHOLD;
+	//// point
+	//if (d12 && d23 && d31)
+	//{
+	//	return (squared_distance(point, v1) < tolerance) ? true : false;
+	//}
+	//// segment
+	//else if (d12 || d23 || d31)
+	//{
+	//	if (d12)
+	//		return (squared_distance(point, new Segment3f(v2, v3)) < tolerance) ? true : false;
+	//	else if (d23)
+	//		return (squared_distance(point, new Segment3f(v3, v1)) < tolerance) ? true : false;
+	//	else
+	//		return (squared_distance(point, new Segment3f(v1, v2)) < tolerance) ? true : false;
+	//}
+	//// triangle
+	//else
 	{
 		Plane3f plane = triangle.supporting_plane();
 		float sqdis = squared_distance(point, plane);
@@ -130,6 +131,7 @@ bool intersection<Point3f, Triangle3f>(Point3f const & point, Triangle3f const &
 			localCoord[1] > -tolerance && localCoord[1] < 1.0f + tolerance &&
 			localCoord[2] > -tolerance && localCoord[2] < 1.0f + tolerance)
 		{
+			baryceterCoord << localCoord[0], localCoord[1], localCoord[2];
 			return true;
 		}
 		return false;
@@ -137,7 +139,9 @@ bool intersection<Point3f, Triangle3f>(Point3f const & point, Triangle3f const &
 }
 
 template <>
-bool intersection<Segment3f, Segment3f>(Segment3f const & seg1, Segment3f const & seg2, float tolerance)
+bool intersection<Segment3f, Segment3f, Eigen::Vector2f>(
+	Segment3f const & seg1, Segment3f const & seg2, float tolerance,
+	Eigen::Vector2f & barycenterCoord)
 {
 	Point3f v1 = seg1.start();
 	Point3f v2 = seg1.end();
@@ -150,8 +154,18 @@ bool intersection<Segment3f, Segment3f>(Segment3f const & seg1, Segment3f const 
 	// parallel
 	if (x21.cross(x43).squaredNorm() < DISTANCE_OVERLAP_SQUARED_THRESHOLD)
 	{
-		return (intersection(AABBoxOf<Point3f, Segment3f>(seg1), 
-			AABBoxOf<Point3f, Segment3f>(seg2), tolerance)) 
+		/* cloest points on two segments x1->x2, x3->x4 should overlap,
+		 * select the point as the length weighted middle point of x1.5 and x3.5
+		 */
+		float sqLen1 = seg1.squared_length();
+		float sqLen2 = seg2.squared_length();
+		Point3f seg1middle = interpolate(v1, v2, 0.5f);
+		Point3f seg2middle = interpolate(v3, v4, 0.5f);
+		Point3f foot = interpolate(seg1middle, seg2middle, sqLen1 / (sqLen1 + sqLen2));
+		barycenterCoord << (std::sqrt)(squared_distance(v1, foot) / sqLen1),
+			(std::sqrt)(squared_distance(v3, foot) / sqLen2);
+		return (AABBoxOf<Point3f, Segment3f>(seg1).intersection(
+			AABBoxOf<Point3f, Segment3f>(seg2))) 
 			? true : false;
 	}
 	else
@@ -168,6 +182,7 @@ bool intersection<Segment3f, Segment3f>(Segment3f const & seg1, Segment3f const 
 		Eigen::Vector2f x = A.householderQr().solve(b);
 		if (x[0] < 0.0f || x[0] > 1.0f || x[1] < 0.0f || x[1] > 1.0f)
 			return false;
+		barycenterCoord << x[0], x[1];
 		return true;
 	}
 }

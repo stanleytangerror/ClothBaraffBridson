@@ -9,18 +9,18 @@
 //std::list<AABBTree<Triangle3f, Point3f>::Index> *
 //AABBTree<Triangle3f, Point3f>::contactDetection<Point3f>(Point3f const & point, float tolerance);
 
-std::list<typename AABBTree<Triangle3f, Point3f>::Index> *
+TriangleTree::Contact2Triangle *
 TriangleTree::pointTriangleContactDetection(Point3f const & point, GLfloat tolerance)
 {
-	return m_tree->contactDetection(point, tolerance);
+	return m_tree->contactDetection<Point3f, Eigen::Vector3f>(point, tolerance);
 }
 
 /* -------------- EdgeTree ------------- */
 
-std::list<typename AABBTree<Segment3f, Point3f>::Index> *
+EdgeTree::Contact2Edge *
 EdgeTree::edgeEdgeContactDetection(Segment3f const & segment, GLfloat tolerance)
 {
-	return m_tree->contactDetection(segment, tolerance);
+	return m_tree->contactDetection<Segment3f, Eigen::Vector2f>(segment, tolerance);
 	//return nullptr;
 }
 
@@ -28,7 +28,7 @@ EdgeTree::edgeEdgeContactDetection(Segment3f const & segment, GLfloat tolerance)
 
 void OtaduyContact::pointTriangleDetection(GLfloat tolerance)
 {
-	m_pointTriangeContact = new std::map<Veridx, OtaduyContact::Contact2Triangle *>();
+	m_pointTriangeContact = new std::map<Veridx, TriangleTree::Contact2Triangle *>();
 	auto mesh = m_clothPiece->getMesh();
 	for (Veridx vid : mesh->vertices())
 	{
@@ -38,7 +38,7 @@ void OtaduyContact::pointTriangleDetection(GLfloat tolerance)
 
 void OtaduyContact::edgeEdgeDetection(GLfloat tolerance)
 {
-	m_edgeEdgeContact = new std::map<Edgeidx, OtaduyContact::Contact2Edge *>();
+	m_edgeEdgeContact = new std::map<Edgeidx, EdgeTree::Contact2Edge *>();
 	auto mesh = m_clothPiece->getMesh();
 	for (Edgeidx eid : mesh->edges())
 	{
@@ -47,11 +47,11 @@ void OtaduyContact::edgeEdgeDetection(GLfloat tolerance)
 	}
 }
 
-
-void OtaduyContact::generatePointTriangleConstraints()
+void OtaduyContact::applyOnesidePointTriangleImpulse()
 {
-
+	
 }
+
 
 void OtaduyContact::exportContactPoints(GLfloat *& buffer, GLuint & size)
 {

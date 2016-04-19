@@ -8,6 +8,8 @@
 class TriangleTree
 {
 public:
+	typedef std::list<std::pair<typename AABBTree<Triangle3f, Point3f>::Index, Eigen::Vector3f> *> Contact2Triangle;
+
 	TriangleTree(SurfaceMesh3f * mesh) :
 		m_mesh(mesh) // TODO , m_treeSceneIndex(-1)
 	{
@@ -33,8 +35,7 @@ public:
 
 	//void pointContactDetection(GLfloat tolerance);
 
-	std::list<typename AABBTree<Triangle3f, Point3f>::Index> *
-		pointTriangleContactDetection(Point3f const & point, GLfloat tolerance);
+	Contact2Triangle * pointTriangleContactDetection(Point3f const & point, GLfloat tolerance);
 
 private:
 	//static auto toPri = [](Faceiter iter) -> Triangle3f const & {return Triangle3f(face); };
@@ -49,6 +50,8 @@ private:
 class EdgeTree
 {
 public:
+	typedef std::list<std::pair<typename AABBTree<Segment3f, Point3f>::Index, Eigen::Vector2f> *> Contact2Edge;
+
 	EdgeTree(SurfaceMesh3f * mesh) :
 		m_mesh(mesh) // TODO , m_treeSceneIndex(-1)
 	{
@@ -74,8 +77,7 @@ public:
 
 	//void pointContactDetection(GLfloat tolerance);
 
-	std::list<typename AABBTree<Segment3f, Point3f>::Index> *
-		edgeEdgeContactDetection(Segment3f const & segment, GLfloat tolerance);
+	Contact2Edge * edgeEdgeContactDetection(Segment3f const & segment, GLfloat tolerance);
 
 private:
 	//static auto toPri = [](Faceiter iter) -> Triangle3f const & {return Triangle3f(face); };
@@ -90,8 +92,6 @@ private:
 class OtaduyContact
 {
 public:
-	typedef std::list<typename AABBTree<Triangle3f, Point3f>::Index> Contact2Triangle;
-	typedef std::list<typename AABBTree<Segment3f, Point3f>::Index> Contact2Edge;
 	
 	TriangleTree * m_clothPieceFaceBoxTree;
 	TriangleTree * m_rigidBodyFaceBoxTree;
@@ -108,10 +108,10 @@ public:
 	{}
 
 	void pointTriangleDetection(GLfloat tolerance);
-	
 	void edgeEdgeDetection(GLfloat tolerance);
 
-	void generatePointTriangleConstraints();
+	void applyOnesidePointTriangleImpulse();
+	void applyOnesiceEdgeEdgeImpulse();
 
 	void exportContactPoints(GLfloat * & buffer, GLuint & size);
 	void exportContactEdges(GLfloat * & buffer, GLuint & size);
@@ -120,8 +120,8 @@ private:
 	SurfaceMeshObject * const m_clothPiece;
 	SurfaceMeshObject * const m_rigidBody;
 	
-	std::map<Veridx, Contact2Triangle *> * m_pointTriangeContact;
-	std::map<Edgeidx, Contact2Edge *> * m_edgeEdgeContact;
+	std::map<Veridx, TriangleTree::Contact2Triangle *> * m_pointTriangeContact;
+	std::map<Edgeidx, EdgeTree::Contact2Edge *> * m_edgeEdgeContact;
 	
 };
 
