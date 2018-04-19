@@ -2,11 +2,13 @@
 #include "BasicOperations.h"
 #include "Types.h"
 //#include "Tensor3.h"
+#include "Profile.h"
 
 #include <Eigen\Core>
 #include <unsupported\Eigen\CXX11\Tensor>
 
 #include <iostream>
+#include <fstream>
 
 #define STRETCH_FORCE
 #define SHEAR_FORCE
@@ -22,10 +24,8 @@
 
 //#define USE_NEW_A_b
 
-#define DEBUG_ENERGY
+//#define DEBUG_ENERGY
 //#define DEBUG_FORCE
-
-
 
 typedef Eigen::Tensor<float, 3> Tensor3f;
 typedef Eigen::array<Eigen::DenseIndex, 3U> index3;
@@ -71,7 +71,7 @@ void BaraffPhysics::compute(float time_step)
 	addConstraint(vh, Eigen::Vector3f(0.0f, 0.0f, 1.0f));
 	addConstraint(vh, Eigen::Vector3f(0.0f, 1.0f, 0.0f));
 	addConstraint(vh, Eigen::Vector3f(1.0f, 0.0f, 0.0f));
-	for (size_t _i = 0; _i < 38; ++_i, ++iter);
+	for (size_t _i = 0; _i < 58; ++_i, ++iter);
 	vh = *iter++;
 	addConstraint(vh, Eigen::Vector3f(0.0f, 0.0f, 1.0f));
 	addConstraint(vh, Eigen::Vector3f(0.0f, 1.0f, 0.0f));
@@ -99,7 +99,7 @@ void BaraffPhysics::compute(float time_step)
 
 #endif
 
-	// add stretch and shear forces
+		// add stretch and shear forces
 #if defined(STRETCH_FORCE) || defined(SHEAR_FORCE)
 	// forces, velocities and their derivatives
 	//std::cout << "f_total without stretch " << std::endl << f_total << std::endl;
@@ -107,31 +107,31 @@ void BaraffPhysics::compute(float time_step)
 	//std::cout << "out v_total " << std::endl << v_total << std::endl;
 	//std::cout << "out v_total nonzero " << std::endl << v_total.nonZeros() << std::endl;
 	//std::cout << "out v_total[0] " << std::endl << v_total.block<3, 1>(0, 0) << std::endl;
-	size_t face_cnt = 0;
-	SurfaceMesh3f::Property_map<Veridx, Point3f> vph_planarcoord = 
-		mesh->property_map<Veridx, Point3f>(clothPiece->pname_vertexPlanarCoords).first;
-	BOOST_FOREACH(Faceidx fhd, mesh->faces())
-	{
-		getStretchAndShearForce(fhd, vph_planarcoord, k_stretch, kd_stretch, k_shear, kd_shear, bu, bv);
-		face_cnt += 1;
-		//break;
-	}
+		size_t face_cnt = 0;
+		SurfaceMesh3f::Property_map<Veridx, Point3f> vph_planarcoord =
+			mesh->property_map<Veridx, Point3f>(clothPiece->pname_vertexPlanarCoords).first;
+		BOOST_FOREACH(Faceidx fhd, mesh->faces())
+		{
+			getStretchAndShearForce(fhd, vph_planarcoord, k_stretch, kd_stretch, k_shear, kd_shear, bu, bv);
+			face_cnt += 1;
+			//break;
+		}
 
 #ifdef DEBUG_ENERGY
-	std::cout << "stretch energy " << Cu_stretch.norm() + Cv_stretch.norm() << std::endl;
-	std::cout << "shear energy " << C_shear.norm() << std::endl;
+		std::cout << "stretch energy " << Cu_stretch.norm() + Cv_stretch.norm() << std::endl;
+		std::cout << "shear energy " << C_shear.norm() << std::endl;
 #endif
-	//std::cout << "C_shear " << std::endl << C_shear << std::endl;
-	//std::cout << "C_shear nonzero " << C_shear.nonZeros() << std::endl;
-	//std::cout << "C_shear norm " << C_shear.norm() << std::endl;
-	//float magnitude = max(fabs(C_shear.maxCoeff()), fabs(C_shear.minCoeff()));
-	//Eigen::VectorXf temp = C_shear / magnitude;
-	//std::cout << "C_shear absmax " << magnitude << std::endl;
-	//std::cout << "C_shear norm absmax " << max(fabs(temp.maxCoeff()), fabs(temp.minCoeff())) << std::endl;
-	//std::cout << "f_total with stretch " << std::endl << f_total << std::endl;
-	//std::cout << "f_total with stretch block " << std::endl << f_total.block<30, 1>(0, 0) << std::endl;
-	//std::cout << "face_cnt " << std::endl << face_cnt << std::endl;
-	//std::cout << "df_dx_total with stretch " << std::endl << df_dx_total << std::endl;
+		//std::cout << "C_shear " << std::endl << C_shear << std::endl;
+		//std::cout << "C_shear nonzero " << C_shear.nonZeros() << std::endl;
+		//std::cout << "C_shear norm " << C_shear.norm() << std::endl;
+		//float magnitude = max(fabs(C_shear.maxCoeff()), fabs(C_shear.minCoeff()));
+		//Eigen::VectorXf temp = C_shear / magnitude;
+		//std::cout << "C_shear absmax " << magnitude << std::endl;
+		//std::cout << "C_shear norm absmax " << max(fabs(temp.maxCoeff()), fabs(temp.minCoeff())) << std::endl;
+		//std::cout << "f_total with stretch " << std::endl << f_total << std::endl;
+		//std::cout << "f_total with stretch block " << std::endl << f_total.block<30, 1>(0, 0) << std::endl;
+		//std::cout << "face_cnt " << std::endl << face_cnt << std::endl;
+		//std::cout << "df_dx_total with stretch " << std::endl << df_dx_total << std::endl;
 #endif
 
 	// add bend force

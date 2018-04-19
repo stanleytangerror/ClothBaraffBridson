@@ -4,16 +4,19 @@
 #include "ResourceManager.h"
 #include "Config.h"
 #include "EventManager.h"
+#include "Clock.h"
 
 void Simulator::run()
 {
 	while (!Screen::closed())
 	{
+		Clock::Instance()->Tick(1.f);
+
 		{
 			EventManager::active(eventManager);
 			Screen::pullEvents();
 			eventManager->handleEvents();
-			if (!clock->paused())
+			if (!Clock::Instance()->paused())
 			{
 				updateData();
 			}
@@ -56,13 +59,17 @@ void Simulator::init()
 	clothPiece = new SurfaceMeshObject(3);
 	clothPiece->import(ourModel.getMeshes()[0]);
 	clothPiece->useVTexCoord2DAsVPlanarCoord3f();
+	clothPiece->addPositionsProperty();
 	
 	// initial planar coordinates
 	clothDynamics = new BaraffDynamics(clothPiece);
 
+#ifdef USE_ENV_MAP
 	auto env = new SceneEnv(ResourceManager::GetShader("background_cube"),
 		ResourceManager::GetCubeMap("background_texture"), viewer->getCamera());
 	Scene::add_component(env);
+#endif
+
 	auto clo = new SceneClothPiece(ResourceManager::GetShader("cloth_piece"),
 		ResourceManager::GetShader("cloth_piece_normal"),
 		clothPiece, viewer->getCamera());
@@ -74,9 +81,13 @@ void Simulator::init()
 		(aiPostProcessSteps)(aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_JoinIdenticalVertices));
 	rigidBody = new SurfaceMeshObject(3);
 	rigidBody->import(rigidBodyModel.getMeshes()[0]);
+	rigidBody->addPositionsProperty();
+
+#ifdef USE_SPHERE_COLLIDER
 	auto sph = new SceneRigidBody(ResourceManager::GetShader("rigid_body"),
 		rigidBody, viewer->getCamera());
 	Scene::add_component(sph);
+#endif
 
 	contactSceneIndex = Scene::add_component(new SceneContact(
 		ResourceManager::GetShader("bounding_box"), ResourceManager::GetShader("contact_point"),
@@ -87,6 +98,13 @@ void Simulator::init()
 	// ------------ register event handlers ------------
 	eventManager = new EventManager(Screen::window);
 	eventManager->registerKeyboardEventHandler([this](bool const * const keyMask) -> void {this->viewer->keyboard_press(keyMask); });
+	eventManager->registerKeyboardEventHandler([this](bool const * const keyMask) -> void {
+		if (keyMask[GLFW_KEY_C])
+		{
+			Clock::Instance()->resume();
+			Clock::Instance()->PushFrameCounter(new FrameCounter(40, []() { Clock::Instance()->pause(); }));
+		}
+	});
 	eventManager->registerMouseEventHandler([this](GLfloat xpos, GLfloat ypos, GLfloat xlast, GLfloat ylast) -> void {this->viewer->move_mouse(xpos, ypos, xlast, ylast); });
 	eventManager->registerScrollEventHandler([this](GLfloat scrollX, GLfloat scrollY) -> void {this->viewer->scroll_mouse(scrollX, scrollY); });
 	eventManager->registerKeyboardEventHandler([this](bool const * const keyMask) -> void {this->pauseEventHandle(keyMask); });
@@ -95,20 +113,8 @@ void Simulator::init()
 
 void Simulator::updateData()
 {
-	
 #define USE_SIMULATION
-
-#ifdef SHOW_MODEL
-			Shader modelShader = ResourceManager::GetShader("model_loading");
-			modelShader.Use();   // <-- Don't forget this one!
-								 // Transformation matrices
-			glUniformMatrix4fv(glGetUniformLocation(modelShader.Program, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
-			glUniformMatrix4fv(glGetUniformLocation(modelShader.Program, "view"), 1, GL_FALSE, glm::value_ptr(view));
-			glm::mat4 model;
-			model = glm::scale(glm::mat4(), glm::vec3(0.20f, 0.20f, 0.20f));
-			glUniformMatrix4fv(glGetUniformLocation(modelShader.Program, "model"), 1, GL_FALSE, glm::value_ptr(model));
-			ourModel.Draw(modelShader);
-#endif
+//#define DO_CONTACT_HANDLER
 
 #ifdef USE_SIMULATION
 		// Draw the loaded model
@@ -126,12 +132,13 @@ void Simulator::updateData()
 			
 #endif
 
+#ifdef DO_CONTACT_HANDLER
 		contactHandler = new OtaduyContact(clothPiece, rigidBody);
 		contactHandler->pointTriangleDetection(0.1f);
 		contactHandler->edgeEdgeDetection(0.1f);
 		(dynamic_cast<SceneContact *>(Scene::get_component(contactSceneIndex)))
 			->setContacts(contactHandler);
-
+#endif
 }
 
 void Simulator::pauseEventHandle(bool const * const keyMask)

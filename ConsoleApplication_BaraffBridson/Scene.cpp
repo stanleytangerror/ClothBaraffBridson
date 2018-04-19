@@ -24,7 +24,7 @@ void Scene::erase_component(Scene::Index index)
 
 void Scene::draw()
 {
-	glClearColor(0.6f, 0.6f, 0.6f, 1.0f);
+	glClearColor(1.f, 1.f, 1.f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	for (SceneComponent * com : Scene::render_list)
@@ -122,13 +122,13 @@ const
 	glUniformMatrix4fv(glGetUniformLocation(clothPieceShader->Program, "model"), 1, GL_FALSE, glm::value_ptr(model));
 
 	glUniform3f(glGetUniformLocation(clothPieceShader->Program, "viewPos"), viewPos.x, viewPos.y, viewPos.z);
-	glUniform3f(glGetUniformLocation(clothPieceShader->Program, "light.direction"), 0.0f, 1.0f, 0.0f);
-	glUniform3f(glGetUniformLocation(clothPieceShader->Program, "light.color"), 0.3f, 0.49f, 0.85f);
+	glUniform3f(glGetUniformLocation(clothPieceShader->Program, "light.direction"), 0.0f, -0.707f, 0.707f);
+	glUniform3f(glGetUniformLocation(clothPieceShader->Program, "light.color"), 0.9f, 0.9f, 0.9f);
 	/* from http://devernay.free.fr/cours/opengl/materials.html */
-	glUniform3f(glGetUniformLocation(clothPieceShader->Program, "material.ambient"), 0.19225f, 0.19225f, 0.19225f);
-	glUniform3f(glGetUniformLocation(clothPieceShader->Program, "material.diffuse"), 0.50754f, 0.50754f, 0.50754f);
-	glUniform3f(glGetUniformLocation(clothPieceShader->Program, "material.specular"), 0.508273f, 0.508273f, 0.508273f);
-	glUniform1f(glGetUniformLocation(clothPieceShader->Program, "material.shininess"), 0.4f);
+	glUniform3f(glGetUniformLocation(clothPieceShader->Program, "material.ambient"), 0.4f, 0.2f, 0.2f);
+	glUniform3f(glGetUniformLocation(clothPieceShader->Program, "material.diffuse"), 0.7f, 0.3f, 0.3f);
+	glUniform3f(glGetUniformLocation(clothPieceShader->Program, "material.specular"), 0.1f, 0.1f, 0.1f);
+	glUniform1f(glGetUniformLocation(clothPieceShader->Program, "material.shininess"), 0.1f);
 
 	glBindVertexArray(meshVAO);
 	{

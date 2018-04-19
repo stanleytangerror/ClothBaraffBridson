@@ -12,6 +12,7 @@
 
 #include <algorithm>
 #include <list>
+#include <vector>
 
 /* --------------- AABBox class definition --------------- */
 
@@ -131,9 +132,11 @@ public:
 	typedef int Index;
 
 	template <typename IterType, typename toPair>
-	AABBTree(IterType & begin, IterType const & end, toPair & topair):
-		tree(new std::list<NodeType *>())
+	AABBTree(IterType & begin, IterType const & end, toPair & topair, int reserveSize = -1):
+		tree(new std::vector<NodeType *>())
 	{
+		if (reserveSize > 0)
+			tree->reserve(reserveSize);
 		for (; begin != end; ++begin)
 		{
 			NodeType * p = topair(begin);
@@ -141,7 +144,7 @@ public:
 		}
 	}
 
-	std::list<NodeType *> const * getBoxes()
+	std::vector<NodeType *> const * getBoxes()
 	{
 		return tree;
 	}
@@ -156,9 +159,14 @@ public:
 		}
 	}
 
-	int size()
+	int size() const
 	{
 		return tree->size();
+	}
+
+	NodeType const * at(Index idx) const
+	{
+		return (*tree)[idx];
 	}
 
 	void exportAABBoxPositions(GLfloat * & verticesBuffer, GLuint & pointSize) const
@@ -189,7 +197,7 @@ public:
 	//}
 	
 private:
-	std::list<NodeType *> * tree;
+	std::vector<NodeType *> * tree;
 
 };
 
@@ -197,8 +205,13 @@ private:
 
 struct FaceIter2Triangle3fAABBoxPair
 {
+	typedef SurfaceMesh3f::Property_map<Veridx, Point3f> VPropertyMap;
+
 	SurfaceMesh3f const * const m_mesh;
-	FaceIter2Triangle3fAABBoxPair(SurfaceMesh3f * mesh) : m_mesh(mesh) {}
+	VPropertyMap const * const m_propertyMap;
+
+	FaceIter2Triangle3fAABBoxPair(SurfaceMesh3f * mesh, VPropertyMap * propertyMap = nullptr) :
+		m_mesh(mesh), m_propertyMap(propertyMap) {}
 
 	AABBTree<Triangle3f, Point3f>::NodeType * operator() (/*SurfaceMesh3f const * mesh, */Faceiter const & iter) const
 	{ 
@@ -220,7 +233,7 @@ struct FaceIter2Triangle3fAABBoxPair
 		{
 			Veridx vid = *vbegin;
 			//std::cout << "vertex index" << vid << std::endl;
-			Point3f p = m_mesh->point(vid);
+			Point3f p = (this->m_propertyMap) ? (*m_propertyMap)[vid] : m_mesh->point(vid);
 			ps.push_back(p);
 			//std::cout << "point" << std::endl << p << std::endl;
 			minx = (std::min)(minx, p.x());
@@ -244,14 +257,22 @@ struct FaceIter2Triangle3fAABBoxPair
 
 struct EdgeIter2Segment3fAABBoxPair
 {
+
+	typedef SurfaceMesh3f::Property_map<Veridx, Point3f> VPropertyMap;
+
 	SurfaceMesh3f const * const m_mesh;
-	EdgeIter2Segment3fAABBoxPair(SurfaceMesh3f * mesh) : m_mesh(mesh) {}
+	VPropertyMap const * const m_propertyMap;
+
+	EdgeIter2Segment3fAABBoxPair(SurfaceMesh3f * mesh, VPropertyMap * propertyMap = nullptr) : 
+		m_mesh(mesh), m_propertyMap(propertyMap) {}
 
 	AABBTree<Segment3f, Point3f>::NodeType * operator() (/*SurfaceMesh3f const * mesh, */Edgeiter const & iter) const
 	{
 		Edgeidx eid = *iter;
-		Point3f v0 = m_mesh->point(m_mesh->vertex(eid, 0));
-		Point3f v1 = m_mesh->point(m_mesh->vertex(eid, 1));
+		Veridx vid0 = m_mesh->vertex(eid, 0);
+		Veridx vid1 = m_mesh->vertex(eid, 1);
+		Point3f v0 = (this->m_propertyMap) ? (*m_propertyMap)[vid0] : m_mesh->point(vid0);
+		Point3f v1 = (this->m_propertyMap) ? (*m_propertyMap)[vid1] : m_mesh->point(vid1);
 		float maxx = (std::max)(v0.x(), v1.x());
 		float maxy = (std::max)(v0.y(), v1.y());
 		float maxz = (std::max)(v0.z(), v1.z());

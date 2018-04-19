@@ -3,14 +3,14 @@
 
 #include <map>
 
-/* -------------- TriangleTree ------------- */
+/* -------------- FaceTree ------------- */
 
 //template<> template<>
 //std::list<AABBTree<Triangle3f, Point3f>::Index> *
 //AABBTree<Triangle3f, Point3f>::contactDetection<Point3f>(Point3f const & point, float tolerance);
 
-TriangleTree::Contact2Triangle *
-TriangleTree::pointTriangleContactDetection(Point3f const & point, GLfloat tolerance)
+FaceTree::Contact2Triangle *
+FaceTree::pointTriangleContactDetection(Point3f const & point, GLfloat tolerance)
 {
 	return m_tree->contactDetection<Point3f, Eigen::Vector3f>(point, tolerance);
 }
@@ -28,7 +28,7 @@ EdgeTree::edgeEdgeContactDetection(Segment3f const & segment, GLfloat tolerance)
 
 void OtaduyContact::pointTriangleDetection(GLfloat tolerance)
 {
-	m_pointTriangeContact = new std::map<Veridx, TriangleTree::Contact2Triangle *>();
+	m_pointTriangeContact = new std::map<Veridx, FaceTree::Contact2Triangle *>();
 	auto mesh = m_clothPiece->getMesh();
 	for (Veridx vid : mesh->vertices())
 	{
@@ -47,9 +47,27 @@ void OtaduyContact::edgeEdgeDetection(GLfloat tolerance)
 	}
 }
 
-void OtaduyContact::applyOnesidePointTriangleImpulse()
+void OtaduyContact::applyPointImpulse()
 {
-	
+	// for each contact point
+	for (auto contact : *m_pointTriangeContact)
+	{
+		Veridx vid = contact.first;
+		// for each point's contacting triangle
+		for (auto tri : *contact.second)
+		{
+			// TODO
+			auto point = m_clothPieceFaceBoxTree->getTree()->at(tri->first);
+			Eigen::Vector3f coord = tri->second;
+
+		}
+	}
+}
+
+void OtaduyContact::pointImpluse(Veridx vid, Faceidx fid, Eigen::Vector3f & coord)
+{
+	// TODO
+
 }
 
 
