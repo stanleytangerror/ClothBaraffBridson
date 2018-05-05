@@ -5,6 +5,8 @@
 #include "Config.h"
 #include "EventManager.h"
 #include "Clock.h"
+#include "ContactHandler.h"
+#include "DebugRenderer.h"
 
 void Simulator::run()
 {
@@ -31,6 +33,8 @@ void Simulator::init()
 	Screen::initEnv();
 	loopCount = 0u;
 
+	DebugRenderer::Instance()->Init(viewer->getCamera());
+
 	// ---------- Setup and compile our shaders -------------------
 	ResourceManager::LoadShader("model_loading", "E:\\Microsoft Visual Studio 2015\\Workspace\\ConsoleApplication_BaraffBridson\\ConsoleApplication_BaraffBridson\\model_loading.vs", "E:\\Microsoft Visual Studio 2015\\Workspace\\ConsoleApplication_BaraffBridson\\ConsoleApplication_BaraffBridson\\model_loading.frag");
 	ResourceManager::LoadShader("background_cube", "E:\\Microsoft Visual Studio 2015\\Workspace\\ConsoleApplication_BaraffBridson\\ConsoleApplication_BaraffBridson\\background_cube.vs", "E:\\Microsoft Visual Studio 2015\\Workspace\\ConsoleApplication_BaraffBridson\\ConsoleApplication_BaraffBridson\\background_cube.frag");
@@ -41,7 +45,7 @@ void Simulator::init()
 	ResourceManager::LoadShader("contact_point", "E:\\Microsoft Visual Studio 2015\\Workspace\\ConsoleApplication_BaraffBridson\\ConsoleApplication_BaraffBridson\\contact_point.vs", "E:\\Microsoft Visual Studio 2015\\Workspace\\ConsoleApplication_BaraffBridson\\ConsoleApplication_BaraffBridson\\contact_point.frag");
 	//ResourceManager::LoadShader("model_loading", ".\\model_loading.vs", ".\\model_loading.frag");
 	//ResourceManager::LoadShader("background_cube", ".\\background_cube.vs", ".\\background_cube.frag");
-	
+
 	// ----------- load cube map ----------------
 	std::vector<const GLchar*> faces;
 	faces.push_back("E:\\Computer Graphics\\Materials\\CubeMaps\\background01\\side.jpg");
@@ -53,14 +57,23 @@ void Simulator::init()
 	ResourceManager::LoadCubeMap("background_texture", faces);
 
 	// ----------- Load models ----------------
-	Model ourModel((GLchar *)Config::modelPath.c_str(), 
+	Model ourModel((GLchar *)Config::modelPath.c_str(),
 		(aiPostProcessSteps)(aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_JoinIdenticalVertices));
-	
+
 	clothPiece = new SurfaceMeshObject(3);
 	clothPiece->import(ourModel.getMeshes()[0]);
+	{
+		Eigen::Matrix4f affine;
+		affine <<
+			1.0f, 0.0f, 0.0f, 0.0f,
+			0.0f, 1.0f, 0.0f, 2.0f,
+			0.0f, 0.0f, 1.0f, 0.0f,
+			0.0f, 0.0f, 0.0f, 1.0f;
+		clothPiece->Affine(affine);
+	}
 	clothPiece->useVTexCoord2DAsVPlanarCoord3f();
 	clothPiece->addPositionsProperty();
-	
+
 	// initial planar coordinates
 	clothDynamics = new BaraffDynamics(clothPiece);
 
@@ -81,17 +94,28 @@ void Simulator::init()
 		(aiPostProcessSteps)(aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_JoinIdenticalVertices));
 	rigidBody = new SurfaceMeshObject(3);
 	rigidBody->import(rigidBodyModel.getMeshes()[0]);
+	{
+		Eigen::Matrix4f affine;
+		affine <<
+			3.0f, 0.0f, 0.0f, 0.0f,
+			0.0f, 3.0f, 0.0f, -2.0f,
+			0.0f, 0.0f, 3.0f, 0.0f,
+			0.0f, 0.0f, 0.0f, 1.0f;
+		rigidBody->Affine(affine);
+	}
 	rigidBody->addPositionsProperty();
 
-#ifdef USE_SPHERE_COLLIDER
+//#ifdef USE_SPHERE_COLLIDER
 	auto sph = new SceneRigidBody(ResourceManager::GetShader("rigid_body"),
 		rigidBody, viewer->getCamera());
 	Scene::add_component(sph);
-#endif
+//#endif
 
-	contactSceneIndex = Scene::add_component(new SceneContact(
-		ResourceManager::GetShader("bounding_box"), ResourceManager::GetShader("contact_point"),
-		viewer->getCamera()));
+	//contactSceneIndex = Scene::add_component(new SceneContact(
+	//	ResourceManager::GetShader("bounding_box"), ResourceManager::GetShader("contact_point"),
+	//	viewer->getCamera()));
+
+	mContactHandler = new ContactHandler(clothPiece, rigidBody);
 
 	Scene::load();
 
@@ -128,9 +152,16 @@ void Simulator::updateData()
 		//{
 		//	loop_cnt -= 1;
 		//}
+
 		clothDynamics->writeBack();
-			
+
+		mContactHandler->Resolve();
+
+		clothDynamics->RecomputeNormals();
+
 #endif
+
+
 
 #ifdef DO_CONTACT_HANDLER
 		contactHandler = new OtaduyContact(clothPiece, rigidBody);

@@ -147,6 +147,9 @@ public:
 	std::map<Faceidx, GLuint> const * getFaces2indices() { return faces2indices; }
 	std::map<Edgeidx, GLuint> const * getEdges2indices() { return edges2indices; }
 
+	void RecomputeNormals();
+	void Affine(const Eigen::Matrix4f& matrix);
+
 private:
 	const GLuint EDGES;
 

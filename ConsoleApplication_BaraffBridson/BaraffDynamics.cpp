@@ -93,3 +93,8 @@ void BaraffDynamics::exportBendConditionData(GLfloat *& dataBuffer, GLuint & dat
 	physics->exportBendConditionData(dataBuffer, dataSize);
 }
 
+void BaraffDynamics::RecomputeNormals()
+{
+	model->RecomputeNormals();
+}
+

@@ -214,13 +214,8 @@ void SurfaceMeshObject::import(const Mesh mesh)
 	/* compute face normal */
 	/* generate vertex normal conditioning on face normal */
 	//PolyArrayMesh & mesh = *PolyMesh;
-	SurfaceMesh3f::Property_map<Faceidx, Vec3f> faceNormals =
-		PolyMesh->add_property_map<Faceidx, Vec3f>(pname_faceNormals, CGAL::NULL_VECTOR).first;
-	SurfaceMesh3f::Property_map<Veridx, Vec3f> vertexNormals =
-		PolyMesh->add_property_map<Veridx, Vec3f>(pname_vertexNormals, CGAL::NULL_VECTOR).first;
-	CGAL::Polygon_mesh_processing::compute_normals(*PolyMesh, vertexNormals, faceNormals,
-		CGAL::Polygon_mesh_processing::parameters::vertex_point_map(PolyMesh->points()).geom_traits(Kernelf()));
-
+	RecomputeNormals();
+	
 	/* initial sizes */
 	VERTEX_SIZE = PolyMesh->number_of_vertices();
 	FACE_SIZE = PolyMesh->number_of_faces();
@@ -276,18 +271,29 @@ void SurfaceMeshObject::setPositions(Eigen::VectorXf const & positions)
 		copy_v3f(pos_cgal, pos_eigen);
 		PolyMesh->point(viter) = pos_cgal;
 	}
-	/* after changing position
-	* update normals for consistence
-	*/
+}
+
+void SurfaceMeshObject::RecomputeNormals()
+{
 	SurfaceMesh3f::Property_map<Faceidx, Vec3f> faceNormals =
-		PolyMesh->property_map<Faceidx, Vec3f>(pname_faceNormals).first;
-	//CGAL::Polygon_mesh_processing::compute_face_normals(mesh, faceNormals);
+		PolyMesh->add_property_map<Faceidx, Vec3f>(pname_faceNormals, CGAL::NULL_VECTOR).first;
 	SurfaceMesh3f::Property_map<Veridx, Vec3f> vertexNormals =
-		PolyMesh->property_map<Veridx, Vec3f>(pname_vertexNormals).first;
-	//CGAL::Polygon_mesh_processing::compute_vertex_normals(mesh, vertexNormals);
+		PolyMesh->add_property_map<Veridx, Vec3f>(pname_vertexNormals, CGAL::NULL_VECTOR).first;
 	CGAL::Polygon_mesh_processing::compute_normals(*PolyMesh, vertexNormals, faceNormals,
 		CGAL::Polygon_mesh_processing::parameters::vertex_point_map(PolyMesh->points()).geom_traits(Kernelf()));
 
+}
+
+void SurfaceMeshObject::Affine(const Eigen::Matrix4f& matrix)
+{
+	SurfaceMesh3f * mesh = this->PolyMesh;
+
+	for (Veridx vid : mesh->vertices())
+	{
+		Eigen::Vector4f temp = matrix * Eigen::Vector4f(mesh->point(vid).x(), mesh->point(vid).y(), mesh->point(vid).z(), 1.0f);
+		Eigen::Vector3f newPos = temp.block<3, 1>(0, 0);
+		copy_v3f(mesh->point(vid), newPos);
+	}
 }
 
 /* export data for VBO and EBO for drawing */

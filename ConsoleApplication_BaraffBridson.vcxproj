@@ -106,6 +106,8 @@
     <ClCompile Include="ConsoleApplication_BaraffBridson\BaraffPhysics.cpp" />
     <ClCompile Include="consoleapplication_baraffbridson\BasicOperations.cpp" />
     <ClCompile Include="ConsoleApplication_BaraffBridson\Clock.cpp" />
+    <ClCompile Include="ConsoleApplication_BaraffBridson\ContactHandler.cpp" />
+    <ClCompile Include="ConsoleApplication_BaraffBridson\DebugRenderer.cpp" />
     <ClCompile Include="ConsoleApplication_BaraffBridson\Profile.cpp" />
     <ClCompile Include="consoleapplication_baraffbridson\SurfaceMeshObject.cpp" />
     <ClCompile Include="consoleapplication_baraffbridson\BaraffMPCGSolver.cpp" />
@@ -130,7 +132,11 @@
     <ClInclude Include="ConsoleApplication_BaraffBridson\BasicTypes.h" />
     <ClInclude Include="consoleapplication_baraffbridson\Camera.h" />
     <ClInclude Include="ConsoleApplication_BaraffBridson\Clock.h" />
+    <ClInclude Include="ConsoleApplication_BaraffBridson\ContactHandler.h" />
+    <ClInclude Include="ConsoleApplication_BaraffBridson\DebugRenderer.h" />
     <ClInclude Include="ConsoleApplication_BaraffBridson\Profile.h" />
+    <ClInclude Include="ConsoleApplication_BaraffBridson\Singleton.h" />
+    <ClInclude Include="ConsoleApplication_BaraffBridson\SpatialHashing.h" />
     <ClInclude Include="consoleapplication_baraffbridson\SurfaceMeshObject.h" />
     <ClInclude Include="consoleapplication_baraffbridson\BaraffMPCGSolver.h" />
     <ClInclude Include="ConsoleApplication_BaraffBridson\Config.h" />
@@ -164,6 +170,8 @@
     <None Include="ConsoleApplication_BaraffBridson\cloth_piece_debug.vs" />
     <None Include="ConsoleApplication_BaraffBridson\contact_point.frag" />
     <None Include="ConsoleApplication_BaraffBridson\contact_point.vs" />
+    <None Include="ConsoleApplication_BaraffBridson\debug_render.frag" />
+    <None Include="ConsoleApplication_BaraffBridson\debug_render.vs" />
     <None Include="ConsoleApplication_BaraffBridson\model_loading.frag" />
     <None Include="ConsoleApplication_BaraffBridson\model_loading.vs" />
     <None Include="ConsoleApplication_BaraffBridson\rigid_body.frag" />

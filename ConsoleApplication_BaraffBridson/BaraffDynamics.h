@@ -28,6 +28,8 @@ public:
 	void exportShearConditionData(GLfloat* & dataBuffer, GLuint & dataSize);
 	void exportBendConditionData(GLfloat* & dataBuffer, GLuint & dataSize);
 
+	void RecomputeNormals();
+
 private:
 	SurfaceMeshObject* model;
 	BaraffPhysics* physics;

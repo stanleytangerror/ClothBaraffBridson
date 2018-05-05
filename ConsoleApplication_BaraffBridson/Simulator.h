@@ -26,6 +26,7 @@ private:
 	SurfaceMeshObject * rigidBody;
 	BaraffDynamics * clothDynamics;
 	OtaduyContact * contactHandler;
+	class ContactHandler * mContactHandler;
 	EventManager * eventManager;
 	FOVControl * viewer;
 	Clock * clock;

@@ -87,6 +87,12 @@
     <ClCompile Include="ConsoleApplication_BaraffBridson\Clock.cpp">
       <Filter>Source Files\Util</Filter>
     </ClCompile>
+    <ClCompile Include="ConsoleApplication_BaraffBridson\ContactHandler.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ConsoleApplication_BaraffBridson\DebugRenderer.cpp">
+      <Filter>Source Files\Util</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="consoleapplication_baraffbridson\EigenMatScalar.h">
@@ -167,6 +173,18 @@
     <ClInclude Include="ConsoleApplication_BaraffBridson\Profile.h">
       <Filter>Header Files\Util</Filter>
     </ClInclude>
+    <ClInclude Include="ConsoleApplication_BaraffBridson\SpatialHashing.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ConsoleApplication_BaraffBridson\ContactHandler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ConsoleApplication_BaraffBridson\DebugRenderer.h">
+      <Filter>Header Files\Util</Filter>
+    </ClInclude>
+    <ClInclude Include="ConsoleApplication_BaraffBridson\Singleton.h">
+      <Filter>Header Files\Util</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="ConsoleApplication_BaraffBridson\model_loading.vs">
@@ -215,6 +233,12 @@
       <Filter>Resource Files</Filter>
     </None>
     <None Include="ConsoleApplication_BaraffBridson\contact_point.vs">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="ConsoleApplication_BaraffBridson\debug_render.frag">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="ConsoleApplication_BaraffBridson\debug_render.vs">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>

@@ -4,6 +4,7 @@
 #include "Camera.h"
 #include "ResourceManager.h"
 #include "AABBTree\AABBTree.h"
+#include "DebugRenderer.h"
 
 std::vector<SceneComponent *> Scene::render_list;
 
@@ -33,6 +34,7 @@ void Scene::draw()
 	}
 	//glfwSwapBuffers(window);
 
+	DebugRenderer::Instance()->Draw();
 }
 
 void Scene::update()
@@ -222,8 +224,7 @@ void SceneClothPiece::update()
 {
 	projection = glm::perspective(camera->Zoom, Screen::aspectRatio, 0.1f, 100.0f);
 	view = camera->GetViewMatrix();
-	model = glm::scale(glm::mat4(), glm::vec3(0.20f, 0.20f, 0.20f));
-	model = glm::translate(model, glm::vec3(0.0f, 0.40f, 0.0f)); // Translate it down a bit so it's at the center of the scene
+	model = glm::mat4(); // Translate it down a bit so it's at the center of the scene
 
 	viewPos = camera->Position;
 
@@ -329,8 +330,7 @@ void SceneRigidBody::update()
 {
 	projection = glm::perspective(camera->Zoom, Screen::aspectRatio, 0.1f, 100.0f);
 	view = camera->GetViewMatrix();
-	model = glm::scale(glm::mat4(), glm::vec3(0.20f, 0.20f, 0.20f));
-	model = glm::translate(model, glm::vec3(0.0f, 0.40f, 0.0f)); // Translate it down a bit so it's at the center of the scene
+	model = glm::mat4(); // Translate it down a bit so it's at the center of the scene
 
 	viewPos = camera->Position;
 
