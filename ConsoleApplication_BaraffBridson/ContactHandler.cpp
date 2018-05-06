@@ -119,9 +119,6 @@ namespace
 	{
 		SpatialHashing<Faceidx>::AABB aabb;
 
-		static int count = 0;
-		bool debug = false; // (count++) % 37 == 0;
-
 		std::array<Eigen::Vector3f, 3> triangle;
 		int i = 0;
 		CGAL::Vertex_around_face_circulator<SurfaceMesh3f> cfviter(mesh->halfedge(faceIdx), *mesh), done(cfviter);
@@ -136,38 +133,10 @@ namespace
 			aabb.mMax.z() = std::max<float>(aabb.mMax.z(), pos.z());
 
 			copy_v3f(triangle[i], pos);
-			//triangle[i].x() = std::abs<float>(triangle[i].x());
-			//triangle[i].y() = std::abs<float>(triangle[i].y());
-			//triangle[i].z() = std::abs<float>(triangle[i].z());
 
 			++cfviter;
 			++i;
 		} while (cfviter != done);
-
-		if (debug)
-		{
-			gDebugContact->Push(triangle);
-			//gDebugContact->Push(aabb);
-
-			float mGridLen = 0.3f;
-			int mHashBase = 67;
-
-			for (float x = aabb.mMin.x() - mGridLen; x <= aabb.mMax.x() + mGridLen; x += mGridLen)
-				for (float y = aabb.mMin.y() - mGridLen; y <= aabb.mMax.y() + mGridLen; y += mGridLen)
-					for (float z = aabb.mMin.z() - mGridLen; z <= aabb.mMax.z() + mGridLen; z += mGridLen)
-					{
-						const Eigen::Vector3f temp = Eigen::Vector3f(x, y, z) * (1.f / mGridLen);
-						int i = ((int)std::abs(temp.x())) % mHashBase;
-						int j = ((int)std::abs(temp.y())) % mHashBase;
-						int k = ((int)std::abs(temp.z())) % mHashBase;
-
-						SpatialHashing<Faceidx>::AABB aabb;
-						aabb.mMin = Eigen::Vector3f(i * mGridLen, j * mGridLen, k * mGridLen);
-						aabb.mMax = Eigen::Vector3f(i * mGridLen + mGridLen, j * mGridLen + mGridLen, k * mGridLen + mGridLen);
-						gDebugContact->Push(aabb);
-					}
-
-		}
 
 		return aabb;
 	}
@@ -240,6 +209,7 @@ namespace
 
 		if (solve_UniOutsideTrianglePointDistanceConstraint(position, triangle[0], triangle[1], triangle[2], -normal, 0.3f, corr))
 		{
+			//gDebugContact->Push(triangle);
 			position += corr;
 			return true;
 		}
@@ -287,7 +257,12 @@ void ContactHandler::Resolve()
 		{
 			if (PointTriangleContactResolve(pos, rigidBodyMesh, faceNormals, fidx))
 			{
-				copy_v3f(clothPieceMesh->point(vidx), pos);
+				Eigen::Vector3f normal;
+				copy_v3f(normal, faceNormals[fidx]);
+
+				//gDebugContact->PushSinglePoint(pos, 0.1f);
+				mResolver(mClothPiece, vidx, fidx, normal, pos);
+				//copy_v3f(clothPieceMesh->point(vidx), pos);
 			}
 		}
 	}	

@@ -7,13 +7,15 @@
 #include <functional>
 #include <vector>
 
+#include "Singleton.h"
+
 class FrameCounter;
 
-class Clock
+class Clock : public Singleton<Clock>
 {
 public:
-	Clock(bool isPaused = false)
-		: isPaused(isPaused)
+	Clock()
+		: isPaused(true)
 	{ }
 
 	void pause()
@@ -39,19 +41,6 @@ private:
 	std::clock_t * stdClock;
 	bool isPaused;
 	std::vector<FrameCounter *>	mCounters;
-
-public:
-	static Clock * Instance()
-	{
-		if (!Clock::msClock)
-			Clock::msClock = new Clock(true);
-
-		return Clock::msClock;
-	}
-
-private:
-	static Clock* msClock;
-
 };
 
 class FrameCounter

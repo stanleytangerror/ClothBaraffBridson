@@ -20,7 +20,7 @@ void Simulator::run()
 			eventManager->handleEvents();
 			if (!Clock::Instance()->paused())
 			{
-				updateData();
+				simulateInternal();
 			}
 		}
 		Scene::renderScene();
@@ -31,11 +31,11 @@ void Simulator::run()
 void Simulator::init()
 {
 	Screen::initEnv();
-	loopCount = 0u;
 
 	DebugRenderer::Instance()->Init(viewer->getCamera());
 
-	// ---------- Setup and compile our shaders -------------------
+	//////////////////////////////////////////////////////////////////////////
+	// load shaders
 	ResourceManager::LoadShader("model_loading", "E:\\Microsoft Visual Studio 2015\\Workspace\\ConsoleApplication_BaraffBridson\\ConsoleApplication_BaraffBridson\\model_loading.vs", "E:\\Microsoft Visual Studio 2015\\Workspace\\ConsoleApplication_BaraffBridson\\ConsoleApplication_BaraffBridson\\model_loading.frag");
 	ResourceManager::LoadShader("background_cube", "E:\\Microsoft Visual Studio 2015\\Workspace\\ConsoleApplication_BaraffBridson\\ConsoleApplication_BaraffBridson\\background_cube.vs", "E:\\Microsoft Visual Studio 2015\\Workspace\\ConsoleApplication_BaraffBridson\\ConsoleApplication_BaraffBridson\\background_cube.frag");
 	ResourceManager::LoadShader("cloth_piece", "E:\\Microsoft Visual Studio 2015\\Workspace\\ConsoleApplication_BaraffBridson\\ConsoleApplication_BaraffBridson\\cloth_piece.vs", "E:\\Microsoft Visual Studio 2015\\Workspace\\ConsoleApplication_BaraffBridson\\ConsoleApplication_BaraffBridson\\cloth_piece.frag");
@@ -44,20 +44,9 @@ void Simulator::init()
 	ResourceManager::LoadShader("bounding_box", "E:\\Microsoft Visual Studio 2015\\Workspace\\ConsoleApplication_BaraffBridson\\ConsoleApplication_BaraffBridson\\bounding_box.vs", "E:\\Microsoft Visual Studio 2015\\Workspace\\ConsoleApplication_BaraffBridson\\ConsoleApplication_BaraffBridson\\bounding_box.frag", "E:\\Microsoft Visual Studio 2015\\Workspace\\ConsoleApplication_BaraffBridson\\ConsoleApplication_BaraffBridson\\bounding_box.gs");
 	ResourceManager::LoadShader("contact_point", "E:\\Microsoft Visual Studio 2015\\Workspace\\ConsoleApplication_BaraffBridson\\ConsoleApplication_BaraffBridson\\contact_point.vs", "E:\\Microsoft Visual Studio 2015\\Workspace\\ConsoleApplication_BaraffBridson\\ConsoleApplication_BaraffBridson\\contact_point.frag");
 	ResourceManager::LoadShader("cloth", ".\\ConsoleApplication_BaraffBridson\\cloth_vs.glsl", ".\\ConsoleApplication_BaraffBridson\\cloth_frag.glsl");
-	//ResourceManager::LoadShader("model_loading", ".\\model_loading.vs", ".\\model_loading.frag");
-	//ResourceManager::LoadShader("background_cube", ".\\background_cube.vs", ".\\background_cube.frag");
 
-	// ----------- load cube map ----------------
-	std::vector<const GLchar*> faces;
-	faces.push_back("E:\\Computer Graphics\\Materials\\CubeMaps\\background01\\side.jpg");
-	faces.push_back("E:\\Computer Graphics\\Materials\\CubeMaps\\background01\\side.jpg");
-	faces.push_back("E:\\Computer Graphics\\Materials\\CubeMaps\\background01\\top.jpg");
-	faces.push_back("E:\\Computer Graphics\\Materials\\CubeMaps\\background01\\bottom.jpg");
-	faces.push_back("E:\\Computer Graphics\\Materials\\CubeMaps\\background01\\side.jpg");
-	faces.push_back("E:\\Computer Graphics\\Materials\\CubeMaps\\background01\\side.jpg");
-	ResourceManager::LoadCubeMap("background_texture", faces);
-
-	// ----------- Load models ----------------
+	//////////////////////////////////////////////////////////////////////////
+	// cloth models
 	Model ourModel((GLchar *)Config::modelPath.c_str(),
 		(aiPostProcessSteps)(aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_JoinIdenticalVertices));
 
@@ -75,22 +64,14 @@ void Simulator::init()
 	clothPiece->useVTexCoord2DAsVPlanarCoord3f();
 	clothPiece->addPositionsProperty();
 
-	// initial planar coordinates
-	clothDynamics = new BaraffDynamics(clothPiece);
-
-#ifdef USE_ENV_MAP
-	auto env = new SceneEnv(ResourceManager::GetShader("background_cube"),
-		ResourceManager::GetCubeMap("background_texture"), viewer->getCamera());
-	Scene::add_component(env);
-#endif
-
-	auto clo = new SceneClothPiece(ResourceManager::GetShader("cloth"),
+	Scene::add_component(new SceneClothPiece(
+		ResourceManager::GetShader("cloth"),
 		ResourceManager::GetShader("cloth_piece_normal"),
-		clothPiece, viewer->getCamera());
-	Scene::add_component(clo);
-	//clothPieceBoxSceneIndex = Scene::add_component(new SceneAABBox(ResourceManager::GetShader("bounding_box"),
-	//	viewer->getCamera()));
+		clothPiece, 
+		viewer->getCamera()));
 
+	//////////////////////////////////////////////////////////////////////////
+	// rigid body
 	Model rigidBodyModel((GLchar *)Config::spherePath.c_str(),
 		(aiPostProcessSteps)(aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_JoinIdenticalVertices));
 	rigidBody = new SurfaceMeshObject(3);
@@ -106,21 +87,19 @@ void Simulator::init()
 	}
 	rigidBody->addPositionsProperty();
 
-//#ifdef USE_SPHERE_COLLIDER
-	auto sph = new SceneRigidBody(ResourceManager::GetShader("rigid_body"),
-		rigidBody, viewer->getCamera());
-	Scene::add_component(sph);
-//#endif
+	Scene::add_component(new SceneRigidBody(
+		ResourceManager::GetShader("rigid_body"),
+		rigidBody, 
+		viewer->getCamera()));
 
-	//contactSceneIndex = Scene::add_component(new SceneContact(
-	//	ResourceManager::GetShader("bounding_box"), ResourceManager::GetShader("contact_point"),
-	//	viewer->getCamera()));
-
-	mContactHandler = new ContactHandler(clothPiece, rigidBody);
+	//////////////////////////////////////////////////////////////////////////
+	// simulation
+	clothDynamics = new BaraffDynamics(clothPiece, rigidBody);
 
 	Scene::load();
 
-	// ------------ register event handlers ------------
+	//////////////////////////////////////////////////////////////////////////
+	// input system
 	eventManager = new EventManager(Screen::window);
 	eventManager->registerKeyboardEventHandler([this](bool const * const keyMask) -> void {this->viewer->keyboard_press(keyMask); });
 	eventManager->registerKeyboardEventHandler([this](bool const * const keyMask) -> void {
@@ -133,54 +112,23 @@ void Simulator::init()
 	eventManager->registerMouseEventHandler([this](GLfloat xpos, GLfloat ypos, GLfloat xlast, GLfloat ylast) -> void {this->viewer->move_mouse(xpos, ypos, xlast, ylast); });
 	eventManager->registerScrollEventHandler([this](GLfloat scrollX, GLfloat scrollY) -> void {this->viewer->scroll_mouse(scrollX, scrollY); });
 	eventManager->registerKeyboardEventHandler([this](bool const * const keyMask) -> void {this->pauseEventHandle(keyMask); });
-
 }
 
-void Simulator::updateData()
+void Simulator::simulateInternal()
 {
-#define USE_SIMULATION
-//#define DO_CONTACT_HANDLER
-
-#ifdef USE_SIMULATION
-		// Draw the loaded model
-		//if (loop_cnt < init_loop)
-		//{
-			clothDynamics->stepforward(0.02f);
-		//	loop_cnt += 1;
-		//	std::cout << "simulation loop " << loop_cnt << std::endl;
-		//}
-		//if (keys[81])
-		//{
-		//	loop_cnt -= 1;
-		//}
-
-		clothDynamics->writeBack();
-
-		mContactHandler->Resolve();
-
-		clothDynamics->RecomputeNormals();
-
-#endif
-
-
-
-#ifdef DO_CONTACT_HANDLER
-		contactHandler = new OtaduyContact(clothPiece, rigidBody);
-		contactHandler->pointTriangleDetection(0.1f);
-		contactHandler->edgeEdgeDetection(0.1f);
-		(dynamic_cast<SceneContact *>(Scene::get_component(contactSceneIndex)))
-			->setContacts(contactHandler);
-#endif
+	clothDynamics->stepforward(0.02f);
+	clothDynamics->writeBack();
+	clothDynamics->RecomputeNormals();
 }
 
 void Simulator::pauseEventHandle(bool const * const keyMask)
 {
 	if (keyMask[GLFW_KEY_Z])
 	{
-		clock->pause();
+		Clock::Instance()->pause();
 	}
 	if (keyMask[GLFW_KEY_X])
 	{
-		clock->resume();
+		Clock::Instance()->resume();
 	}
 }

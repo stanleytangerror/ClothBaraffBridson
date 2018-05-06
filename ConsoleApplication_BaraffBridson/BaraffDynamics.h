@@ -4,14 +4,15 @@
 #include "SurfaceMeshObject.h"
 #include "BaraffPhysics.h"
 #include "BaraffMPCGSolver.h"
-
+#include "ContactHandler.h"
 
 class BaraffDynamics
 {
-
 public:
-	BaraffDynamics(SurfaceMeshObject * model) : 
-		model(model), physics(new BaraffPhysics(model))
+	BaraffDynamics(SurfaceMeshObject * model, SurfaceMeshObject * collider) 
+		: model(model)
+		, physics(new BaraffPhysics(model))
+		, mContactHandler(new ContactHandler(model, collider))
 	{
 		initial();
 	}
@@ -35,6 +36,8 @@ private:
 	BaraffPhysics* physics;
 	Eigen::VectorXf last_root;
 	//BaraffMPCGSolver solver;
+
+	ContactHandler * mContactHandler;
 
 	void initial();
 

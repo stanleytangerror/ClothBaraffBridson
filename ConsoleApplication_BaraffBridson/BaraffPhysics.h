@@ -37,10 +37,11 @@ public:
 		return positions;
 	}
 
-	//size_t exportVertexSize()
-	//{
-	//	return VERTEX_SIZE;
-	//}
+	void addConstraint(Veridx vhandle, Eigen::Vector3f direction);
+	void addExternForce(Veridx vhandle, Eigen::Vector3f ext_force);
+
+	// called before each iteration
+	void reset(float time_step, GLboolean first);
 
 private:
 	SurfaceMeshObject * const clothPiece;
@@ -104,12 +105,6 @@ private:
 	// -------------- compute functions ----------------- 
 	/* called once, used for allocating memory */
 	void initial();
-
-	// called before each iteration
-	void reset(float time_step, GLboolean first);
-
-	void addConstraint(Veridx vhandle, Eigen::Vector3f direction);
-	void addExternForce(Veridx vhandle, Eigen::Vector3f ext_force);
 
 	void getStretchAndShearForce(Faceidx fhandle,
 		const SurfaceMesh3f::Property_map<Veridx, Point3f> & vprop_planarcoord,

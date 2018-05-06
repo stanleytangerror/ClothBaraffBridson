@@ -3,7 +3,7 @@
 template <typename T>
 class Singleton
 {
-public:
+protected:
 	Singleton() {}
 	Singleton(const Singleton& other) = delete;
 	Singleton(Singleton&& other) = delete;
@@ -13,6 +13,7 @@ public:
 
 	virtual ~Singleton() {}
 
+public:
 	static T * Instance()
 	{
 		if (!T::msInstance)
@@ -23,9 +24,8 @@ public:
 		return T::msInstance;
 	}
 
-private:
+protected:
 	static T* msInstance;
-
 };
 
 template <typename T>

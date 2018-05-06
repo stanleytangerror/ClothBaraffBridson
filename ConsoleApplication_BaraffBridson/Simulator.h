@@ -11,8 +11,8 @@ class Simulator
 {
 public:
 
-	explicit Simulator():
-		viewer(new FOVControl()), clock(new Clock())
+	Simulator()
+		: viewer(new FOVControl())
 	{} 
 
 	// WARNING: should be called explicitly
@@ -26,16 +26,12 @@ private:
 	SurfaceMeshObject * rigidBody;
 	BaraffDynamics * clothDynamics;
 	OtaduyContact * contactHandler;
-	class ContactHandler * mContactHandler;
 	EventManager * eventManager;
 	FOVControl * viewer;
-	Clock * clock;
-
-	GLuint loopCount;
 
 	Scene::Index contactSceneIndex;
 
-	void updateData();
+	void simulateInternal();
 
 	void pauseEventHandle(bool const * const keyMask);
 

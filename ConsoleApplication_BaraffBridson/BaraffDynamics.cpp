@@ -4,16 +4,27 @@
 #include "Profile.h"
 #include <Eigen/IterativeLinearSolvers>
 #include <iostream>
+#include "SurfaceMeshObject.h"
 
 void BaraffDynamics::initial()
 {
 	//physics = BaraffPhysics(model);
 	last_root = Eigen::VectorXf::Zero(3 * model->getVertexSize());
+
+	auto * physics = this->physics;
+
+	//copy_v3f(clothPieceMesh->point(vidx), pos);
+	mContactHandler->SetResolver([physics](SurfaceMeshObject* mesh, const Veridx& vidx, const Faceidx& fidx, const Eigen::Vector3f& faceNormal, const Eigen::Vector3f& pos) {
+		copy_v3f(mesh->getMesh()->point(vidx), pos);
+		//physics->addConstraint(vidx, faceNormal);
+	});
 }
 
 void BaraffDynamics::stepforward(float time_step)
 {
 	Temp::ProfileNewFrame();
+
+	mContactHandler->Resolve();
 
 	{
 		PROFILE_SCOPE;

@@ -28,8 +28,6 @@ void Clock::PushFrameCounter(FrameCounter * const frameCounter)
 		mCounters.push_back(frameCounter);
 }
 
-Clock* Clock::msClock = nullptr;
-
 FrameCounter::FrameCounter(int frameCount, const Functor& onHit)
 	: mFrameCount(frameCount)
 	, mOnHit(onHit)

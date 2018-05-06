@@ -297,7 +297,7 @@ void BaraffPhysics::reset(float time_step, GLboolean first)
 	if (first)
 		v_total.setZero();
 	else
-		v_total += (currentPositions - positions) * (1.f / time_step) * 0.05f;
+		v_total += (currentPositions - positions) * (1.f / time_step) * 0.01f;
 	std::swap(currentPositions, positions);
 
 	df_dx_internal_total.setZero();
@@ -318,6 +318,8 @@ void BaraffPhysics::addConstraint(Veridx vhandle, Eigen::Vector3f direction)
 	GLuint global_index = clothPiece->getVertices2indices()->at(vhandle);
 	Eigen::Vector3f dir_unit = direction.normalized();
 	addBlock33(constraints, global_index, global_index, -dir_unit * dir_unit.transpose());
+
+	//v_total.block<3, 1>(global_index, 0) = Eigen::Vector3f::Zero();
 }
 
 void BaraffPhysics::addExternForce(Veridx vhandle, Eigen::Vector3f ext_force)
