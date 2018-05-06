@@ -14,10 +14,8 @@ public:
 	struct AABB
 	{
 		AABB()
-			//: mMin((std::numeric_limits<float>::max)(), (std::numeric_limits<float>::max)(), (std::numeric_limits<float>::max)())
-			//, mMax(-(std::numeric_limits<float>::max)(), -(std::numeric_limits<float>::max)(), -(std::numeric_limits<float>::max)())
-			: mMin(1000.f * Eigen::Vector3f::Ones())
-			, mMax(-1000.f * Eigen::Vector3f::Ones())
+			: mMin((std::numeric_limits<float>::max)(), (std::numeric_limits<float>::max)(), (std::numeric_limits<float>::max)())
+			, mMax(-(std::numeric_limits<float>::max)(), -(std::numeric_limits<float>::max)(), -(std::numeric_limits<float>::max)())
 		{}
 
 		AABB(const AABB& other) 

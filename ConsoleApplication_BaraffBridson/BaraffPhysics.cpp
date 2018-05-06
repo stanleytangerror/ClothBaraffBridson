@@ -58,7 +58,7 @@ Eigen::VectorXf BaraffPhysics::exportb()
 
 void BaraffPhysics::compute(float time_step)
 {
-	reset(false);
+	reset(time_step, false);
 
 	this->time_step = time_step;
 
@@ -76,27 +76,6 @@ void BaraffPhysics::compute(float time_step)
 	addConstraint(vh, Eigen::Vector3f(0.0f, 0.0f, 1.0f));
 	addConstraint(vh, Eigen::Vector3f(0.0f, 1.0f, 0.0f));
 	addConstraint(vh, Eigen::Vector3f(1.0f, 0.0f, 0.0f));
-	//for (size_t _i = 0; _i < 8; ++_i, ++iter)
-	//{
-	//	vh = *iter;
-	//	addConstraint(vh, Eigen::Vector3f(0.0f, 0.0f, 1.0f));
-	//	addConstraint(vh, Eigen::Vector3f(0.0f, 1.0f, 0.0f));
-	//	addConstraint(vh, Eigen::Vector3f(1.0f, 0.0f, 0.0f));
-	//}
-	//for (size_t _i = 0; _i < 100; ++_i, ++iter)
-	//{
-	//	vh = *iter;
-	//	addConstraint(vh, Eigen::Vector3f(0.0f, 0.0f, 1.0f));
-	//	addConstraint(vh, Eigen::Vector3f(0.0f, 1.0f, 0.0f));
-	//	addConstraint(vh, Eigen::Vector3f(1.0f, 0.0f, 0.0f));
-	//}
-	//for (size_t _i = 0; _i < 9; ++_i, ++iter);
-	//vh = *iter;
-	//addConstraint(vh, Eigen::Vector3f(0.0f, 0.0f, 1.0f));
-	//addConstraint(vh, Eigen::Vector3f(0.0f, 1.0f, 0.0f));
-	//addConstraint(vh, Eigen::Vector3f(1.0f, 0.0f, 0.0f));
-
-
 #endif
 
 		// add stretch and shear forces
@@ -294,11 +273,11 @@ void BaraffPhysics::initial()
 	//clothPiece->useVTexCoord2DAsVPlanarCoord3f();
 	//clothPiece->getVPlanarCoord3f(vph_planarcoord);
 	
-	reset(true);
+	reset(0.05f, true);
 }
 
 // called before each iteration
-void BaraffPhysics::reset(GLboolean first)
+void BaraffPhysics::reset(float time_step, GLboolean first)
 {
 	SurfaceMesh3f* mesh = clothPiece->getMesh();
 
@@ -313,12 +292,13 @@ void BaraffPhysics::reset(GLboolean first)
 	Cv_stretch.setZero();
 	C_shear.setZero();
 	C_bend.setZero();
+
+	Eigen::VectorXf currentPositions = clothPiece->getPositions();
 	if (first)
-	{
 		v_total.setZero();
-		//std::cout << "initial v_total nonzero " << std::endl << v_total.nonZeros() << std::endl;
-		//std::cout << "initial v_total " << std::endl << v_total.block<3, 1>(0, 0) << std::endl;
-	}
+	else
+		v_total += (currentPositions - positions) * (1.f / time_step) * 0.05f;
+	std::swap(currentPositions, positions);
 
 	df_dx_internal_total.setZero();
 	df_dx_damp_total.setZero();
@@ -328,14 +308,8 @@ void BaraffPhysics::reset(GLboolean first)
 	df_dv_damp_total.reserve(smat_reserve_force);
 
 	// reset constraint
-	//if (first)
-	{
-		//coeff_list.clear();
-		//for (size_t _i = 0; _i < clothPiece->getVertexSize() * 3; ++_i)
-		//	coeff_list.push_back(Tri_float(_i, _i, 1.0f));
-		//constraints.setFromTriplets(coeff_list.begin(), coeff_list.end());
-		constraints.setIdentity();
-	}
+	constraints.setIdentity();
+
 }
 
 // I - p*pT == 0, p should be unit vector
@@ -1310,7 +1284,7 @@ void BaraffPhysics::getBendForce(Faceidx fhandle0, Faceidx fhandle1,
 void BaraffPhysics::update(const Eigen::VectorXf & v_delta)
 {
 	positions += time_step * (v_total + v_delta);
-	v_total += v_delta;
+	v_total += v_delta * 0.2f;
 	//std::cout << "delta position " << std::endl << v_total << std::endl;
 }
 

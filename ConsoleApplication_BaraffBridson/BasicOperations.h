@@ -128,5 +128,15 @@ inline Eigen::Matrix3f get_S_m3f(Eigen::Vector3f & v)
 
 Eigen::Vector3f get_vector3f_block(Eigen::Tensor<float, 3> & tensor, unsigned int block_i, unsigned int block_j);
 
+inline bool Equals(const float v0, const float v1, const float epsilon)
+{
+	return (std::abs(v0 - v1) < epsilon);
+}
+
+inline bool EqualsZero(const float v, const float epsilon = 1e-10f)
+{
+	return Equals(v, 0.f, epsilon);
+}
+
 #endif
 

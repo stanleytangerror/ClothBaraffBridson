@@ -241,5 +241,11 @@
     <None Include="ConsoleApplication_BaraffBridson\debug_render.vs">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="ConsoleApplication_BaraffBridson\cloth_frag.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="ConsoleApplication_BaraffBridson\cloth_vs.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
 </Project>

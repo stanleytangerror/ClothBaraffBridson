@@ -163,11 +163,13 @@
     <None Include="ConsoleApplication_BaraffBridson\bounding_box.frag" />
     <None Include="ConsoleApplication_BaraffBridson\bounding_box.gs" />
     <None Include="ConsoleApplication_BaraffBridson\bounding_box.vs" />
+    <None Include="ConsoleApplication_BaraffBridson\cloth_frag.glsl" />
     <None Include="ConsoleApplication_BaraffBridson\cloth_piece.frag" />
     <None Include="ConsoleApplication_BaraffBridson\cloth_piece.vs" />
     <None Include="ConsoleApplication_BaraffBridson\cloth_piece_debug.frag" />
     <None Include="ConsoleApplication_BaraffBridson\cloth_piece_debug.gs" />
     <None Include="ConsoleApplication_BaraffBridson\cloth_piece_debug.vs" />
+    <None Include="ConsoleApplication_BaraffBridson\cloth_vs.glsl" />
     <None Include="ConsoleApplication_BaraffBridson\contact_point.frag" />
     <None Include="ConsoleApplication_BaraffBridson\contact_point.vs" />
     <None Include="ConsoleApplication_BaraffBridson\debug_render.frag" />

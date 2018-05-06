@@ -106,7 +106,7 @@ private:
 	void initial();
 
 	// called before each iteration
-	void reset(GLboolean first);
+	void reset(float time_step, GLboolean first);
 
 	void addConstraint(Veridx vhandle, Eigen::Vector3f direction);
 	void addExternForce(Veridx vhandle, Eigen::Vector3f ext_force);

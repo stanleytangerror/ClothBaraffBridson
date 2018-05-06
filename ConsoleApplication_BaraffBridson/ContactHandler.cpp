@@ -205,7 +205,7 @@ namespace
 			b2 = t;
 			if (b0 <= 0.0f || b1 <= 0.0f || b2 <= 0.0f)
 			{
-				return true;
+				return false;
 			}
 		}
 		Eigen::Vector3f q = p0 * b0 + p1 * b1 + p2 * b2;
@@ -215,8 +215,7 @@ namespace
 		if (offsetMag < dist)
 		{
 			//if (Eigen::Vector3f.Dot(n, offset) > 0.0f)
-			corr = (q + n * dist - p);
-			corr = -corr;
+			corr = -(q + n * dist - p);
 			return true;
 		}
 		
@@ -239,9 +238,8 @@ namespace
 			++i;
 		} while (cfviter != done);
 
-		if (solve_UniOutsideTrianglePointDistanceConstraint(position, triangle[0], triangle[1], triangle[2], normal, 0.05f, corr))
+		if (solve_UniOutsideTrianglePointDistanceConstraint(position, triangle[0], triangle[1], triangle[2], -normal, 0.3f, corr))
 		{
-			gDebugContact->Push(triangle);
 			position += corr;
 			return true;
 		}
@@ -278,18 +276,6 @@ void ContactHandler::Resolve()
 		0.3f,
 		67);
 
-#if 0
-	for (int i = 0; i < 10; ++i)
-		for (int j = 0; j < 10; ++j)
-			for (int k = 0; k < 10; ++k)
-			{
-				SpatialHashing<Faceidx>::AABB aabb;
-				aabb.mMin = Eigen::Vector3f(i * 0.3f, j * 0.3f, k * 0.3f);
-				aabb.mMax = Eigen::Vector3f(i * 0.3f + 0.3f, j * 0.3f + 0.3f, k * 0.3f + 0.3f);
-				gDebugContact->Push(aabb);
-			}
-#endif
-
 	SurfaceMesh3f::Property_map<Faceidx, Vec3f> faceNormals = rigidBodyMesh->property_map<Faceidx, Vec3f>(mRigidBody->pname_faceNormals).first;
 
 	BOOST_FOREACH(Veridx vidx, clothPieceMesh->vertices())
@@ -299,8 +285,10 @@ void ContactHandler::Resolve()
 
 		for (const Faceidx & fidx : space.Query(pos).mPrimitives)
 		{
-			PointTriangleContactResolve(pos, rigidBodyMesh, faceNormals, fidx);
+			if (PointTriangleContactResolve(pos, rigidBodyMesh, faceNormals, fidx))
+			{
+				copy_v3f(clothPieceMesh->point(vidx), pos);
+			}
 		}
-		//copy_v3f(clothPieceMesh->point(vidx), pos);
 	}	
 }
