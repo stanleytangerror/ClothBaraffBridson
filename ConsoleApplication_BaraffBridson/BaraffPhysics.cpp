@@ -20,7 +20,7 @@
 #define USE_BEND_DAMP
 
 #define USE_GRAVITY
-#define USE_CONSTRAINTS
+//#define USE_CONSTRAINTS
 
 //#define USE_NEW_A_b
 

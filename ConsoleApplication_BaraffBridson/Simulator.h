@@ -23,7 +23,7 @@ public:
 private:
 
 	SurfaceMeshObject * clothPiece;
-	SurfaceMeshObject * rigidBody;
+	std::vector<SurfaceMeshObject *> mRigidBodies;
 	BaraffDynamics * clothDynamics;
 	OtaduyContact * contactHandler;
 	EventManager * eventManager;

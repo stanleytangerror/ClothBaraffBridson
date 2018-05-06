@@ -34,7 +34,7 @@ public:
 		std::vector<T> mPrimitives;
 		void Add(const T& primitive) 
 		{
-			//if (std::find(mPrimitives.begin(), mPrimitives.end(), primitive) == mPrimitives.end())
+			if (std::find(mPrimitives.begin(), mPrimitives.end(), primitive) == mPrimitives.end())
 				mPrimitives.push_back(primitive); 
 		}
 	};

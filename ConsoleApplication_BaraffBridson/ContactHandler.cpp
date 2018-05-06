@@ -217,53 +217,60 @@ namespace
 	}
 }
 
-ContactHandler::ContactHandler(SurfaceMeshObject * clothPiece, SurfaceMeshObject * rigidBody)
+ContactHandler::ContactHandler(SurfaceMeshObject * clothPiece, const std::vector<SurfaceMeshObject *>& colliders)
 	: mClothPiece(clothPiece)
-	, mRigidBody(rigidBody)
+	, mRigidBodies(colliders)
 {
 }
 
 void ContactHandler::Resolve()
 {
-	if (!mClothPiece || !mRigidBody) return;
+	if (!mClothPiece || mRigidBodies.empty()) return;
 
 	static bool doOnce = (DebugRenderer::Instance()->Push(gDebugContact), true);
 
 	gDebugContact->Clear();
 
-	SurfaceMesh3f * rigidBodyMesh = mRigidBody->getMesh();
-	SurfaceMesh3f * clothPieceMesh = mClothPiece->getMesh();
-
-	std::vector<Faceidx> faces;
-	BOOST_FOREACH(Faceidx fidx, rigidBodyMesh->faces())
+	for (auto * rigidBodyObj : mRigidBodies)
 	{
-		faces.push_back(fidx);
-	}
+		//////////////////////////////////////////////////////////////////////////
+		// create spatial hashing
+		SurfaceMesh3f * rigidBodyMesh = rigidBodyObj->getMesh();
+		SurfaceMesh3f * clothPieceMesh = mClothPiece->getMesh();
 
-	SpatialHashing<Faceidx> space(
-		faces,
-		[rigidBodyMesh](const Faceidx& faceIdx) { return FaceAABB(rigidBodyMesh, faceIdx); },
-		0.3f,
-		67);
-
-	SurfaceMesh3f::Property_map<Faceidx, Vec3f> faceNormals = rigidBodyMesh->property_map<Faceidx, Vec3f>(mRigidBody->pname_faceNormals).first;
-
-	BOOST_FOREACH(Veridx vidx, clothPieceMesh->vertices())
-	{
-		Eigen::Vector3f pos;
-		copy_v3f(pos, clothPieceMesh->point(vidx));
-
-		for (const Faceidx & fidx : space.Query(pos).mPrimitives)
+		std::vector<Faceidx> faces;
+		BOOST_FOREACH(Faceidx fidx, rigidBodyMesh->faces())
 		{
-			if (PointTriangleContactResolve(pos, rigidBodyMesh, faceNormals, fidx))
-			{
-				Eigen::Vector3f normal;
-				copy_v3f(normal, faceNormals[fidx]);
+			faces.push_back(fidx);
+		}
 
-				//gDebugContact->PushSinglePoint(pos, 0.1f);
-				mResolver(mClothPiece, vidx, fidx, normal, pos);
-				//copy_v3f(clothPieceMesh->point(vidx), pos);
+		SpatialHashing<Faceidx> space(
+			faces,
+			[rigidBodyMesh](const Faceidx& faceIdx) { return FaceAABB(rigidBodyMesh, faceIdx); },
+			0.3f,
+			67);
+
+		//////////////////////////////////////////////////////////////////////////
+		// collision detect and resolve
+		SurfaceMesh3f::Property_map<Faceidx, Vec3f> faceNormals = rigidBodyMesh->property_map<Faceidx, Vec3f>(rigidBodyObj->pname_faceNormals).first;
+
+		BOOST_FOREACH(Veridx vidx, clothPieceMesh->vertices())
+		{
+			Eigen::Vector3f pos;
+			copy_v3f(pos, clothPieceMesh->point(vidx));
+
+			for (const Faceidx & fidx : space.Query(pos).mPrimitives)
+			{
+				if (PointTriangleContactResolve(pos, rigidBodyMesh, faceNormals, fidx))
+				{
+					Eigen::Vector3f normal;
+					copy_v3f(normal, faceNormals[fidx]);
+
+					//gDebugContact->PushSinglePoint(pos, 0.1f);
+					mResolver(mClothPiece, vidx, fidx, normal, pos);
+					//copy_v3f(clothPieceMesh->point(vidx), pos);
+				}
 			}
 		}
-	}	
+	}
 }

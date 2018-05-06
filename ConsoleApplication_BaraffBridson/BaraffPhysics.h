@@ -70,7 +70,7 @@ private:
 	// parameters for cloth density
 	float density = 0.1f;
 	// parameters for stretch forces
-	float k_stretch = 5e4f, kd_stretch = 0.02f;
+	float k_stretch = 5e5f, kd_stretch = 0.02f;
 	float bu = 20.0f, bv = 20.0f;
 	// parameters for shear forces
 	float k_shear = 5e2f, kd_shear = 0.02f;

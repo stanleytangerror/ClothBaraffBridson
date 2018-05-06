@@ -46,55 +46,85 @@ void Simulator::init()
 	ResourceManager::LoadShader("cloth", ".\\ConsoleApplication_BaraffBridson\\cloth_vs.glsl", ".\\ConsoleApplication_BaraffBridson\\cloth_frag.glsl");
 
 	//////////////////////////////////////////////////////////////////////////
-	// cloth models
-	Model ourModel((GLchar *)Config::modelPath.c_str(),
-		(aiPostProcessSteps)(aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_JoinIdenticalVertices));
-
-	clothPiece = new SurfaceMeshObject(3);
-	clothPiece->import(ourModel.getMeshes()[0]);
-	{
-		Eigen::Matrix4f affine;
-		affine <<
-			1.0f, 0.0f, 0.0f, 0.0f,
-			0.0f, 1.0f, 0.0f, 2.0f,
-			0.0f, 0.0f, 1.0f, 0.0f,
-			0.0f, 0.0f, 0.0f, 1.0f;
-		clothPiece->Affine(affine);
-	}
-	clothPiece->useVTexCoord2DAsVPlanarCoord3f();
-	clothPiece->addPositionsProperty();
-
-	Scene::add_component(new SceneClothPiece(
-		ResourceManager::GetShader("cloth"),
-		ResourceManager::GetShader("cloth_piece_normal"),
-		clothPiece, 
-		viewer->getCamera()));
+	// load models
+	Model squarePlaneModel((GLchar *)Config::modelPath.c_str(), (aiPostProcessSteps)(aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_JoinIdenticalVertices));
+	Model sphereModel((GLchar *)Config::spherePath.c_str(), (aiPostProcessSteps)(aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_JoinIdenticalVertices));
 
 	//////////////////////////////////////////////////////////////////////////
-	// rigid body
-	Model rigidBodyModel((GLchar *)Config::spherePath.c_str(),
-		(aiPostProcessSteps)(aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_JoinIdenticalVertices));
-	rigidBody = new SurfaceMeshObject(3);
-	rigidBody->import(rigidBodyModel.getMeshes()[0]);
+	// create cloth
 	{
-		Eigen::Matrix4f affine;
-		affine <<
-			3.0f, 0.0f, 0.0f, 0.0f,
-			0.0f, 3.0f, 0.0f, -2.0f,
-			0.0f, 0.0f, 3.0f, 0.0f,
-			0.0f, 0.0f, 0.0f, 1.0f;
-		rigidBody->Affine(affine);
-	}
-	rigidBody->addPositionsProperty();
+		clothPiece = new SurfaceMeshObject(3);
+		clothPiece->import(squarePlaneModel.getMeshes()[0]);
+		{
+			Eigen::Matrix4f affine;
+			affine <<
+				1.0f, 0.0f, 0.0f, 0.0f,
+				0.0f, 1.0f, 0.0f, 2.0f,
+				0.0f, 0.0f, 1.0f, 0.0f,
+				0.0f, 0.0f, 0.0f, 1.0f;
+			clothPiece->Affine(affine);
+		}
+		clothPiece->useVTexCoord2DAsVPlanarCoord3f();
+		clothPiece->addPositionsProperty();
 
-	Scene::add_component(new SceneRigidBody(
-		ResourceManager::GetShader("rigid_body"),
-		rigidBody, 
-		viewer->getCamera()));
+		Scene::add_component(new SceneClothPiece(
+			ResourceManager::GetShader("cloth"),
+			ResourceManager::GetShader("cloth_piece_normal"),
+			clothPiece,
+			viewer->getCamera()));
+	}
+
+	//////////////////////////////////////////////////////////////////////////
+	// rigid body - sphere
+	{
+		SurfaceMeshObject * meshObj = new SurfaceMeshObject(3);
+		mRigidBodies.push_back(meshObj);
+
+		meshObj->import(sphereModel.getMeshes()[0]);
+		{
+			Eigen::Matrix4f affine;
+			affine <<
+				3.0f, 0.0f, 0.0f, 0.0f,
+				0.0f, 3.0f, 0.0f, -2.0f,
+				0.0f, 0.0f, 3.0f, 0.0f,
+				0.0f, 0.0f, 0.0f, 1.0f;
+			meshObj->Affine(affine);
+		}
+		meshObj->addPositionsProperty();
+
+		Scene::add_component(new SceneRigidBody(
+			ResourceManager::GetShader("cloth"),
+			meshObj,
+			viewer->getCamera()));
+	}
+
+	//////////////////////////////////////////////////////////////////////////
+	// rigid body - plane
+	{
+		SurfaceMeshObject * meshObj = new SurfaceMeshObject(3);
+		mRigidBodies.push_back(meshObj);
+
+		meshObj->import(squarePlaneModel.getMeshes()[0]);
+		{
+			Eigen::Matrix4f affine;
+			affine <<
+				3.0f, 0.0f, 0.0f, 0.0f,
+				0.0f, 3.0f, 0.0f, -5.0f,
+				0.0f, 0.0f, 3.0f, 0.0f,
+				0.0f, 0.0f, 0.0f, 1.0f;
+			meshObj->Affine(affine);
+		}
+		meshObj->addPositionsProperty();
+
+		Scene::add_component(new SceneRigidBody(
+			ResourceManager::GetShader("cloth"),
+			meshObj,
+			viewer->getCamera()));
+	}
 
 	//////////////////////////////////////////////////////////////////////////
 	// simulation
-	clothDynamics = new BaraffDynamics(clothPiece, rigidBody);
+	clothDynamics = new BaraffDynamics(clothPiece, mRigidBodies);
 
 	Scene::load();
 

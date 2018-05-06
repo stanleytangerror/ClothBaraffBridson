@@ -9,10 +9,10 @@
 class BaraffDynamics
 {
 public:
-	BaraffDynamics(SurfaceMeshObject * model, SurfaceMeshObject * collider) 
+	BaraffDynamics(SurfaceMeshObject * model, const std::vector<SurfaceMeshObject *>& colliders) 
 		: model(model)
 		, physics(new BaraffPhysics(model))
-		, mContactHandler(new ContactHandler(model, collider))
+		, mContactHandler(new ContactHandler(model, colliders))
 	{
 		initial();
 	}
